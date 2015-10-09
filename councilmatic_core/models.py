@@ -1,9 +1,16 @@
 from django.db import models
 from datetime import datetime
+from django.core.exceptions import ImproperlyConfigured
 import pytz
-from chi_city.city_config import TIMEZONE, OCD_CITY_COUNCIL_ID, CITY_COUNCIL_NAME
+from django.conf import settings
 
-app_timezone = pytz.timezone(TIMEZONE)
+if not hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+    raise ImproperlyConfigured('You must define a OCD_COUNCIL_ID in settings.py')
+
+if not hasattr(settings, 'CITY_COUNCIL_NAME'):
+    raise ImproperlyConfigured('You must define a CITY_COUNCIL_NAME in settings.py')
+
+app_timezone = pytz.timezone(settings.TIME_ZONE)
 now = datetime.now()
 
 class Person(models.Model):
