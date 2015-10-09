@@ -75,10 +75,10 @@ class Command(BaseCommand):
             print("deleted all organizations and posts")
 
         # first grab ny city council root
-        self.grab_organization_posts(OCD_CITY_COUNCIL_ID)
+        self.grab_organization_posts(settings.OCD_CITY_COUNCIL_ID)
 
         # this grabs a paginated listing of all organizations within a jurisdiction
-        orgs_url = base_url+'/organizations/?jurisdiction_id='+OCD_JURISDICTION_ID
+        orgs_url = base_url+'/organizations/?jurisdiction_id='+settings.OCD_JURISDICTION_ID
         r = requests.get(orgs_url)
         page_json = json.loads(r.text)
 
@@ -220,7 +220,7 @@ class Command(BaseCommand):
         # get legislative sessions
         self.grab_legislative_sessions()
 
-        bill_url = base_url+'/bills/?from_organization_id='+OCD_CITY_COUNCIL_ID
+        bill_url = base_url+'/bills/?from_organization_id='+settings.OCD_CITY_COUNCIL_ID
         r = requests.get(bill_url)
         page_json = json.loads(r.text)
 
@@ -237,7 +237,7 @@ class Command(BaseCommand):
         # TO-DO: update this when ocd data is fixed
         obj, created = LegislativeSession.objects.get_or_create(
                 identifier='2014',
-                jurisdiction_ocd_id=OCD_JURISDICTION_ID,
+                jurisdiction_ocd_id=settings.OCD_JURISDICTION_ID,
                 name='2014 Legislative Session',
             )
         if created and DEBUG:
@@ -521,7 +521,7 @@ class Command(BaseCommand):
             print("deleted all events, participants, documents, agenda items, bills")
 
         # this grabs a paginated listing of all events within a jurisdiction
-        events_url = base_url+'/events/?jurisdiction_id='+OCD_JURISDICTION_ID
+        events_url = base_url+'/events/?jurisdiction_id='+settings.OCD_JURISDICTION_ID
         r = requests.get(events_url)
         page_json = json.loads(r.text)
 
