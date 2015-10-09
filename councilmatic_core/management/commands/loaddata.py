@@ -1,15 +1,14 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.text import slugify
 from django.db.utils import IntegrityError, DataError
-from councilmatic_core.models import Person, Organization, Action, ActionRelatedEntity, \
+from councilmatic_core.models import Person, Bill, Organization, Action, ActionRelatedEntity, \
                         Post, Membership, Sponsorship, LegislativeSession, \
                         Document, BillDocument, Event, EventParticipant, EventDocument, \
                         EventAgendaItem, AgendaItemBill
-from chicago.models import ChicagoBill as Bill
-from chi_city.settings import HEADSHOT_PATH
-from chi_city.settings_local import DEBUG
-from chi_city.city_config import OCD_JURISDICTION_ID, OCD_CITY_COUNCIL_ID, TIMEZONE
+
 import requests
 import json
 import pytz
@@ -17,8 +16,19 @@ import os.path
 import re
 import datetime
 
-app_timezone = pytz.timezone(TIMEZONE)
+for configuration in ['OCD_JURISDICTION_ID', 
+                      'OCD_CITY_COUNCIL_ID', 
+                      'HEADSHOT_PATH']:
+
+
+    if not hasattr(settings, configuration):
+        raise ImproperlyConfigured('You must define {0} in settings.py'.format(configuration))
+
+app_timezone = pytz.timezone(settings.TIME_ZONE)
 base_url = 'http://ocd.datamade.us'
+
+DEBUG = settings.DEBUG
+
 
 class Command(BaseCommand):
     help = 'loads in data from the open civic data API'
