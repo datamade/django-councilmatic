@@ -1,4 +1,5 @@
 *.pyc
 __pycache__/*
 dist/*
-django-councilmatic.egg-info/
+django-councilmatic.egg-info/*
+councilmatic_core/static/images/*

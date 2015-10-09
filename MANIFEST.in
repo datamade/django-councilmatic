@@ -1,0 +1,7 @@
+include LICENSE
+include README.rst
+recursive-include councilmatic_core/static *
+recursive-include councilmatic_core/templates *
+recursive-include councilmatic_core/management *
+recursive-include councilmatic_core/migrations *
+recursive-include councilmatic_core/templatetags *
