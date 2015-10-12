@@ -103,9 +103,16 @@ class Bill(models.Model):
     @property
     def committees_involved(self):
         if self.actions.all():
-            orgs = set([a.organization.name for a in self.actions.all() if (a.organization.name !='Mayor' and a.organization.name != 'New York City Council')])
-            if not orgs and self.controlling_body and self.controlling_body[0].name != CITY_COUNCIL_NAME:
+            
+            orgs = set([a.organization.name for a in self.actions.all() if \
+                       (a.organization.name !='Mayor' and \
+                        a.organization.name != settings.CITY_COUNCIL_NAME)])
+
+            if not orgs and self.controlling_body and \
+                    self.controlling_body[0].name != settings.CITY_COUNCIL_NAME:
+
                 orgs = self.controlling_body
+            
             return list(orgs)
         else:
             return None

@@ -27,6 +27,7 @@ def city_context(request):
         'CITY_NAME_SHORT': getattr(settings, 'CITY_NAME_SHORT', None),
         'SEARCH_PLACEHOLDER_TEXT': getattr(settings,'SEARCH_PLACEHOLDER_TEXT', None),
         'LEGISLATION_TYPE_DESCRIPTIONS': getattr(settings,'LEGISLATION_TYPE_DESCRIPTIONS', None),
+        'LEGISTAR_URL': getattr(settings,'LEGISTAR_URL', None),
     }
 
 def index(request):
@@ -147,7 +148,20 @@ def events(request, year=None, month=None):
     newest_year = Event.objects.all().order_by('-start_time').first().start_time.year
     oldest_year = Event.objects.all().order_by('start_time').first().start_time.year
     year_range = list(reversed(range(oldest_year, newest_year+1)))
-    month_options = [['January', 1],['Febrary',2],['March',3],['April',4],['May',5],['June',6],['July',7],['August',8],['September',9],['October',10],['November',11],['December',12]]
+    month_options = [
+        ['January', 1],
+        ['February',2],
+        ['March',3],
+        ['April',4],
+        ['May',5],
+        ['June',6],
+        ['July',7],
+        ['August',8],
+        ['September',9],
+        ['October',10],
+        ['November',11],
+        ['December',12]
+    ]
 
     if not year or not month:
         year = date.today().year
