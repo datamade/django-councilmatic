@@ -12,11 +12,11 @@
     <br/>
     <div class='jumbotron'>
         <p class="h4">
-            Search {{city_name}} legislation
+            Search {{settings.CITY_NAME}} legislation
         </p>
         <form method="get" action=".">
             <div class="input-group site-intro-search">
-                <input name="q" type="text" class="input-lg form-control" placeholder="{{search_placeholder_text}}" {% if request.GET.q %}value="{{request.GET.q}}"{% endif %}>
+                <input name="q" type="text" class="input-lg form-control" placeholder="{{settings.SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q}}"{% endif %}>
                 <div class='input-group-btn'>
                     <button type="submit" class="btn btn-lg btn-primary">
                         <i class='fa fa-fw fa-search'></i>

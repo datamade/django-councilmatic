@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import Http404
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
@@ -7,7 +8,6 @@ from .models import Person, Bill, Organization, Action, Event
 from haystack.forms import FacetedSearchForm
 from datetime import date, timedelta
 from itertools import groupby
-import chi_city.city_config as city_config
 
 class CouncilmaticSearchForm(FacetedSearchForm):
     
@@ -20,15 +20,14 @@ class CouncilmaticSearchForm(FacetedSearchForm):
         return self.searchqueryset.all()
 
 def city_context(request):
-    city_context = {
-        'city_name': city_config.CITY_NAME, 
-        'city_name_short': city_config.CITY_NAME_SHORT,
-        'city_council_name': city_config.CITY_COUNCIL_NAME, 
-        'search_placeholder_text': city_config.SEARCH_PLACEHOLDER_TEXT,
-        'legislation_type_descriptions': city_config.LEGISLATION_TYPE_DESCRIPTIONS,
-        'site_meta': city_config.SITE_META,
+    return {
+        'SITE_META': getattr(settings, 'SITE_META', None),
+        'CITY_COUNCIL_NAME': getattr(settings, 'CITY_COUNCIL_NAME', None),
+        'CITY_NAME': getattr(settings, 'CITY_NAME', None),
+        'CITY_NAME_SHORT': getattr(settings, 'CITY_NAME_SHORT', None),
+        'SEARCH_PLACEHOLDER_TEXT': getattr(settings,'SEARCH_PLACEHOLDER_TEXT', None),
+        'LEGISLATION_TYPE_DESCRIPTIONS': getattr(settings,'LEGISLATION_TYPE_DESCRIPTIONS', None),
     }
-    return city_context
 
 def index(request):
     one_month_ago = date.today() + timedelta(days=-30)
@@ -42,22 +41,22 @@ def index(request):
         'upcoming_committee_meetings': list(Event.upcoming_committee_meetings()),
     }
 
-    return render(request, 'core/index.html', context)
+    return render(request, 'councilmatic_core/index.html', context)
 
 def about(request):
 
-    return render(request, 'core/about.html')
+    return render(request, 'councilmatic_core/about.html')
 
 def not_found(request):
-    return render(request, 'core/404.html')
+    return render(request, 'councilmatic_core/404.html')
 
 def council_members(request):
-    city_council = Organization.objects.filter(ocd_id=city_config.OCD_CITY_COUNCIL_ID).first()
+    city_council = Organization.objects.filter(ocd_id=settings.OCD_CITY_COUNCIL_ID).first()
     context = {
         'city_council': city_council
     }
 
-    return render(request, 'core/council_members.html', context)
+    return render(request, 'councilmatic_core/council_members.html', context)
 
 def bill_detail(request, slug):
 
@@ -73,7 +72,7 @@ def bill_detail(request, slug):
         'actions': actions
     }
 
-    return render(request, 'core/legislation.html', context)
+    return render(request, 'councilmatic_core/legislation.html', context)
 
 def committees(request):
 
@@ -92,7 +91,7 @@ def committees(request):
         'taskforces': taskforces,
     }
 
-    return render(request, 'core/committees.html', context)
+    return render(request, 'councilmatic_core/committees.html', context)
 
 def committee_detail(request, slug):
 
@@ -103,16 +102,18 @@ def committee_detail(request, slug):
 
     chairs = committee.memberships.filter(role="CHAIRPERSON")
     memberships = committee.memberships.filter(role="Committee Member")
-    committee_description = city_config.COMMITTEE_DESCIPTIONS[committee.slug] if committee.slug in city_config.COMMITTEE_DESCIPTIONS else None
-
+    
     context = {
         'committee': committee,
         'chairs': chairs,
         'memberships': memberships,
-        'committee_description': committee_description,
+        'committee_description': None,
     }
+    
+    if getattr(settings, 'COMMITTEE_DESCRIPTIONS'):
+        context['committee_description'] = settings.COMMITTEE_DESCRIPTIONS.get(committee.slug)
 
-    return render(request, 'core/committee.html', context)
+    return render(request, 'councilmatic_core/committee.html', context)
 
 def person(request, slug):
 
@@ -134,7 +135,7 @@ def person(request, slug):
         'sponsored_legislation': [s.bill for s in sponsorships][:10]
     }
 
-    return render(request, 'core/person.html', context)
+    return render(request, 'councilmatic_core/person.html', context)
 
 def events(request, year=None, month=None):
 
@@ -163,7 +164,7 @@ def events(request, year=None, month=None):
             'month_options': month_options,
         }
 
-        return render(request, 'core/events.html', context)
+        return render(request, 'councilmatic_core/events.html', context)
     else:
         year = int(year)
         month = int(month)
@@ -185,7 +186,7 @@ def events(request, year=None, month=None):
             'month_options': month_options,
         }
 
-        return render(request, 'core/events.html', context)
+        return render(request, 'councilmatic_core/events.html', context)
 
 def event_detail(request, slug):
 
@@ -197,7 +198,7 @@ def event_detail(request, slug):
         'participants': participants
     }
 
-    return render(request, 'core/event.html', context)
+    return render(request, 'councilmatic_core/event.html', context)
 
 def user_login(request):
     if request.method == 'POST':

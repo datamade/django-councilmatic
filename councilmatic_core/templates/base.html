@@ -3,29 +3,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{% block title %}{% endblock %} - {{site_meta.site_name}}</title>
+    <title>{% block title %}{% endblock %} - {{SITE_META.site_name}}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{site_meta.site_desc}}">
-    <meta name="author" content="{{site_meta.site_author}}">
+    <meta name="description" content="{{SITE_META.site_desc}}">
+    <meta name="author" content="{{SITE_META.site_author}}">
 
 
     <!-- Facebook -->
-    <meta property="og:site_name" content="{{site_meta.site_name}}">
-    <meta property="og:title" content="{{site_meta.site_name}}">
+    <meta property="og:site_name" content="{{SITE_META.site_name}}">
+    <meta property="og:title" content="{{SITE_META.site_name}}">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="{{site_meta.site_desc}}">
-    <meta property="og:url" content="{{site_meta.site_url}}">
-    <meta property="og:image" content="{{site_meta.site_url}}{% static 'images/logo-lg.png' %}">
+    <meta property="og:description" content="{{SITE_META.site_desc}}">
+    <meta property="og:url" content="{{SITE_META.site_url}}">
+    <meta property="og:image" content="{{SITE_META.site_url}}{% static 'images/logo-lg.png' %}">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:site" content="{{site_meta.twitter_site}}">
-    <meta name="twitter:creator" content="{{site_meta.twitter_creator}}">
-    <meta name="twitter:description" content="{{site_meta.site_desc}}">
-    <meta name="twitter:title" content="{{site_meta.site_name}}">
-    <meta name="twitter:url" content="{{site_meta.site_url}}">
-    <meta name="twitter:image:src" content="{{site_meta.site_url}}{% static 'images/logo-lg.png' %}">
+    <meta name="twitter:site" content="{{SITE_META.twitter_site}}">
+    <meta name="twitter:creator" content="{{SITE_META.twitter_creator}}">
+    <meta name="twitter:description" content="{{SITE_META.site_desc}}">
+    <meta name="twitter:title" content="{{SITE_META.site_name}}">
+    <meta name="twitter:url" content="{{SITE_META.site_url}}">
+    <meta name="twitter:image:src" content="{{SITE_META.site_url}}{% static 'images/logo-lg.png' %}">
 
     <link href="{% static 'images/favicon.png' %}" rel="shortcut icon">
 
@@ -40,11 +40,10 @@
 
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container-fluid container-fluid-nav">
-
             <div id="nav-title">
                 <a class="navbar-brand" href="/">
                     <img id="logo" src="{% static 'images/logo.png'%}"></img>
-                    <span id="logo-text">{{city_name_short}} Councilmatic</span>
+                    <span id="logo-text">{{ CITY_NAME_SHORT }} Councilmatic</span>
                 </a>
             </div>
             <ul id="nav-items">
@@ -76,7 +75,7 @@
             <div class='clearfix'></div>
 
             <p>Part of the <a href='http://www.councilmatic.org'>Councilmatic family</a>. Proudly brought to you by</p>
-        
+
             <a href='http://www.participatorypolitics.org/'><img style='height:60px;' src='/static/images/ppf-logo.png' /></a>
             <a href='http://www.ritaallen.org'><img style='height:60px;' src='/static/images/rita-allen-logo.png' /></a>
             <a href='http://datamade.us'><img style='height:20px;' src='/static/images/datamade-logo.png' /></a>
@@ -85,7 +84,7 @@
 
     <script src="{% static 'js/jquery-1.10.1.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
-  
+
     {% block extra_js %}{% endblock %}
 
     <script src="{% static 'js/analytics_lib.js' %}"></script>

@@ -1,7 +1,7 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
 {% load staticfiles %}
-{% block title %}{{city_council_name}} Committees{% endblock %}
+{% block title %}{{CITY_COUNCIL_NAME}} Committees{% endblock %}
 {% block content %}
 
     <div class="row-fluid">
@@ -112,9 +112,9 @@
                 <p>Each Council Member serves on at least three of the Council's standing committees, sub- and select committees and panels. The standing committees must meet at least once a month unless the Charter mandates otherwise. Committee assignments are made by the Committee on Rules, Privileges and Elections and voted on by the entire Council.</p>
 
                 {% if taskforces %}
-                <p>{{city_council_name}} is currently composed of {{committees | length }} Committees, {{subcommittees | length }} Subcommittees and {{taskforces | length }} Task Forces.</p>
+                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees, {{subcommittees | length }} Subcommittees and {{taskforces | length }} Task Forces.</p>
                 {% else %}
-                <p>{{city_council_name}} is currently composed of {{committees | length }} Committees and {{subcommittees | length }} Subcommittees.</p>
+                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees and {{subcommittees | length }} Subcommittees.</p>
                 {% endif %}
 
                 <p><a href='/about/#about-city-council'>Read more about how City Council works ></a></p>

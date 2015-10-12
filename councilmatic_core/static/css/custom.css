@@ -216,15 +216,10 @@ select {
 
 /* styling the home page */
 #section-photo{
-    background-image: 
-        linear-gradient(
-          rgba(0, 0, 0, 0.3), 
-          rgba(0, 0, 0, 0.3)
-        ),
-        url('../images/nyc-hall-cropped.png');
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
+    background-color: #333;
     height: 300px;
 }
 
