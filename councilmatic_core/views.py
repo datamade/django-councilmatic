@@ -30,9 +30,14 @@ def city_context(request):
     }
 
 def index(request):
-    one_month_ago = date.today() + timedelta(days=-30)
-    recent_legislation = Bill.objects.exclude(last_action_date=None).filter(last_action_date__gt=one_month_ago).order_by('-last_action_date').all()
-    recently_passed = [l for l in recent_legislation if l.inferred_status == 'Passed' and l.bill_type == 'Introduction']
+    some_time_ago = date.today() + timedelta(days=-100)
+    recent_legislation = Bill.objects.exclude(last_action_date=None)\
+                                     .filter(last_action_date__gt=some_time_ago)\
+                                     .order_by('-last_action_date').all()
+
+    recently_passed = [l for l in recent_legislation \
+                           if l.inferred_status == 'Passed' \
+                               and l.bill_type == 'Introduction'][:3]
 
     context = {
         'recent_legislation': recent_legislation,
@@ -41,7 +46,7 @@ def index(request):
         'upcoming_committee_meetings': list(Event.upcoming_committee_meetings()),
     }
 
-    return render(request, 'councilmatic_core/index.html', context)
+    return render(request, 'core/index.html', context)
 
 def about(request):
 

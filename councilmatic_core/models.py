@@ -11,7 +11,6 @@ if not hasattr(settings, 'CITY_COUNCIL_NAME'):
     raise ImproperlyConfigured('You must define a CITY_COUNCIL_NAME in settings.py')
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
-now = datetime.now()
 
 class Person(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
@@ -259,11 +258,15 @@ class Event(models.Model):
 
     @classmethod
     def next_city_council_meeting(cls):
-        return cls.objects.filter(name__icontains='City Council Stated Meeting').filter(start_time__gt=now).order_by('start_time').first()
+        return cls.objects.filter(name__icontains='City Council Stated Meeting')\
+                  .filter(start_time__gt=datetime.now()).order_by('start_time').first()
 
     @classmethod
     def upcoming_committee_meetings(cls):
-        return cls.objects.filter(start_time__gt=now).exclude(name='City Council Stated Meeting').exclude(name='City Council Stated Meeting ').order_by('start_time').all()[:3]
+        return cls.objects.filter(start_time__gt=datetime.now())\
+                  .exclude(name='City Council Stated Meeting')\
+                  .exclude(name='City Council Stated Meeting ')\
+                  .order_by('start_time').all()[:3]
 
 class EventParticipant(models.Model):
     event = models.ForeignKey('Event', related_name='participants')
