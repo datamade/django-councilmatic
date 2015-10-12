@@ -9,6 +9,8 @@ from councilmatic_core.models import Person, Bill, Organization, Action, ActionR
                         Document, BillDocument, Event, EventParticipant, EventDocument, \
                         EventAgendaItem, AgendaItemBill
 
+from dateutil import parser as date_parser
+
 import requests
 import json
 import pytz
@@ -344,9 +346,11 @@ class Command(BaseCommand):
         classification = ""
         if action_json['classification']:
             classification = action_json['classification'][0]
+        
+        action_date = app_timezone.localize(date_parser.parse(action_json['date']))
 
         action_obj, created = Action.objects.get_or_create(
-                date=action_json['date'],
+                date=action_date,
                 classification=classification,
                 description=action_json['description'],
                 organization=org,
@@ -425,7 +429,7 @@ class Command(BaseCommand):
 
             # save image to disk
             if page_json['image']:
-                r = requests.get(page_json['image'])
+                r = requests.get(page_json['image'], verify=False)
                 if r.status_code == 200:
                     with open((HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
                         for chunk in r.iter_content(1000):
