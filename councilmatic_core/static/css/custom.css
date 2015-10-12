@@ -213,8 +213,6 @@ select {
     display: inline-block;
 }
 
-
-/* styling the home page */
 #section-photo{
     background-size: cover;
     background-repeat: no-repeat;
@@ -226,33 +224,6 @@ select {
 #section-photo h1 {
     color: #fff;
 }
-
-.photo-credit{
-    color: #ccc;
-    font-size: 8px;
-}
-
-#section-events{
-    background-color: #F8F8F8;
-}
-#featured-bills{
-    background-color: #F0F0F0;
-    padding-top: 30px;
-}
-#featured-bills, #section-recently-passed, #section-events{
-    padding-bottom: 30px;
-}
-
-.well-featured{
-    border: none;
-    background-color: #F8F8F8;
-
-}
-.well-featured > h3{
-    margin-top: 0;
-}
-
-
 
 .mobile-only {
     display: none;

@@ -32,7 +32,7 @@ class BillIndex(indexes.SearchIndex):
     inferred_status = indexes.CharField(faceted=True)
 
     def get_model(self):
-        return self.model
+        return Bill
 
     def prepare_friendly_name(self, obj):
         return obj.friendly_name
