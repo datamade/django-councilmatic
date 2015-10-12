@@ -254,6 +254,10 @@ class Event(models.Model):
         return '/event/%s' %self.slug
 
     @property
+    def link_html(self):
+        return '<a href="'+self.event_page_url+'" title="View Event Details">'+self.name+'</a>' 
+
+    @property
     def clean_agenda_items(self):
         agenda_items = self.agenda_items.order_by('order').all()
         agenda_deduped = []
