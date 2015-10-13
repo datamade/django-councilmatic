@@ -11,9 +11,6 @@ urlpatterns = [
     url(r'^committee/(?P<slug>.*)/$', views.CommitteeDetailView.as_view(), name='committee_detail'),
     url(r'^legislation/(?P<slug>.*)/$', views.BillDetailView.as_view(), name='bill_detail'),
     url(r'^person/(?P<slug>.*)/$', views.PersonDetailView.as_view(), name='person'),
-    url(r'^login/$', views.user_login, name='user_login'),
-    url(r'^logout/$', views.user_logout, name='user_logout'),
-    url(r'^events/$', views.events, name='events'),
-    url(r'^events/(.*)/(.*)/$', views.events, name='events'),
-    url(r'^event/(.*)/$', views.event_detail, name='event_detail'),
+    url(r'^events/$', views.EventsView.as_view(), name='events'),
+    url(r'^event/(?P<slug>.*)/$', views.EventDetailView.as_view(), name='event_detail'),
 ]

@@ -5,10 +5,16 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.db.models import Max, Min
 from .models import Person, Bill, Organization, Action, Event, Post
 from haystack.forms import FacetedSearchForm
-from datetime import date, timedelta
-from itertools import groupby
+from datetime import date, timedelta, datetime
+import itertools
+from operator import attrgetter
+
+import pytz
+
+app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 class CouncilmaticSearchForm(FacetedSearchForm):
     
@@ -123,99 +129,70 @@ class PersonDetailView(DetailView):
 
         return context
 
+
+class EventsView(ListView):
+    template_name = 'councilmatic_core/events.html'
+
+    def get_queryset(self):
+        # Realize this is stupid. The reason this exists is so that
+        # we can have this be a ListView in the inherited subclasses
+        # if needed
+        return []
+
+    def get_context_data(self, **kwargs):
+        context = super(EventsView, self).get_context_data(**kwargs)
+        
+        aggregates = Event.objects.aggregate(Min('start_time'), Max('start_time'))
+        min_year, max_year = aggregates['start_time__min'].year, aggregates['start_time__max'].year
+        context['year_range'] = list(reversed(range(min_year, max_year + 1)))
+        
+        context['month_options'] = []
+        for index in range(1, 13):
+            month_name = datetime(date.today().year, index, 1).strftime('%B')
+            context['month_options'].append([month_name, index])
+        
+        context['show_upcoming'] = True
+        context['this_month'] = date.today().month
+        context['this_year'] = date.today().year
+        events_key = 'upcoming_events'
+
+        upcoming_dates = Event.objects.filter(start_time__gt=date.today())
+        
+        current_year = self.request.GET.get('year')
+        current_month = self.request.GET.get('month')
+        if current_year and current_month:
+            events_key = 'month_events'
+            upcoming_dates = Event.objects\
+                                  .filter(start_time__year=int(current_year))\
+                                  .filter(start_time__month=int(current_month))
+            
+            context['show_upcoming'] = False
+            context['this_month'] = int(current_month)
+            context['this_year'] = int(current_year)
+        
+        upcoming_dates = upcoming_dates.order_by('start_time')
+        
+        day_grouper = lambda x: (x.start_time.year, x.start_time.month, x.start_time.day)
+        context[events_key] = []
+        
+        for event_date, events in itertools.groupby(upcoming_dates, key=day_grouper):
+            events = sorted(events, key=attrgetter('start_time'))
+            context[events_key].append([date(*event_date), events])
+        
+        return context
+
+class EventDetailView(DetailView):
+    template_name = 'councilmatic_core/event.html'
+    model = Event
+    context_object_name = 'event'
+
+    def get_context_data(self, **kwargs):
+        context = super(EventDetailView, self).get_context_data(**kwargs)
+        
+        participants = [p.name for p in context['event'].participants.all()]
+        context['participants'] = Organization.objects.filter(name__in=participants)
+        
+        return context
+
 def not_found(request):
     return render(request, 'councilmatic_core/404.html')
-
-
-def events(request, year=None, month=None):
-
-    newest_year = Event.objects.all().order_by('-start_time').first().start_time.year
-    oldest_year = Event.objects.all().order_by('start_time').first().start_time.year
-    year_range = list(reversed(range(oldest_year, newest_year+1)))
-    month_options = [
-        ['January', 1],
-        ['February',2],
-        ['March',3],
-        ['April',4],
-        ['May',5],
-        ['June',6],
-        ['July',7],
-        ['August',8],
-        ['September',9],
-        ['October',10],
-        ['November',11],
-        ['December',12]
-    ]
-
-    if not year or not month:
-        year = date.today().year
-        month = date.today().month
-
-        upcoming_dates = Event.objects.filter(start_time__gt=date.today()).datetimes('start_time', 'day').order_by('start_time')[:50]
-        upcoming_events = []
-        for d in upcoming_dates:
-            if not (upcoming_events and d == upcoming_events[-1][0]):
-                events_on_day = Event.objects.filter(start_time__year=d.year).filter(start_time__month=d.month).filter(start_time__day=d.day).order_by('start_time').all()
-                upcoming_events.append([d, events_on_day])
-
-        context = {
-            'show_upcoming': True,
-            'this_month': month,
-            'this_year': year,
-            'upcoming_events': upcoming_events,
-            'year_range': year_range,
-            'month_options': month_options,
-        }
-
-        return render(request, 'councilmatic_core/events.html', context)
-    else:
-        year = int(year)
-        month = int(month)
-
-        month_dates = Event.objects.filter(start_time__year=year).filter(start_time__month=month).datetimes('start_time', 'day').order_by('start_time')
-        month_events = []
-        for d in month_dates:
-            if not (month_events and d == month_events[-1][0]):
-                events_on_day = Event.objects.filter(start_time__year=d.year).filter(start_time__month=d.month).filter(start_time__day=d.day).order_by('start_time').all()
-                month_events.append([d, events_on_day])
-
-        context = {
-            'show_upcoming': False,
-            'this_month': month,
-            'this_year': year,
-            'first_date': month_dates[0] if month_dates else None,
-            'month_events': month_events,
-            'year_range': year_range,
-            'month_options': month_options,
-        }
-
-        return render(request, 'councilmatic_core/events.html', context)
-
-def event_detail(request, slug):
-
-    event = Event.objects.filter(slug=slug).first()
-
-    participants = [ Organization.objects.filter(name=p.entity_name).first() for p in event.participants.all()]
-    context = {
-        'event': event,
-        'participants': participants
-    }
-
-    return render(request, 'councilmatic_core/event.html', context)
-
-def user_login(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            if user is not None:
-                login(request, user)
-                return redirect('index')
-    else:
-        form = AuthenticationForm()
-
-    return render(request, 'core_user/login.html', {'form': form})
-
-def user_logout(request):
-    logout(request)
-    return redirect('index')
