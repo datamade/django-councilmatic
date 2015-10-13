@@ -3,13 +3,11 @@ from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
 
 class BillIndex(indexes.SearchIndex):
-    model = None
 
     text = indexes.CharField(document=True, use_template=True, template_name="search/indexes/councilmatic_core/bill_text.txt")
     slug = indexes.CharField(model_attr='slug', indexed=False)
     ocd_id = indexes.CharField(model_attr='ocd_id', indexed=False)
     bill_type = indexes.CharField(model_attr='bill_type', faceted=True)
-    classification = indexes.CharField(model_attr='classification')
     identifier = indexes.CharField(model_attr='identifier')
     description = indexes.CharField(model_attr='description')
     source_url = indexes.CharField(model_attr='source_url', indexed=False)

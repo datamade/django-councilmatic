@@ -1,6 +1,6 @@
 {% extends "base_with_margins.html" %}
 {% load staticfiles %}
-{% block title %}{{city_council_name}} Members{% endblock %}
+{% block title %}{{CITY_COUNCIL_NAME}} Members{% endblock %}
 {% block content %}
 
     <div class="row-fluid">
@@ -23,7 +23,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for post in city_council.posts.all %}
+                        {% for post in posts %}
                             <tr>
                                 <td>
                                     {% if post.current_member %}

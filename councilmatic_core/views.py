@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.conf import settings
+from django.views.generic import TemplateView, ListView, DetailView
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Person, Bill, Organization, Action, Event
+from .models import Person, Bill, Organization, Action, Event, Post
 from haystack.forms import FacetedSearchForm
 from datetime import date, timedelta
 from itertools import groupby
@@ -30,118 +31,101 @@ def city_context(request):
         'LEGISTAR_URL': getattr(settings,'LEGISTAR_URL', None),
     }
 
-def index(request):
-    some_time_ago = date.today() + timedelta(days=-100)
-    recent_legislation = Bill.objects.exclude(last_action_date=None)\
-                                     .filter(last_action_date__gt=some_time_ago)\
-                                     .order_by('-last_action_date').all()
+class IndexView(TemplateView):
+     
+    template_name = 'councilmatic_core/index.html'
+    bill_model = Bill
+    event_model = Event
 
-    recently_passed = [l for l in recent_legislation \
-                           if l.inferred_status == 'Passed' \
-                               and l.bill_type == 'Introduction'][:3]
+    def get_context_data(self, **kwargs):
+        context = super(IndexView, self).get_context_data(**kwargs)
+        
+        some_time_ago = date.today() + timedelta(days=-100)
+        recent_legislation = self.bill_model.objects\
+                                 .exclude(last_action_date=None)\
+                                 .filter(last_action_date__gt=some_time_ago)\
+                                 .order_by('-last_action_date').all()
 
-    context = {
-        'recent_legislation': recent_legislation,
-        'recently_passed': recently_passed,
-        'next_council_meeting': Event.next_city_council_meeting(),
-        'upcoming_committee_meetings': list(Event.upcoming_committee_meetings()),
-    }
+        recently_passed = [l for l in recent_legislation \
+                               if l.inferred_status == 'Passed' \
+                                   and l.bill_type == 'Introduction'][:3]
+        
+        upcoming_meetings = list(self.event_model.upcoming_committee_meetings())
 
-    return render(request, 'core/index.html', context)
+        return {
+            'recent_legislation': recent_legislation,
+            'recently_passed': recently_passed,
+            'next_council_meeting': self.event_model.next_city_council_meeting(),
+            'upcoming_committee_meetings': upcoming_meetings,
+        }
 
-def about(request):
 
-    return render(request, 'councilmatic_core/about.html')
+class AboutView(TemplateView):
+    template_name = 'councilmatic_core/about.html'
+
+class CouncilMembersView(ListView):
+    template_name = 'councilmatic_core/council_members.html'
+    context_object_name = 'posts'
+    
+    def get_queryset(self):
+        return Post.objects.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID)
+
+class BillDetailView(DetailView):
+    model = Bill
+    template_name = 'councilmatic_core/legislation.html'
+    context_object_name = 'legislation'
+    
+    def get_context_data(self, **kwargs):
+        context = super(BillDetailView, self).get_context_data(**kwargs)
+        
+        context['actions'] = self.get_object().actions.all().order_by('-order')
+        
+        return context
+
+class CommitteesView(ListView):
+    template_name = 'councilmatic_core/committees.html'
+    context_object_name = 'committees'
+
+    def get_queryset(self):
+        return Organization.committees().filter(name__startswith='Committee')
+
+class CommitteeDetailView(DetailView):
+    model = Organization
+    template_name = 'councilmatic_core/committee.html'
+    context_object_name = 'committee'
+    
+    def get_context_data(self, **kwargs):
+        context = super(CommitteeDetailView, self).get_context_data(**kwargs)
+        
+        committee = context['committee']
+        context['chairs'] = committee.memberships.filter(role='CHAIRPERSON')
+        context['memberships'] = committee.memberships.filter(role='Committee Member')
+        
+        if getattr(settings, 'COMMITTEE_DESCRIPTIONS', None):
+            description = settings.COMMITTEE_DESCRIPTIONS.get(self.get_slug())
+            context['committee_description'] = description
+
+        return context
+
+class PersonDetailView(DetailView):
+    model = Person
+    template_name = 'councilmatic_core/person.html'
+    context_object_name = 'person'
+    
+    def get_context_data(self, **kwargs):
+        context = super(PersonDetailView, self).get_context_data(**kwargs)
+        
+        person = context['person']
+        context['sponsorships'] = person.primary_sponsorships.order_by('-bill__last_action_date')
+
+        context['chairs'] = person.memberships.filter(role="CHAIRPERSON")
+        context['memberships'] = person.memberships.filter(role="Committee Member")
+
+        return context
 
 def not_found(request):
     return render(request, 'councilmatic_core/404.html')
 
-def council_members(request):
-    city_council = Organization.objects.filter(ocd_id=settings.OCD_CITY_COUNCIL_ID).first()
-    context = {
-        'city_council': city_council
-    }
-
-    return render(request, 'councilmatic_core/council_members.html', context)
-
-def bill_detail(request, slug):
-
-    legislation = Bill.objects.filter(slug=slug).first()
-    
-    if not legislation:
-        raise Http404("Legislation does not exist")
-
-    actions = legislation.actions.all().order_by('-order')
-
-    context={
-        'legislation': legislation,
-        'actions': actions
-    }
-
-    return render(request, 'councilmatic_core/legislation.html', context)
-
-def committees(request):
-
-    committees = Organization.committees().filter(name__startswith='Committee')
-    committees = [c for c in committees if c.memberships.all()]
-
-    subcommittees = Organization.committees().filter(name__startswith='Subcommittee')
-    subcommittees = [c for c in subcommittees if c.memberships.all()]
-
-    taskforces = Organization.committees().filter(name__startswith='Task Force')
-    taskforces = [c for c in taskforces if c.memberships.all()]
-
-    context={
-        'committees': committees,
-        'subcommittees': subcommittees,
-        'taskforces': taskforces,
-    }
-
-    return render(request, 'councilmatic_core/committees.html', context)
-
-def committee_detail(request, slug):
-
-    committee = Organization.objects.filter(slug=slug).first()
-
-    if not committee:
-        raise Http404("Committee does not exist")
-
-    chairs = committee.memberships.filter(role="CHAIRPERSON")
-    memberships = committee.memberships.filter(role="Committee Member")
-    
-    context = {
-        'committee': committee,
-        'chairs': chairs,
-        'memberships': memberships,
-        'committee_description': None,
-    }
-    
-    if getattr(settings, 'COMMITTEE_DESCRIPTIONS'):
-        context['committee_description'] = settings.COMMITTEE_DESCRIPTIONS.get(committee.slug)
-
-    return render(request, 'councilmatic_core/committee.html', context)
-
-def person(request, slug):
-
-    person = Person.objects.filter(slug=slug).first()
-
-    if not person:
-        raise Http404("Person does not exist")
-
-    sponsorships = person.primary_sponsorships.order_by('-bill__last_action_date')
-
-    chairs = person.memberships.filter(role="CHAIRPERSON")
-    memberships = person.memberships.filter(role="Committee Member")
-
-    context = {
-        'person': person,
-        'chairs': chairs,
-        'memberships': memberships,
-        'sponsorships': sponsorships,
-        'sponsored_legislation': [s.bill for s in sponsorships][:10]
-    }
-
-    return render(request, 'councilmatic_core/person.html', context)
 
 def events(request, year=None, month=None):
 

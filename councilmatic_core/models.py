@@ -27,7 +27,7 @@ class Person(models.Model):
 
     @property
     def council_seat(self):
-        return self.memberships.filter(organization__ocd_id=OCD_CITY_COUNCIL_ID).first().post.label
+        return self.memberships.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID).first().post.label
 
     @property
     def is_speaker(self):
