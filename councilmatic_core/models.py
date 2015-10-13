@@ -94,7 +94,7 @@ class Bill(models.Model):
 
     @property
     def friendly_name(self):
-        return None
+        return self.identifier
 
     @property
     def primary_sponsor(self):
