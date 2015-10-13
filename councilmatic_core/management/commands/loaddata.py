@@ -253,13 +253,10 @@ class Command(BaseCommand):
 
         from_org = Organization.objects.filter(ocd_id=page_json['from_organization']['id']).first()
         legislative_session = LegislativeSession.objects.filter(identifier=page_json['legislative_session']['identifier']).first()
-
-        # THIS IF STATEMENT IS A NYC CUSTOMIZATION
-        # only load bills that have a local classification
-        # this is a temporary fix - remove when outdated bills are no longer in ocd
-        # if 'local_classification' in page_json['extras']:
-
-        if len(page_json['classification']) == 1:
+        
+        if page_json['extras'].get('local_classification'):
+            bill_type = page_json['extras']['local_classification']
+        elif len(page_json['classification']) == 1:
             bill_type = page_json['classification'][0]
         else:
             raise Exception(page_json['classification'])
