@@ -195,6 +195,9 @@ h1, h2, h3, h4 {
 .label-active{
     background-color: #3D8A8E;
 }
+.label-failed{
+    background-color: #D91E18;
+}
 
 select {
     margin-left: 0;
