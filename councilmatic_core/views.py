@@ -47,15 +47,16 @@ class IndexView(TemplateView):
         context = super(IndexView, self).get_context_data(**kwargs)
         
         some_time_ago = date.today() + timedelta(days=-100)
+        
         recent_legislation = self.bill_model.objects\
                                  .exclude(last_action_date=None)\
                                  .filter(last_action_date__gt=some_time_ago)\
-                                 .order_by('-last_action_date').all()
-
+                                 .order_by('-last_action_date')
+        
         recently_passed = [l for l in recent_legislation \
                                if l.inferred_status == 'Passed' \
                                    and l.bill_type == 'Introduction'][:3]
-        
+
         upcoming_meetings = list(self.event_model.upcoming_committee_meetings())
 
         return {
@@ -74,7 +75,8 @@ class CouncilMembersView(ListView):
     context_object_name = 'posts'
     
     def get_queryset(self):
-        return Post.objects.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID)
+        return Organization.objects.get(ocd_id=settings.OCD_CITY_COUNCIL_ID).posts.all()
+        # return Post.objects.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID)
 
 class BillDetailView(DetailView):
     model = Bill
@@ -122,7 +124,7 @@ class PersonDetailView(DetailView):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
         
         person = context['person']
-        context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-bill__last_action_date')]
+        context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')]
         context['chairs'] = person.memberships.filter(role="CHAIRPERSON")
         context['memberships'] = person.memberships.filter(role="Committee Member")
         

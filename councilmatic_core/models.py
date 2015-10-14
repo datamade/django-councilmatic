@@ -32,6 +32,7 @@ def override_relation(base_model):
                 for attr in attrs:
                     setattr(overridden, attr, getattr(base_model, attr))
                 
+
         except TypeError:
             pass
     
@@ -53,7 +54,7 @@ class Person(models.Model):
 
     @property
     def council_seat(self):
-        return self.memberships.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID).first().post.label
+        return self.memberships.filter(_organization__ocd_id=settings.OCD_CITY_COUNCIL_ID).first().post.label
 
     @property
     def is_speaker(self):
@@ -85,25 +86,30 @@ class Bill(models.Model):
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
 
-    from_organization = models.ForeignKey('Organization', 
+    _from_organization = models.ForeignKey('Organization', 
                                            related_name='bills', 
-                                           null=True)
+                                           null=True,
+                                           db_column='from_organization_id')
 
     full_text = models.TextField(blank=True)
     abstract = models.TextField(blank=True)
     last_action_date = models.DateTimeField(default=None, null=True)
     
-    legislative_session = models.ForeignKey('LegislativeSession', 
+    _legislative_session = models.ForeignKey('LegislativeSession', 
                                              related_name='bills', 
-                                             null=True)
+                                             null=True,
+                                             db_column='legislative_session_id')
     
     slug = models.CharField(max_length=255, unique=True)
     
-    def __init__(self, *args, **kwargs):
-        super(Bill, self).__init__(*args, **kwargs)
-        self.from_organization = override_relation(self.from_organization)
-        self.legislative_session = override_relation(self.legislative_session)
-    
+    @property
+    def from_organization(self):
+        return override_relation(self._from_organization)
+
+    @property
+    def legislative_session(self):
+        return override_relation(self._legislative_session)
+
     def __str__(self):
         return self.friendly_name
 
@@ -173,13 +179,13 @@ class Organization(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
     classification = models.CharField(max_length=255, null=True)
-    parent = models.ForeignKey('self', related_name='children', null=True, db_column='parent_id')
+    _parent = models.ForeignKey('self', related_name='children', null=True, db_column='parent_id')
     source_url = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
-
-    def __init__(self, *args, **kwargs):
-        super(Organization, self).__init__(*args, **kwargs)
-        self.parent = override_relation(self.parent)
+    
+    @property
+    def parent(self):
+        return override_relation(self._parent)
 
     def __str__(self):
         return self.name
@@ -212,14 +218,26 @@ class Action(models.Model):
     date = models.DateTimeField(default=None)
     classification = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    organization = models.ForeignKey('Organization', related_name='actions', null=True)
-    bill = models.ForeignKey('Bill', related_name='actions', null=True)
+    
+    _organization = models.ForeignKey('Organization', 
+                                      related_name='actions', 
+                                      null=True, 
+                                      db_column='organization_id')
+
+    _bill = models.ForeignKey('Bill', 
+                              related_name='actions', 
+                              null=True, 
+                              db_column='bill_id')
+
     order = models.IntegerField()
     
-    def __init__(self, *args, **kwargs):
-        super(Action, self).__init__(*args, **kwargs)
-        self.bill = override_relation(self.bill)
-        self.organization = override_relation(self.organization)
+    @property
+    def bill(self):
+        return override_relation(self._bill)
+
+    @property
+    def organization(self):
+        return override_relation(self._organization)
 
     @property 
     def label(self):
@@ -241,25 +259,25 @@ class Action(models.Model):
         else: return 'info'
 
 class ActionRelatedEntity(models.Model):
-    action = models.ForeignKey('Action', related_name='related_entities')
+    _action = models.ForeignKey('Action', related_name='related_entities', db_column='action_id')
     entity_type = models.CharField(max_length=100)
     entity_name = models.CharField(max_length=255)
     organization_ocd_id = models.CharField(max_length=100, blank=True)
     person_ocd_id = models.CharField(max_length=100, blank=True)
     
-    def __init__(self, *args, **kwargs):
-        super(ActionRelatedEntity, self).__init__(*args, **kwargs)
-        self.action = override_relation(self.action)
+    @property
+    def action(self):
+        return override_relation(self._action)
 
 class Post(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
     label = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
-    organization = models.ForeignKey('Organization', related_name='posts')
+    _organization = models.ForeignKey('Organization', related_name='posts', db_column='organization_id')
     
-    def __init__(self, *args, **kwargs):
-        super(Post, self).__init__(*args, **kwargs)
-        self.organization = override_relation(self.organization)
+    @property
+    def organization(self):
+        return override_relation(self._organization)
 
     @property
     def current_member(self):
@@ -273,30 +291,39 @@ class Post(models.Model):
             return None
 
 class Membership(models.Model):
-    organization = models.ForeignKey('Organization', related_name='memberships')
-    person = models.ForeignKey('Person', related_name='memberships')
-    post = models.ForeignKey('Post', related_name='memberships', null=True)
+    _organization = models.ForeignKey('Organization', related_name='memberships', db_column='organization_id')
+    _person = models.ForeignKey('Person', related_name='memberships', db_column='person_id')
+    _post = models.ForeignKey('Post', related_name='memberships', null=True, db_column='post_id')
     label = models.CharField(max_length=255, blank=True)
     role = models.CharField(max_length=255, blank=True)
     start_date = models.DateField(default=None, null=True)
     end_date = models.DateField(default=None, null=True)
     
-    def __init__(self, *args, **kwargs):
-        super(Membership, self).__init__(*args, **kwargs)
-        self.organization = override_relation(self.organization)
-        self.person = override_relation(self.person)
-        self.post = override_relation(self.post)
+    @property
+    def organization(self):
+        return override_relation(self._organization)
+    
+    @property
+    def person(self):
+        return override_relation(self._person)
+    
+    @property
+    def post(self):
+        return override_relation(self._post)
 
 class Sponsorship(models.Model):
-    bill = models.ForeignKey('Bill', related_name='sponsorships')
-    person = models.ForeignKey('Person', related_name='sponsorships')
+    _bill = models.ForeignKey('Bill', related_name='sponsorships', db_column='bill_id')
+    _person = models.ForeignKey('Person', related_name='sponsorships', db_column='person_id')
     classification = models.CharField(max_length=255)
     is_primary = models.BooleanField(default=False)
     
-    def __init__(self, *args, **kwargs):
-        super(Sponsorship, self).__init__(*args, **kwargs)
-        self.bill = override_relation(self.bill)
-        self.person = override_relation(self.person)
+    @property
+    def bill(self):
+        return override_relation(self._bill)
+    
+    @property
+    def person(self):
+        return override_relation(self._person)
 
     def __str__(self):
         return '{0} ({1})'.format(self.bill.identifier, self.person.name)
