@@ -125,7 +125,7 @@ class PersonDetailView(DetailView):
         context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-bill__last_action_date')]
         context['chairs'] = person.memberships.filter(role="CHAIRPERSON")
         context['memberships'] = person.memberships.filter(role="Committee Member")
-
+        
         return context
 
 
@@ -188,7 +188,7 @@ class EventDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
         
-        participants = [p.name for p in context['event'].participants.all()]
+        participants = [p.entity_name for p in context['event'].participants.all()]
         context['participants'] = Organization.objects.filter(name__in=participants)
         
         return context

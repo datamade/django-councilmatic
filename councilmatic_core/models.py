@@ -31,7 +31,7 @@ def override_relation(base_model):
                 attrs = [f.attname for f in base_model.__class__._meta.fields] + ['_state']
                 for attr in attrs:
                     setattr(overridden, attr, getattr(base_model, attr))
-
+                
         except TypeError:
             pass
     
