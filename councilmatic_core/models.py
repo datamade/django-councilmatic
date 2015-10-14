@@ -3,6 +3,8 @@ from datetime import datetime
 from django.core.exceptions import ImproperlyConfigured
 import pytz
 from django.conf import settings
+import inspect
+import importlib
 
 if not hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
     raise ImproperlyConfigured('You must define a OCD_COUNCIL_ID in settings.py')
@@ -11,6 +13,30 @@ if not hasattr(settings, 'CITY_COUNCIL_NAME'):
     raise ImproperlyConfigured('You must define a CITY_COUNCIL_NAME in settings.py')
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
+
+def override_relation(base_model):
+    
+    models_module = '{0}.models'.format(settings.APP_NAME)
+    app_models = importlib.import_module(models_module)
+    
+    overridden = base_model
+    for name, member in inspect.getmembers(app_models):
+        
+        try:
+            if issubclass(member, base_model.__class__):
+                module = __import__(models_module, globals(), locals(), [name])
+                
+                overridden = getattr(module, name)()
+
+                attrs = [f.attname for f in base_model.__class__._meta.fields] + ['_state']
+                for attr in attrs:
+                    setattr(overridden, attr, getattr(base_model, attr))
+
+        except TypeError:
+            pass
+    
+    return overridden
+
 
 class Person(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
@@ -58,13 +84,26 @@ class Bill(models.Model):
     date_updated = models.DateTimeField(default=None, null=True)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
-    from_organization = models.ForeignKey('Organization', related_name='bills', null=True)
+
+    from_organization = models.ForeignKey('Organization', 
+                                           related_name='bills', 
+                                           null=True)
+
     full_text = models.TextField(blank=True)
     abstract = models.TextField(blank=True)
     last_action_date = models.DateTimeField(default=None, null=True)
-    legislative_session = models.ForeignKey('LegislativeSession', related_name='bills', null=True)
+    
+    legislative_session = models.ForeignKey('LegislativeSession', 
+                                             related_name='bills', 
+                                             null=True)
+    
     slug = models.CharField(max_length=255, unique=True)
-
+    
+    def __init__(self, *args, **kwargs):
+        super(Bill, self).__init__(*args, **kwargs)
+        self.from_organization = override_relation(self.from_organization)
+        self.legislative_session = override_relation(self.legislative_session)
+    
     def __str__(self):
         return self.friendly_name
 
@@ -134,9 +173,13 @@ class Organization(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
     classification = models.CharField(max_length=255, null=True)
-    parent = models.ForeignKey('self', related_name='children', null=True)
+    parent = models.ForeignKey('self', related_name='children', null=True, db_column='parent_id')
     source_url = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
+
+    def __init__(self, *args, **kwargs):
+        super(Organization, self).__init__(*args, **kwargs)
+        self.parent = override_relation(self.parent)
 
     def __str__(self):
         return self.name
@@ -172,6 +215,11 @@ class Action(models.Model):
     organization = models.ForeignKey('Organization', related_name='actions', null=True)
     bill = models.ForeignKey('Bill', related_name='actions', null=True)
     order = models.IntegerField()
+    
+    def __init__(self, *args, **kwargs):
+        super(Action, self).__init__(*args, **kwargs)
+        self.bill = override_relation(self.bill)
+        self.organization = override_relation(self.organization)
 
     @property 
     def label(self):
@@ -198,12 +246,20 @@ class ActionRelatedEntity(models.Model):
     entity_name = models.CharField(max_length=255)
     organization_ocd_id = models.CharField(max_length=100, blank=True)
     person_ocd_id = models.CharField(max_length=100, blank=True)
+    
+    def __init__(self, *args, **kwargs):
+        super(ActionRelatedEntity, self).__init__(*args, **kwargs)
+        self.action = override_relation(self.action)
 
 class Post(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
     label = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
     organization = models.ForeignKey('Organization', related_name='posts')
+    
+    def __init__(self, *args, **kwargs):
+        super(Post, self).__init__(*args, **kwargs)
+        self.organization = override_relation(self.organization)
 
     @property
     def current_member(self):
@@ -224,12 +280,23 @@ class Membership(models.Model):
     role = models.CharField(max_length=255, blank=True)
     start_date = models.DateField(default=None, null=True)
     end_date = models.DateField(default=None, null=True)
+    
+    def __init__(self, *args, **kwargs):
+        super(Membership, self).__init__(*args, **kwargs)
+        self.organization = override_relation(self.organization)
+        self.person = override_relation(self.person)
+        self.post = override_relation(self.post)
 
 class Sponsorship(models.Model):
     bill = models.ForeignKey('Bill', related_name='sponsorships')
     person = models.ForeignKey('Person', related_name='sponsorships')
     classification = models.CharField(max_length=255)
     is_primary = models.BooleanField(default=False)
+    
+    def __init__(self, *args, **kwargs):
+        super(Sponsorship, self).__init__(*args, **kwargs)
+        self.bill = override_relation(self.bill)
+        self.person = override_relation(self.person)
 
     def __str__(self):
         return '{0} ({1})'.format(self.bill.identifier, self.person.name)
@@ -284,16 +351,29 @@ class EventParticipant(models.Model):
     note = models.TextField()
     entity_name = models.CharField(max_length=255)
     entity_type = models.CharField(max_length=100)
+    
+    def __init__(self, *args, **kwargs):
+        super(EventParticipant, self).__init__(*args, **kwargs)
+        self.event = override_relation(self.event)
 
 class EventAgendaItem(models.Model):
     event = models.ForeignKey('Event', related_name='agenda_items')
     order = models.IntegerField()
     description = models.TextField()
+    
+    def __init__(self, *args, **kwargs):
+        super(EventAgendaItem, self).__init__(*args, **kwargs)
+        self.event = override_relation(self.event)
 
 class AgendaItemBill(models.Model):
     agenda_item = models.ForeignKey('EventAgendaItem', related_name='related_bills')
     bill = models.ForeignKey('Bill', related_name='related_agenda_items')
     note = models.CharField(max_length=255)
+    
+    def __init__(self, *args, **kwargs):
+        super(AgendaItemBill, self).__init__(*args, **kwargs)
+        self.agenda_item = override_relation(self.agenda_item)
+        self.bill = override_relation(self.bill)
 
 class Document(models.Model):
     note = models.TextField()
@@ -302,10 +382,20 @@ class Document(models.Model):
 class BillDocument(models.Model):
     bill = models.ForeignKey('Bill', related_name='documents')
     document = models.ForeignKey('Document', related_name='bills')
+    
+    def __init__(self, *args, **kwargs):
+        super(BillDocument, self).__init__(*args, **kwargs)
+        self.bill = override_relation(self.bill)
+        self.document = override_relation(self.document)
 
 class EventDocument(models.Model):
     event = models.ForeignKey('Event', related_name='documents')
     document = models.ForeignKey('Document', related_name='events')
+    
+    def __init__(self, *args, **kwargs):
+        super(EventDocument, self).__init__(*args, **kwargs)
+        self.event = override_relation(self.event)
+        self.document = override_relation(self.document)
 
 class LegislativeSession(models.Model):
     identifier = models.CharField(max_length=255)
