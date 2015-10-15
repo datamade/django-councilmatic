@@ -131,7 +131,7 @@ class PersonDetailView(DetailView):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
         
         person = context['person']
-        context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')]
+        context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')[:10]]
         context['chairs'] = person.memberships.filter(role="CHAIRPERSON")
         context['memberships'] = person.memberships.filter(role="Committee Member")
         
