@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-councilmatic',
-    version='0.2',
+    version='0.2.1',
     packages=['councilmatic_core'],
     include_package_data=True,
     license='MIT License',  # example license
