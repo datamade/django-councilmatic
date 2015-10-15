@@ -108,7 +108,7 @@
 
             <p>
                 <a class="small" href="/legislation/{{ result.object.slug }}">{{ result.object.friendly_name }}</a>
-                <span class='label label-{{result.object.inferred_status | lower}}'>{{result.object.inferred_status}}</span>
+                {{ legislation.inferred_status | inferred_status_label | safe }}
             </p>
 
 

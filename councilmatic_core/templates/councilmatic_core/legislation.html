@@ -9,7 +9,9 @@
                 <h1 class="bill-page-title">
                     <br/>
                     {{ legislation.friendly_name }}
-                    <span class='label label-{{legislation.inferred_status | lower}} pull-right'>{{legislation.inferred_status}}</span>
+                    <span class="pull-right">
+                        {{ legislation.inferred_status | inferred_status_label | safe }}
+                    </span>
                 </h1>
             </div>
         </div>

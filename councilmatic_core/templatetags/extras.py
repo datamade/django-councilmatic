@@ -12,6 +12,11 @@ def sentence_case(value):
 
 @register.filter
 @stringfilter
+def inferred_status_label(status):
+    return "<span class='label label-"+status.lower()+"'>"+status+"</span>"
+
+@register.filter
+@stringfilter
 def facet_name(value):
     if value == 'bill_type': return 'Legislation type'
     if value == 'sponsorships': return 'Sponsor'
