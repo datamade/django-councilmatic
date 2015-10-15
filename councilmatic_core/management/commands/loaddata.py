@@ -112,7 +112,7 @@ class Command(BaseCommand):
                         classification=page_json['classification'],
                         source_url=source_url,
                         slug=slugify(page_json['name']),
-                        parent=parent,
+                        _parent=parent,
                     )
             except IntegrityError:
                 ocd_id_part = organization_ocd_id.rsplit('-',1)[1]
@@ -122,7 +122,7 @@ class Command(BaseCommand):
                         classification=page_json['classification'],
                         source_url=source_url,
                         slug=slugify(page_json['name'])+ocd_id_part,
-                        parent=parent,
+                        _parent=parent,
                     )
         else:
             try:
@@ -154,7 +154,7 @@ class Command(BaseCommand):
                     ocd_id = post_json['id'],
                     label = post_json['label'],
                     role = post_json['role'],
-                    organization = org_obj,
+                    _organization = org_obj,
                 )
 
             # if created and DEBUG:
@@ -195,8 +195,8 @@ class Command(BaseCommand):
                 sponsor=Person.objects.filter(ocd_id=sponsor_json['entity_id']).first()
                 if sponsor:
                     obj, created = Sponsorship.objects.get_or_create(
-                            bill=bill,
-                            person=sponsor,
+                            _bill=bill,
+                            _person=sponsor,
                             classification=sponsor_json['classification'],
                             is_primary=sponsor_json['primary'],
                         )
@@ -284,10 +284,10 @@ class Command(BaseCommand):
                     date_updated=page_json['updated_at'],
                     source_url=page_json['sources'][0]['url'],
                     source_note=page_json['sources'][0]['note'],
-                    from_organization=from_org,
+                    _from_organization=from_org,
                     full_text=full_text,
                     abstract=abstract,
-                    legislative_session=legislative_session,
+                    _legislative_session=legislative_session,
                     bill_type=bill_type,
                     slug=slugify(page_json['identifier']),
                 )
@@ -302,10 +302,10 @@ class Command(BaseCommand):
                     date_updated=page_json['updated_at'],
                     source_url=page_json['sources'][0]['url'],
                     source_note=page_json['sources'][0]['note'],
-                    from_organization=from_org,
+                    _from_organization=from_org,
                     full_text=full_text,
                     abstract=abstract,
-                    legislative_session=legislative_session,
+                    _legislative_session=legislative_session,
                     bill_type=bill_type,
                     slug=slugify(page_json['identifier'])+ocd_id_part,
                 )
@@ -350,8 +350,8 @@ class Command(BaseCommand):
                 date=action_date,
                 classification=classification,
                 description=action_json['description'],
-                organization=org,
-                bill=bill,
+                _organization=org,
+                _bill=bill,
                 order=action_order,
             )
 
@@ -361,7 +361,7 @@ class Command(BaseCommand):
         for related_entity_json in action_json['related_entities']:
 
             action_related_entity = {
-                'action': action_obj,
+                '_action': action_obj,
                 'entity_name': related_entity_json['name'],
                 'entity_type': related_entity_json['entity_type'],
                 'organization_ocd_id': '',
@@ -498,9 +498,9 @@ class Command(BaseCommand):
                 start_date = None
 
             obj, created = Membership.objects.get_or_create(
-                    organization = organization,
-                    person = person,
-                    post = post,
+                    _organization = organization,
+                    _person = person,
+                    _post = post,
                     label = membership_json['label'],
                     role = membership_json['role'],
                     start_date = start_date,
