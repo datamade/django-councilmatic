@@ -46,21 +46,28 @@ class IndexView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(IndexView, self).get_context_data(**kwargs)
         
-        some_time_ago = date.today() + timedelta(days=-100)
-        
-        recent_legislation = self.bill_model.objects\
+        recently_passed = []
+        # go back in time at 10-day intervals til you find 3 passed bills
+        for i in range(0,-100, -10):
+            begin = date.today() + timedelta(days=i)
+            end = date.today() + timedelta(days=i-10)
+
+            leg_in_range = self.bill_model.objects\
                                  .exclude(last_action_date=None)\
-                                 .filter(last_action_date__gt=some_time_ago)\
+                                 .filter(last_action_date__lte=begin)\
+                                 .filter(last_action_date__gt=end)\
                                  .order_by('-last_action_date')
-        
-        recently_passed = [l for l in recent_legislation \
-                               if l.inferred_status == 'Passed' \
-                                   and l.bill_type == 'Introduction'][:3]
+            passed_in_range = [l for l in leg_in_range \
+                               if l.inferred_status == 'Passed']
+
+            recently_passed.extend(passed_in_range)
+            if len(recently_passed) >= 3:
+                recently_passed = recently_passed[:3]
+                break
 
         upcoming_meetings = list(self.event_model.upcoming_committee_meetings())
 
         return {
-            'recent_legislation': recent_legislation,
             'recently_passed': recently_passed,
             'next_council_meeting': self.event_model.next_city_council_meeting(),
             'upcoming_committee_meetings': upcoming_meetings,
