@@ -135,7 +135,7 @@ class Bill(models.Model):
 
     @property
     def date_passed(self):
-        return self.actions.filter(classification='executive-signature').order_by('-order').first().date if self.actions.all() else None
+        return self.actions.filter(classification='passage').order_by('-order').first().date if self.actions.all() else None
 
     @property
     def friendly_name(self):
