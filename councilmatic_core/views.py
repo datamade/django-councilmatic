@@ -29,6 +29,7 @@ class CouncilmaticSearchForm(FacetedSearchForm):
 def city_context(request):
     return {
         'SITE_META': getattr(settings, 'SITE_META', None),
+        'FOOTER_CREDITS': getattr(settings, 'FOOTER_CREDITS', None),
         'CITY_COUNCIL_NAME': getattr(settings, 'CITY_COUNCIL_NAME', None),
         'CITY_NAME': getattr(settings, 'CITY_NAME', None),
         'CITY_NAME_SHORT': getattr(settings, 'CITY_NAME_SHORT', None),

@@ -79,9 +79,12 @@
 
             <p>Part of the <a href='http://www.councilmatic.org'>Councilmatic family</a>. Proudly brought to you by</p>
 
-            <a href='http://www.participatorypolitics.org/'><img style='height:60px;' src='/static/images/ppf-logo.png' /></a>
-            <a href='http://www.ritaallen.org'><img style='height:60px;' src='/static/images/rita-allen-logo.png' /></a>
-            <a href='http://datamade.us'><img style='height:20px;' src='/static/images/datamade-logo.png' /></a>
+            {% for credit in FOOTER_CREDITS %}
+
+                <a href='{{credit.url}}' title='{{credit.name}}'><img style='max-height:60px; max-width: 120px;' src='/static/images/{{credit.image}}' /></a>
+
+            {% endfor %}
+            
         </div>
     </div>
 
