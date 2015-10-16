@@ -13,6 +13,7 @@ import itertools
 from operator import attrgetter
 
 import pytz
+import re
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
@@ -135,6 +136,15 @@ class PersonDetailView(DetailView):
         context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')[:10]]
         context['chairs'] = person.memberships.filter(role="CHAIRPERSON")
         context['memberships'] = person.memberships.filter(role="Committee Member")
+
+        seo = settings.SITE_META
+        if person.council_seat:
+            short_name = re.sub(r',.*','', person.name)
+            seo['site_desc'] = '%s - %s representative in %s. See what %s has been up to!' %(person.name, person.council_seat, settings.CITY_COUNCIL_NAME, short_name)
+        else:
+            seo['site_desc'] = 'Details on %s, %s' %(person.name, settings.CITY_COUNCIL_NAME)
+        print(seo)
+        context['seo'] = seo
         
         return context
 
