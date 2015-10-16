@@ -96,6 +96,10 @@ class BillDetailView(DetailView):
         context = super(BillDetailView, self).get_context_data(**kwargs)
         
         context['actions'] = self.get_object().actions.all().order_by('-order')
+
+        seo = settings.SITE_META
+        seo['site_desc'] = "%s legislation detail for %s" %(settings.CITY_COUNCIL_NAME, context['legislation'].friendly_name)
+        context['seo'] = seo
         
         return context
 
@@ -119,8 +123,12 @@ class CommitteeDetailView(DetailView):
         context['memberships'] = committee.memberships.filter(role='Committee Member')
         
         if getattr(settings, 'COMMITTEE_DESCRIPTIONS', None):
-            description = settings.COMMITTEE_DESCRIPTIONS.get(self.get_slug())
+            description = settings.COMMITTEE_DESCRIPTIONS.get(committee.slug)
             context['committee_description'] = description
+
+        seo = settings.SITE_META
+        seo['site_desc'] = "See what %s's %s has been up to!" %(settings.CITY_COUNCIL_NAME, committee.name)
+        context['seo'] = seo
 
         return context
 
@@ -143,7 +151,6 @@ class PersonDetailView(DetailView):
             seo['site_desc'] = '%s - %s representative in %s. See what %s has been up to!' %(person.name, person.council_seat, settings.CITY_COUNCIL_NAME, short_name)
         else:
             seo['site_desc'] = 'Details on %s, %s' %(person.name, settings.CITY_COUNCIL_NAME)
-        print(seo)
         context['seo'] = seo
         
         return context
@@ -210,6 +217,10 @@ class EventDetailView(DetailView):
         
         participants = [p.entity_name for p in context['event'].participants.all()]
         context['participants'] = Organization.objects.filter(name__in=participants)
+
+        seo = settings.SITE_META
+        seo['site_desc'] = 'Event details for %s, %s' %(context['event'].name, settings.CITY_COUNCIL_NAME)
+        context['seo'] = seo
         
         return context
 
