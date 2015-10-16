@@ -196,7 +196,7 @@ class Organization(models.Model):
 
     @property
     def recent_activity(self):
-        return self.actions.order_by('-date', '-bill__identifier', '-order') if self.actions.all() else None
+        return self.actions.order_by('-date', '-_bill__identifier', '-order') if self.actions.all() else None
 
     @property
     def chairs(self):
