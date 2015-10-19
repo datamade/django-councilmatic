@@ -41,8 +41,8 @@ def remove_action_subj(bill_action_desc):
 @register.filter
 @stringfilter
 def short_blurb(text_blob):
-    if len(text_blob) > 200:
-        blurb = text_blob[:200]
+    if len(text_blob) > 196:
+        blurb = text_blob[:196]
         blurb = blurb[:blurb.rfind(' ')]+' ...'
         return blurb
     else:
