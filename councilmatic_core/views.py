@@ -158,6 +158,7 @@ class PersonDetailView(DetailView):
         else:
             seo['site_desc'] = 'Details on %s, %s' %(person.name, settings.CITY_COUNCIL_NAME)
         seo['title'] = '%s - %s' %(person.name, settings.SITE_META['site_name'])
+        seo['image'] = person.headshot_url
         context['seo'] = seo
         
         return context

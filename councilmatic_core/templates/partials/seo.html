@@ -19,7 +19,11 @@
     <meta property="og:type" content="website">
     <meta property="og:description" content="{{seo.site_desc}}">
     <meta property="og:url" content="{{seo.site_url}}">
-    <meta property="og:image" content="{{seo.site_url}}{% static 'images/logo-lg.png' %}">
+    {% if seo.image %}
+        <meta property="og:image" content="{{seo.site_url}}{{seo.image}}">
+    {% else %}
+        <meta property="og:image" content="{{seo.site_url}}{% static 'images/logo-lg.png' %}">
+    {% endif %}
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary">
@@ -32,7 +36,11 @@
         <meta name="twitter:title" content="{{seo.site_name}}">
     {% endif %}
     <meta name="twitter:url" content="{{seo.site_url}}">
-    <meta name="twitter:image:src" content="{{seo.site_url}}{% static 'images/logo-lg.png' %}">
+    {% if seo.image %}
+        <meta name="twitter:image:src" content="{{seo.site_url}}{{seo.image}}">
+    {% else %}
+        <meta name="twitter:image:src" content="{{seo.site_url}}{% static 'images/logo-lg.png' %}">
+    {% endif %}
 {% else %}
     <meta name="description" content="{{SITE_META.site_desc}}">
     <meta name="author" content="{{SITE_META.site_author}}">
