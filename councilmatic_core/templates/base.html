@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     <title>{% block title %}{% endblock %} - {{SITE_META.site_name}}</title>
-    
+
     {% include 'partials/seo.html' %}
 
     <link href="{% static 'images/favicon.png' %}" rel="shortcut icon">
@@ -57,14 +57,18 @@
         <div class='col-sm-12'>
             <div class='clearfix'></div>
 
-            <p>Part of the <a href='http://www.councilmatic.org'>Councilmatic family</a>. Proudly brought to you by</p>
+            {% if FOOTER_CREDITS %}
+                <p>Part of the <a href='http://www.councilmatic.org'>Councilmatic family</a>. Proudly brought to you by</p>
 
-            {% for credit in FOOTER_CREDITS %}
+                {% for credit in FOOTER_CREDITS %}
 
-                <a href='{{credit.url}}' title='{{credit.name}}'><img style='max-height:60px; max-width: 120px;' src='/static/images/{{credit.image}}' /></a>
+                    <a href='{{credit.url}}' title='{{credit.name}}'><img style='max-height:60px; max-width: 120px;' src='/static/images/{{credit.image}}' /></a>
 
-            {% endfor %}
-            
+                {% endfor %}
+            {% else %}
+                <p>Part of the <a href='http://www.councilmatic.org'>Councilmatic family</a>.</p>
+            {% endif %}
+                
         </div>
     </div>
 
