@@ -98,7 +98,8 @@ class BillDetailView(DetailView):
         context['actions'] = self.get_object().actions.all().order_by('-order')
         bill = context['legislation']
 
-        seo = settings.SITE_META
+        seo = {}
+        seo.update(settings.SITE_META)
         seo['site_desc'] = bill.listing_description
         seo['title'] = '%s - %s' %(bill.friendly_name, settings.SITE_META['site_name'])
         context['seo'] = seo
@@ -128,7 +129,8 @@ class CommitteeDetailView(DetailView):
             description = settings.COMMITTEE_DESCRIPTIONS.get(committee.slug)
             context['committee_description'] = description
 
-        seo = settings.SITE_META
+        seo = {}
+        seo.update(settings.SITE_META)
         if description:
             seo['site_desc'] = description
         else:
@@ -151,7 +153,8 @@ class PersonDetailView(DetailView):
         context['chairs'] = person.memberships.filter(role="CHAIRPERSON")
         context['memberships'] = person.memberships.filter(role="Committee Member")
 
-        seo = settings.SITE_META
+        seo = {}
+        seo.update(settings.SITE_META)
         if person.council_seat:
             short_name = re.sub(r',.*','', person.name)
             seo['site_desc'] = '%s - %s representative in %s. See what %s has been up to!' %(person.name, person.council_seat, settings.CITY_COUNCIL_NAME, short_name)
@@ -227,7 +230,8 @@ class EventDetailView(DetailView):
         participants = [p.entity_name for p in event.participants.all()]
         context['participants'] = Organization.objects.filter(name__in=participants)
 
-        seo = settings.SITE_META
+        seo = {}
+        seo.update(settings.SITE_META)
         seo['site_desc'] = 'Public city council event on %s/%s/%s - view event participants & agenda items' %(event.start_time.month, event.start_time.day, event.start_time.year)
         seo['title'] = '%s Event - %s' %(event.name, settings.SITE_META['site_name'])
         context['seo'] = seo
