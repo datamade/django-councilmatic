@@ -1,7 +1,23 @@
-Councilmatic
-====================
+django-councilmtic
+===========
 
-Reusable Django app providing the core functions for Councilmatic
+This is a Django app with core functions for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the open civic data standard, and ultimately makes Councilmatic easier to re-deploy in new cities.
+
+django-councilmatic includes:
+
+- data models for bills, people, organizations, events, and more
+- a task to load data from the open civic data api
+- views & templates for bill/person/organization/event pages, search, and more
+
+The `Councilmatic family <http://www.councilmatic.org/>`_ includes:
+
+- Philly Councilmatic (the original & first Councilmatic, by Mjumbe Poe. since it preceded django-councilmatic, it does not use django-councilmatic)
+- Chicago Councilmatic (the live website doesn't use django-councilmatic, but we are actively re-building it)
+- New York City Councilmatic (launched & built on django-councilmatic)
+
+Councilmatic in your city
+----
+If you're interested in bringing Councilmatic to your city, `contact us <mailto:info@councilmatic.org>`_! We'd love to help.
 
 Team
 ----
@@ -17,7 +33,7 @@ Errors / Bugs
 
 If something is not behaving intuitively, it is a bug, and should be
 reported. Report it here:
-https://github.com/datamade/chi-councilmatic/issues
+https://github.com/datamade/django-councilmatic/issues
 
 Note on Patches/Pull Requests
 -----------------------------
