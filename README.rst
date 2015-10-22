@@ -1,4 +1,4 @@
-django-councilmtic
+django-councilmatic
 ===========
 
 This is a Django app with core functions for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the open civic data standard, and ultimately makes Councilmatic easier to re-deploy in new cities.
