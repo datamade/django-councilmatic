@@ -27,6 +27,9 @@ class CouncilmaticSearchForm(FacetedSearchForm):
     def no_query_found(self):
         return self.searchqueryset.all()
 
+# This is used by a context processor in settings.py to render these variables
+# into the context of every page.
+
 def city_context(request):
     return {
         'SITE_META': getattr(settings, 'SITE_META', None),
@@ -37,6 +40,7 @@ def city_context(request):
         'SEARCH_PLACEHOLDER_TEXT': getattr(settings,'SEARCH_PLACEHOLDER_TEXT', None),
         'LEGISLATION_TYPE_DESCRIPTIONS': getattr(settings,'LEGISLATION_TYPE_DESCRIPTIONS', None),
         'LEGISTAR_URL': getattr(settings,'LEGISTAR_URL', None),
+        'DISQUS_SHORTNAME': getattr(settings, 'DISQUS_SHORTNAME', None)
     }
 
 class IndexView(TemplateView):
