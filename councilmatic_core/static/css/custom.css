@@ -241,6 +241,10 @@ select {
     list-style-type: none;
 }
 
+.hidden{
+    display: none;
+}
+
 
 
 /* medium screens */
