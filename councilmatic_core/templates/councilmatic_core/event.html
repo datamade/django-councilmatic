@@ -58,4 +58,23 @@
         </div>
     </div>
 
+
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "Event",
+      "location": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "{{ CITY_NAME }}",
+        },
+        "name": "{{event.location_name}}"
+      },
+      "name": "{{event.name}}",
+      "startDate": "{{event.start_time.iso_format}}",
+      "url" : "{{event.source_url}}"
+    }
+    </script>
+
 {% endblock %}
