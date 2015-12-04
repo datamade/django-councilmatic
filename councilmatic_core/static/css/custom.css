@@ -88,6 +88,9 @@ h1, h2, h3, h4 {
 .less-pad-list{
     padding-left: 12px;
 }
+.condensed{
+    margin-bottom: 0;
+}
 
 .badge-muted{
     background-color: #aaa;
@@ -170,7 +173,6 @@ h1, h2, h3, h4 {
     background-color: #EB6864;
     color: #fff;
 }
-
 
 .x-small{
     font-size: .75em;
