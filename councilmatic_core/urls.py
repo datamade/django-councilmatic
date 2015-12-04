@@ -13,4 +13,5 @@ urlpatterns = [
     url(r'^person/(?P<slug>.*)/$', views.PersonDetailView.as_view(), name='person'),
     url(r'^events/$', views.EventsView.as_view(), name='events'),
     url(r'^event/(?P<slug>.*)/$', views.EventDetailView.as_view(), name='event_detail'),
+    url(r'^flush-cache/(.*)/$', views.flush, name='flush'),
 ]

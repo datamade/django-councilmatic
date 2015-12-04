@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Max, Min
+from django.core.cache import cache
 from .models import Person, Bill, Organization, Action, Event, Post
 from haystack.forms import FacetedSearchForm
 from datetime import date, timedelta, datetime
@@ -244,3 +245,13 @@ class EventDetailView(DetailView):
 
 def not_found(request):
     return render(request, 'councilmatic_core/404.html')
+
+def flush(request, flush_key):
+
+    try:
+        if flush_key == settings.FLUSH_KEY:
+            cache.clear()
+    except AttributeError:
+        print("\n\n** NOTE: to use flush-cache, set FLUSH_KEY in settings_local.py **\n\n")
+
+    return redirect('index')
