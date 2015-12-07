@@ -108,7 +108,7 @@
 
             <p>
                 <a class="small" href="/legislation/{{ result.object.slug }}">{{ result.object.friendly_name }}</a>
-                {{ legislation.inferred_status | inferred_status_label | safe }}
+                {{ result.object.inferred_status | inferred_status_label | safe }}
             </p>
 
 
@@ -134,7 +134,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <p class="small text-muted condensed">
                 <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
             </p>
