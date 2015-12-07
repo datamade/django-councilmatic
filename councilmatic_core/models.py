@@ -113,6 +113,10 @@ class Bill(models.Model):
     def __str__(self):
         return self.friendly_name
 
+    # the organization that's currently 'responsible' for a bill
+    # this is usually whatever organization performed the most recent action, EXCEPT
+    # for the case of bill referrals (when a bill is referred from city council to a committee), 
+    # in which case it's the organization the bill was referred to
     @property
     def controlling_body(self):
         if self.current_action:
@@ -125,10 +129,12 @@ class Bill(models.Model):
         else:
             return None
 
+    # whatever organization performed the most recent action
     @property
     def last_action_org(self):
         return self.current_action.organization if self.current_action else None
 
+    # the most recent action on a bill
     @property
     def current_action(self):
         return self.actions.all().order_by('-order').first() if self.actions.all() else None
@@ -137,16 +143,22 @@ class Bill(models.Model):
     def date_passed(self):
         return self.actions.filter(classification='passage').order_by('-order').first().date if self.actions.all() else None
 
+    # this is what is used as the title (heading) for bills
+    # throughout the site (bill listings, bill detail pages)
     @property
     def friendly_name(self):
         return self.identifier
 
+    # the primary sponsorship for a bill
     @property
     def primary_sponsor(self):
         return self.sponsorships.filter(is_primary=True).first()
 
+    # by default this returns the committees that have been
+    # involved in the bill's history (the actions)
+    # override this in custom subclass for richer topic logic
     @property
-    def committees_involved(self):
+    def topics(self):
         if self.actions.all():
             
             orgs = set([a.organization.name for a in self.actions.all() if \
@@ -162,9 +174,12 @@ class Bill(models.Model):
         else:
             return None
 
+    # bill status appears in colored labels next to bill names
+    # override this in custom subclass w/ richer logic for determining
+    # bill status, e.g. active, passed, approved, failed, stale
     @property
     def inferred_status(self):
-        return 'Active'
+        return None
 
     @property
     def listing_description(self):
@@ -172,6 +187,7 @@ class Bill(models.Model):
             return self.abstract
         return self.description
 
+    # date of most recent activity on a bill
     def get_last_action_date(self):
         return self.actions.all().order_by('-order').first().date if self.actions.all() else None
 

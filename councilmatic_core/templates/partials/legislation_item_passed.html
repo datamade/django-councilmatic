@@ -19,11 +19,13 @@
     </div>
 </div>
 <p>
-    <i class="fa fa-fw fa-tag"></i>
-    {% for c in legislation.committees_involved %}
-        <span class="badge badge-muted pseudo-topic-tag">
-            {{ c | committee_topic_only }}
-        </span>&nbsp;
-    {% endfor %}
+    {% if legislation.topics %}
+        <i class="fa fa-fw fa-tag"></i>
+        {% for tag in legislation.topics %}
+            <span class="badge badge-muted pseudo-topic-tag">
+                {{ tag | committee_topic_only }}
+            </span>&nbsp;
+        {% endfor %}
+    {% endif %}
     <br/><br/>
 </p>

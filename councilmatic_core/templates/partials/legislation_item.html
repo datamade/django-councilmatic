@@ -26,11 +26,11 @@
 <p>
     <span class="small text-muted"><i class="fa fa-fw fa-calendar-o"></i> {{legislation.last_action_date|date:'n/d/Y'}} - {{legislation.current_action.description | remove_action_subj }}</span><br/>
 
-    {% if legislation.committees_involved %}
+    {% if legislation.topics %}
         <i class="fa fa-fw fa-tag"></i>
-        {% for c in legislation.committees_involved %}
+        {% for tag in legislation.topics %}
             <span class="badge badge-muted pseudo-topic-tag">
-                {{ c | committee_topic_only }}
+                {{ tag | committee_topic_only }}
             </span>&nbsp;
         {% endfor %}
         <br/>
