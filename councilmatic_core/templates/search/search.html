@@ -148,11 +148,11 @@
 
             <p class="condensed">
 
-                {% if result.object.committees_involved %}
+                {% if result.object.topics %}
                     <i class="fa fa-fw fa-tag"></i>
-                    {% for c in result.object.committees_involved %}
+                    {% for tag in result.object.topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            {{ c | committee_topic_only }}
+                            {{ tag | committee_topic_only }}
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
