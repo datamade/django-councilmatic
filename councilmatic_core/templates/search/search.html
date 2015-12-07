@@ -65,6 +65,24 @@
                         {% endfor %}
                     </ul>
 
+                    {% if facets.fields.topics %}
+                        <p><strong>Topics</strong></p>
+
+                        <ul class="search-facet-list">
+                            {% for name, count in facets.fields.topics %}
+                                {% if count %}
+                                    <li class="small">
+                                        <a href="/search/?q={{query}}&selected_facets=controlling_body_exact:{{name}}" title="{{ name|title }}">
+                                            {{ name }}
+                                        </a>
+
+                                        <span class="badge badge-muted pull-right">{{ count }}</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
                     <p><strong>Controlling Body</strong></p>
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.controlling_body %}
