@@ -37,7 +37,7 @@
                         Filter by Status <i class="fa fa-fw fa-plus pull-right"></i></a>
                     </h3>
                 </div>
-                <div class="panel-body collapse" id="filter-status">
+                <div class="panel-body panel-show collapse" id="filter-status">
 
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.inferred_status %}
@@ -63,7 +63,7 @@
                         Filter by Legislation Type <i class="fa fa-fw fa-plus pull-right"></i></a>
                     </h3>
                 </div>
-                <div class="panel-body collapse" id="filter-type">
+                <div class="panel-body panel-show collapse" id="filter-type">
 
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.bill_type %}
@@ -95,7 +95,19 @@
 
                         <ul class="search-facet-list">
                             {% for name, count in facets.fields.topics %}
-                                {% if count %}
+                                {% if count and name == 'Routine' or name == 'Non-Routine'%}
+                                    <li class="small">
+                                        <a href="/search/?q={{query}}&selected_facets=controlling_body_exact:{{name}}" title="{{ name|title }}">
+                                            {{ name }}
+                                        </a>
+
+                                        <span class="badge badge-muted pull-right">{{ count }}</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            <hr/>
+                            {% for name, count in facets.fields.topics %}
+                                {% if count and name != 'Routine' and name != 'Non-Routine'%}
                                     <li class="small">
                                         <a href="/search/?q={{query}}&selected_facets=controlling_body_exact:{{name}}" title="{{ name|title }}">
                                             {{ name }}
@@ -286,7 +298,7 @@
     <script>
         $(function() {
             if ($(window).width() >= 768) {
-                $('.panel-body').collapse('show');
+                $('.panel-show').collapse('show');
             }
         });
     </script>
