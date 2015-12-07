@@ -28,16 +28,17 @@
 
     <div class="row">
         <div class="col-sm-4">
+
+            <!-- Legislation Status -->
             <div class="panel panel-default">
-                <div class="panel-heading" data-toggle="collapse" data-target="#search-filters-mobile">
+                <div class="panel-heading" data-toggle="collapse" data-target="#filter-status">
                     <h3 class="panel-title">
                         <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        Filter results <i class="fa fa-fw fa-plus pull-right"></i></a>
+                        Filter by Status <i class="fa fa-fw fa-plus pull-right"></i></a>
                     </h3>
                 </div>
-                <div class="panel-body collapse" id="search-filters-mobile">
+                <div class="panel-body collapse" id="filter-status">
 
-                    <p><strong>Legislation status</strong></p>
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.inferred_status %}
                             {% if count %}
@@ -51,7 +52,19 @@
                         {% endfor %}
                     </ul>
 
-                    <p><strong>Legislation type</strong></p>
+                </div>
+            </div>
+
+            <!-- Legislation Type -->
+            <div class="panel panel-default">
+                <div class="panel-heading" data-toggle="collapse" data-target="#filter-type">
+                    <h3 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Filter by Legislation Type <i class="fa fa-fw fa-plus pull-right"></i></a>
+                    </h3>
+                </div>
+                <div class="panel-body collapse" id="filter-type">
+
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.bill_type %}
                             {% if count %}
@@ -65,8 +78,20 @@
                         {% endfor %}
                     </ul>
 
+                </div>
+            </div>
+            
+            <!-- Topic -->
+            <div class="panel panel-default">
+                <div class="panel-heading" data-toggle="collapse" data-target="#filter-topic">
+                    <h3 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Filter by Topic <i class="fa fa-fw fa-plus pull-right"></i></a>
+                    </h3>
+                </div>
+                <div class="panel-body collapse" id="filter-topic">
+
                     {% if facets.fields.topics %}
-                        <p><strong>Topics</strong></p>
 
                         <ul class="search-facet-list">
                             {% for name, count in facets.fields.topics %}
@@ -83,7 +108,19 @@
                         </ul>
                     {% endif %}
 
-                    <p><strong>Controlling Body</strong></p>
+                </div>
+            </div>
+            
+            <!-- Controlling Body -->
+            <div class="panel panel-default">
+                <div class="panel-heading" data-toggle="collapse" data-target="#filter-controlling-body">
+                    <h3 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Filter by Controlling Body <i class="fa fa-fw fa-plus pull-right"></i></a>
+                    </h3>
+                </div>
+                <div class="panel-body collapse" id="filter-controlling-body">
+
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.controlling_body %}
                             {% if count %}
@@ -98,7 +135,19 @@
                         {% endfor %}
                     </ul>
 
-                    <p><strong>Sponsor</strong></p>
+                </div>
+            </div>
+
+            <!-- Sponsor -->
+            <div class="panel panel-default">
+                <div class="panel-heading" data-toggle="collapse" data-target="#filter-sponsor">
+                    <h3 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Filter by Sponsor <i class="fa fa-fw fa-plus pull-right"></i></a>
+                    </h3>
+                </div>
+                <div class="panel-body collapse" id="filter-sponsor">
+
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.sponsorships %}
                             {% if count %}
@@ -113,7 +162,12 @@
 
                 </div>
             </div>
+
+
+
         </div>
+
+
 
         <div class="col-sm-8">
             {% if query %}
@@ -195,6 +249,8 @@
         {% endfor %}
         </div>
     </div>
+
+
     {% if page.has_previous or page.has_next %}
         <div class="row">
             <div class="col-md-8 col-md-offset-4">
@@ -230,7 +286,7 @@
     <script>
         $(function() {
             if ($(window).width() >= 768) {
-                $('#search-filters-mobile').collapse('show');
+                $('.panel-body').collapse('show');
             }
         });
     </script>
