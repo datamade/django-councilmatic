@@ -247,6 +247,21 @@ select {
     display: none;
 }
 
+/* search filters */
+.panel-filter{
+    margin-bottom: 4px;
+    border-radius: 0px;
+    border-color: #eee;
+    box-shadow: none;
+}
+.panel-filter > .panel-heading{
+    padding: 4px 8px;
+    background-color: #eee;
+    border-bottom: none;
+}
+.panel-filter > .panel-body{
+    padding: 8px 8px 0px 8px;
+}
 
 
 /* medium screens */

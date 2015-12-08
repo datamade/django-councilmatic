@@ -30,11 +30,11 @@
         <div class="col-sm-4">
 
             <!-- Legislation Status -->
-            <div class="panel panel-default">
+            <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-status">
                     <h3 class="panel-title">
                         <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        Filter by Status <i class="fa fa-fw fa-plus pull-right"></i></a>
+                        Filter by Status <i class="fa fa-fw fa-minus pull-right"></i></a>
                     </h3>
                 </div>
                 <div class="panel-body panel-show collapse" id="filter-status">
@@ -56,11 +56,11 @@
             </div>
 
             <!-- Legislation Type -->
-            <div class="panel panel-default">
+            <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-type">
                     <h3 class="panel-title">
                         <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        Filter by Legislation Type <i class="fa fa-fw fa-plus pull-right"></i></a>
+                        Filter by Legislation Type <i class="fa fa-fw fa-minus pull-right"></i></a>
                     </h3>
                 </div>
                 <div class="panel-body panel-show collapse" id="filter-type">
@@ -82,7 +82,7 @@
             </div>
             
             <!-- Topic -->
-            <div class="panel panel-default">
+            <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-topic">
                     <h3 class="panel-title">
                         <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
@@ -124,7 +124,7 @@
             </div>
             
             <!-- Controlling Body -->
-            <div class="panel panel-default">
+            <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-controlling-body">
                     <h3 class="panel-title">
                         <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
@@ -151,7 +151,7 @@
             </div>
 
             <!-- Sponsor -->
-            <div class="panel panel-default">
+            <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-sponsor">
                     <h3 class="panel-title">
                         <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
@@ -297,9 +297,19 @@
 {% block extra_js %}
     <script>
         $(function() {
+            // filters are collapsed be default b/c they are long
+            // on wide screens, filters w/ class panel-show are expanded
             if ($(window).width() >= 768) {
-                $('.panel-show').collapse('show');
+                $('.panel-show').addClass('in');
             }
+
+            $(".panel-heading").click(function () {
+                if ($(this).parent().children().eq(1).hasClass("in")){
+                    $(this).find('i').removeClass("fa-minus").addClass("fa-plus");
+                } else{
+                    $(this).find('i').removeClass("fa-plus").addClass("fa-minus");
+                }
+            });
         });
     </script>
 {% endblock %}
