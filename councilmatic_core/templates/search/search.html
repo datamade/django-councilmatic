@@ -43,8 +43,8 @@
                         {% for name, count in facets.fields.inferred_status %}
                             {% if count %}
                                 <li class="small">
-                                    <a href="/search/?q={{query}}&selected_facets=inferred_status_exact:{{name}}" title="{{ name|title }}">
-                                        {{ name|committee_topic_only|title|short_title }}
+                                    <a href="#" class="filter-value" id="inferred_status_exact:{{name}}" title="{{ name|title }}">
+                                        {{ name | title | short_title }}
                                     </a>
                                     <span class="badge badge-muted pull-right">{{ count }}</span>
                                 </li>
@@ -69,8 +69,8 @@
                         {% for name, count in facets.fields.bill_type %}
                             {% if count %}
                                 <li class="small">
-                                    <a href="/search/?q={{query}}&selected_facets=bill_type_exact:{{name}}" title="{{ name|title }}">
-                                        {{ name|committee_topic_only|title|short_title }}
+                                    <a href="#" class="filter-value" id="bill_type_exact:{{name}}" title="{{ name|title }}">
+                                        {{ name | title | short_title }}
                                     </a>
                                     <span class="badge badge-muted pull-right">{{ count }}</span>
                                 </li>
@@ -97,8 +97,8 @@
                             {% for name, count in facets.fields.topics %}
                                 {% if count and name == 'Routine' or name == 'Non-Routine'%}
                                     <li class="small">
-                                        <a href="/search/?q={{query}}&selected_facets=controlling_body_exact:{{name}}" title="{{ name|title }}">
-                                            {{ name }}
+                                        <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
+                                            {{ name | title | short_title }}
                                         </a>
 
                                         <span class="badge badge-muted pull-right">{{ count }}</span>
@@ -109,8 +109,8 @@
                             {% for name, count in facets.fields.topics %}
                                 {% if count and name != 'Routine' and name != 'Non-Routine'%}
                                     <li class="small">
-                                        <a href="/search/?q={{query}}&selected_facets=controlling_body_exact:{{name}}" title="{{ name|title }}">
-                                            {{ name }}
+                                        <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
+                                            {{ name | title | short_title }}
                                         </a>
 
                                         <span class="badge badge-muted pull-right">{{ count }}</span>
@@ -137,7 +137,7 @@
                         {% for name, count in facets.fields.controlling_body %}
                             {% if count %}
                                 <li class="small">
-                                    <a href="/search/?q={{query}}&selected_facets=controlling_body_exact:{{name}}" title="{{ name|title }}">
+                                    <a href="#" class="filter-value" id="controlling_body_exact:{{name}}" title="{{ name|title }}">
                                         {{ name|committee_topic_only|title|short_title }}
                                     </a>
 
@@ -164,7 +164,7 @@
                         {% for name, count in facets.fields.sponsorships %}
                             {% if count %}
                                 <li class="small">
-                                    <a href="/search/?q={{query}}&selected_facets=sponsorships_exact:{{name}}" title="{{ name|title }}">
+                                    <a href="#" class="filter-value" id="sponsorships_exact:{{name}}" title="{{ name|title }}">
                                         {{ name|committee_topic_only|title|short_title }}
                                     </a>
                                 </li>
@@ -174,8 +174,6 @@
 
                 </div>
             </div>
-
-
 
         </div>
 
@@ -308,6 +306,19 @@
                     $(this).find('i').removeClass("fa-minus").addClass("fa-plus");
                 } else{
                     $(this).find('i').removeClass("fa-plus").addClass("fa-minus");
+                }
+            });
+
+            $(".filter-value").click(function() {
+
+                var current_url = window.location.href
+                var addtl_filter = this.id
+
+                if(current_url.contains('selected_facets')) {
+                    window.location = current_url + '&selected_facets=' + addtl_filter;
+                } 
+                else {
+                    window.location = '/search/?q={{query}}&selected_facets=' + addtl_filter;
                 }
             });
         });

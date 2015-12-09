@@ -262,6 +262,10 @@ select {
 .panel-filter > .panel-body{
     padding: 8px 8px 0px 8px;
 }
+.search-facet-list > hr {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
 
 
 /* medium screens */
