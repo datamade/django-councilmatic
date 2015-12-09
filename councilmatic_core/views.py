@@ -9,6 +9,7 @@ from django.db.models import Max, Min
 from django.core.cache import cache
 from .models import Person, Bill, Organization, Action, Event, Post
 from haystack.forms import FacetedSearchForm
+from haystack.views import FacetedSearchView
 from datetime import date, timedelta, datetime
 import itertools
 from operator import attrgetter
@@ -17,6 +18,19 @@ import pytz
 import re
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
+
+class CouncilmaticFacetedSearchView(FacetedSearchView):
+
+    def extra_context(self):
+        extra = super(FacetedSearchView, self).extra_context()
+        extra['request'] = self.request
+        extra['facets'] = self.results.facet_counts()
+
+        selected_facet_vals = self.request.GET.getlist("selected_facets")
+        extra['selected_facet_vals'] = selected_facet_vals
+        extra['selected_facets'] = [f.split('_exact:',1)[0] for f in selected_facet_vals]
+        
+        return extra
 
 class CouncilmaticSearchForm(FacetedSearchForm):
     
