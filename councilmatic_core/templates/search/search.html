@@ -40,13 +40,16 @@
                     </h3>
                 </div>
                 <div class="panel-body {% if 'inferred_status' in selected_facets %}panel-show{% endif %} collapse" id="filter-status">
-
                     <ul class="search-facet-list">
                         {% for name, count in facets.fields.inferred_status %}
                             {% if count %}
                                 <li class="small">
                                     <a href="#" class="filter-value" id="inferred_status_exact:{{name}}" title="{{ name|title }}">
-                                        {{ name | title | short_title }}
+                                        {% if name in selected_facets.inferred_status %}
+                                            <strong>{{ name | title | short_title }}</strong>
+                                        {% else %}
+                                            {{ name | title | short_title }}
+                                        {% endif %}
                                     </a>
                                     <span class="badge badge-muted pull-right">{{ count }}</span>
                                 </li>
@@ -74,7 +77,11 @@
                             {% if count %}
                                 <li class="small">
                                     <a href="#" class="filter-value" id="bill_type_exact:{{name}}" title="{{ name|title }}">
-                                        {{ name | title | short_title }}
+                                        {% if bill_type in selected_facets.bill_type %}
+                                            <strong>{{ name | title | short_title }}</strong>
+                                        {% else %}
+                                            {{ name | title | short_title }}
+                                        {% endif %}
                                     </a>
                                     <span class="badge badge-muted pull-right">{{ count }}</span>
                                 </li>
@@ -104,7 +111,11 @@
                                 {% if count and name == 'Routine' or name == 'Non-Routine'%}
                                     <li class="small">
                                         <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
-                                            {{ name | title | short_title }}
+                                            {% if name in selected_facets.topics %}
+                                                <strong>{{ name | title | short_title }}</strong>
+                                            {% else %}
+                                                {{ name | title | short_title }}
+                                            {% endif %}
                                         </a>
 
                                         <span class="badge badge-muted pull-right">{{ count }}</span>
@@ -116,7 +127,11 @@
                                 {% if count and name != 'Routine' and name != 'Non-Routine'%}
                                     <li class="small">
                                         <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
-                                            {{ name | title | short_title }}
+                                            {% if name in selected_facets.topics %}
+                                                <strong>{{ name | title | short_title }}</strong>
+                                            {% else %}
+                                                {{ name | title | short_title }}
+                                            {% endif %}
                                         </a>
 
                                         <span class="badge badge-muted pull-right">{{ count }}</span>
@@ -146,7 +161,11 @@
                             {% if count %}
                                 <li class="small">
                                     <a href="#" class="filter-value" id="controlling_body_exact:{{name}}" title="{{ name|title }}">
-                                        {{ name|committee_topic_only|title|short_title }}
+                                        {% if name in selected_facets.controlling_body %}
+                                            <strong>{{ name | committee_topic_only | title | short_title }}</strong>
+                                        {% else %}
+                                            {{ name | committee_topic_only| title | short_title }}
+                                        {% endif %}
                                     </a>
 
                                     <span class="badge badge-muted pull-right">{{ count }}</span>
@@ -175,7 +194,11 @@
                             {% if count %}
                                 <li class="small">
                                     <a href="#" class="filter-value" id="sponsorships_exact:{{name}}" title="{{ name|title }}">
-                                        {{ name|committee_topic_only|title|short_title }}
+                                        {% if name in selected_facets.sponsorships %}
+                                            <strong>{{ name | title | short_title }}</strong>
+                                        {% else %}
+                                            {{ name | title | short_title }}
+                                        {% endif %}
                                     </a>
                                 </li>
                             {% endif %}
@@ -184,6 +207,11 @@
 
                 </div>
             </div>
+
+            {% if selected_facets %}
+                <br/>
+                <a href="/search" class="btn btn-sm btn-default">Clear Filters</a>
+            {% endif %}
 
         </div>
 

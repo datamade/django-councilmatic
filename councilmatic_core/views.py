@@ -26,10 +26,15 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
         extra['request'] = self.request
         extra['facets'] = self.results.facet_counts()
 
-        selected_facet_vals = self.request.GET.getlist("selected_facets")
-        extra['selected_facet_vals'] = selected_facet_vals
-        extra['selected_facets'] = [f.split('_exact:',1)[0] for f in selected_facet_vals]
-        
+        selected_facets = {}
+        for val in self.request.GET.getlist("selected_facets"):
+            [k,v] = val.split('_exact:',1)
+            try:
+                selected_facets[k].append(v)
+            except KeyError:
+                selected_facets[k] = [v]
+        extra['selected_facets'] = selected_facets
+
         return extra
 
 class CouncilmaticSearchForm(FacetedSearchForm):
