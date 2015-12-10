@@ -77,12 +77,12 @@ class Person(models.Model):
 
 class Bill(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_created_at = models.DateTimeField(default=None)
+    ocd_updated_at = models.DateTimeField(default=None)
     description = models.TextField()
     identifier = models.CharField(max_length=50)
     bill_type = models.CharField(max_length=50)
     classification = models.CharField(max_length=100)
-    date_created = models.DateTimeField(default=None)
-    date_updated = models.DateTimeField(default=None, null=True)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
 
@@ -299,7 +299,7 @@ class Action(models.Model):
         else: return 'info'
 
 class ActionRelatedEntity(models.Model):
-    _action = models.ForeignKey('Action', related_name='related_entities', db_column='action_id')
+    _action = models.ForeignKey('Action', related_name='related_entities', db_column='action_id', null=True)
     entity_type = models.CharField(max_length=100)
     entity_name = models.CharField(max_length=255)
     organization_ocd_id = models.CharField(max_length=100, blank=True)
@@ -313,7 +313,7 @@ class Post(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
     label = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
-    _organization = models.ForeignKey('Organization', related_name='posts', db_column='organization_id')
+    _organization = models.ForeignKey('Organization', related_name='posts', db_column='organization_id', null=True)
     
     @property
     def organization(self):
@@ -331,8 +331,8 @@ class Post(models.Model):
             return None
 
 class Membership(models.Model):
-    _organization = models.ForeignKey('Organization', related_name='memberships', db_column='organization_id')
-    _person = models.ForeignKey('Person', related_name='memberships', db_column='person_id')
+    _organization = models.ForeignKey('Organization', related_name='memberships', db_column='organization_id', null=True)
+    _person = models.ForeignKey('Person', related_name='memberships', db_column='person_id', null=True)
     _post = models.ForeignKey('Post', related_name='memberships', null=True, db_column='post_id')
     label = models.CharField(max_length=255, blank=True)
     role = models.CharField(max_length=255, blank=True)
@@ -352,8 +352,8 @@ class Membership(models.Model):
         return override_relation(self._post)
 
 class Sponsorship(models.Model):
-    _bill = models.ForeignKey('Bill', related_name='sponsorships', db_column='bill_id')
-    _person = models.ForeignKey('Person', related_name='sponsorships', db_column='person_id')
+    _bill = models.ForeignKey('Bill', related_name='sponsorships', db_column='bill_id', null=True)
+    _person = models.ForeignKey('Person', related_name='sponsorships', db_column='person_id', null=True)
     classification = models.CharField(max_length=255)
     is_primary = models.BooleanField(default=False)
     
@@ -370,6 +370,8 @@ class Sponsorship(models.Model):
 
 class Event(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_created_at = models.DateTimeField(default=None)
+    ocd_updated_at = models.DateTimeField(default=None)
     name = models.CharField(max_length=255)
     description = models.TextField()
     classification = models.CharField(max_length=100)
