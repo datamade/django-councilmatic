@@ -61,17 +61,12 @@ class Command(BaseCommand):
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'bills':
-            self.grab_bills(delete=options['delete'], fullhistory = options['fullhistory'])
+            self.grab_bills(delete=options['delete'], fullhistory=options['fullhistory'])
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'people':
             self.grab_people(delete=options['delete'])
             print("\ndone!", datetime.datetime.now())
-
-        elif options['endpoint'] == 'sponsorships':
-            self.grab_sponsorships(delete=options['delete'])
-            print("\ndone!", datetime.datetime.now())
-
 
         elif options['endpoint'] == 'events':
             self.grab_events(delete=options['delete'])
@@ -79,11 +74,12 @@ class Command(BaseCommand):
 
         else:
             print("\n** loading all data types! **\n")
+
             self.grab_organizations(delete=options['delete'])
             self.grab_people(delete=options['delete'])
             self.grab_bills(delete=options['delete'], fullhistory=options['fullhistory'])
-            self.grab_sponsorships(delete=options['delete'])
             self.grab_events(delete=options['delete'])
+
             print("\ndone!", datetime.datetime.now())
 
         
@@ -201,32 +197,6 @@ class Command(BaseCommand):
             for membership_json in page_json['memberships']:
                 self.grab_person_memberships(membership_json['person']['id'])
 
-    def grab_sponsorships(self, delete=False):
-        print("\n\nLOADING SPONSORSHIPS", datetime.datetime.now())
-        if delete:
-            Sponsorship.objects.all().delete()
-            print("deleted all sponsorships")
-
-        # add sponsorships for all existing bills
-        bills = Bill.objects.all()
-        for bill in bills:
-            url = base_url+'/'+bill.ocd_id
-            r = requests.get(url)
-            page_json = json.loads(r.text)
-
-            for sponsor_json in page_json['sponsorships']:
-                sponsor=Person.objects.filter(ocd_id=sponsor_json['entity_id']).first()
-                if sponsor:
-                    obj, created = Sponsorship.objects.get_or_create(
-                            _bill=bill,
-                            _person=sponsor,
-                            classification=sponsor_json['classification'],
-                            is_primary=sponsor_json['primary'],
-                        )
-
-                    # if created and DEBUG:
-                    #     print('      adding sponsorship: %s %s' % (obj.bill, obj.person))
-    
 
     def grab_bills(self, delete=False, fullhistory=False):
         # this grabs all bills & associated actions, documents from city council
@@ -240,7 +210,8 @@ class Command(BaseCommand):
             LegislativeSession.objects.all().delete()
             Document.objects.all().delete()
             BillDocument.objects.all().delete()
-            print("deleted all bills, actions, legislative sessions, documents\n")
+            Sponsorship.objects.all().delete()
+            print("deleted all bills, actions, legislative sessions, documents, sponsorships\n")
 
         # get legislative sessions
         self.grab_legislative_sessions()
@@ -369,9 +340,11 @@ class Command(BaseCommand):
         if created or updated:
 
             if updated:
-                # delete existing bill actions
+                # delete existing bill actions & sponsorships
                 obj.actions.all().delete()
+                obj.sponsorships.all().delete()
 
+            # update actions for a bill
             action_order = 0
             for action_json in page_json['actions']:
                 self.load_action(action_json, obj, action_order)
@@ -381,10 +354,31 @@ class Command(BaseCommand):
             obj.last_action_date = obj.get_last_action_date()
             obj.save()
 
-            # update documents associated with a bill
+            # update documents for with a bill
             for document_json in page_json['documents']:
                 self.load_bill_document(document_json, obj)
 
+            # update sponsorships for a bill
+            for sponsor_json in page_json['sponsorships']:
+                self.load_bill_sponsorship(sponsor_json, obj)
+
+    def load_bill_sponsorship(self, sponsor_json, bill):
+
+        print("LOADING SPONSOR")
+
+        sponsor=Person.objects.filter(ocd_id=sponsor_json['entity_id']).first()
+        if sponsor:
+            obj, created = Sponsorship.objects.get_or_create(
+                    _bill=bill,
+                    _person=sponsor,
+                    classification=sponsor_json['classification'],
+                    is_primary=sponsor_json['primary'],
+                )
+        else:
+            # TEMPORARY - remove this when mayor/clerk stuff is fixed
+            print("**SPONSOR MISSING FROM PEOPLE**")
+            print(sponsor_json)
+            print(bill.ocd_id)
 
 
     def load_action(self, action_json, bill, action_order):
