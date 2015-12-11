@@ -45,6 +45,11 @@ class Command(BaseCommand):
             default=False,
             help='delete data before loading')
 
+        parser.add_argument('--fullhistory',
+            action='store_true',
+            default=False,
+            help='look at all legislative sessions on the ocd api (by default, this task only looks at the current legislative session')
+
     def handle(self, *args, **options):
 
         if options['endpoint'] == 'organizations':
@@ -52,7 +57,7 @@ class Command(BaseCommand):
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'bills':
-            self.grab_bills(delete=options['delete'])
+            self.grab_bills(delete=options['delete'], fullhistory = options['fullhistory'])
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'people':
@@ -207,7 +212,7 @@ class Command(BaseCommand):
                     #     print('      adding sponsorship: %s %s' % (obj.bill, obj.person))
     
 
-    def grab_bills(self, delete=False):
+    def grab_bills(self, delete=False, fullhistory=False):
         # this grabs all bills & associated actions, documents from city council
         # organizations need to be populated before bills & actions are populated
 
@@ -224,28 +229,19 @@ class Command(BaseCommand):
         # get legislative sessions
         self.grab_legislative_sessions()
 
-        if delete:
-            # everything is deleted, grab all legislative sessions
-            leg_sessions_to_grab = settings.LEGISLATIVE_SESSIONS
-            updated_at_filter = ''
+        if fullhistory:
+            #grab all legislative sessions
+            leg_sessions_to_check = settings.LEGISLATIVE_SESSIONS
         else:
-            # otherwise, only look at most recent legislative session & only
-            # look at stuff that has been updated since most recent Bill.ocd_updated_at value
-            leg_sessions_to_grab = [settings.LEGISLATIVE_SESSIONS[-1]]
-            most_recent_date = Bill.objects.all().order_by('-ocd_updated_at').first().ocd_updated_at.isoformat()
-            most_recent_date = most_recent_date.split('+')[0]
-            ocd_id = Bill.objects.all().order_by('-ocd_updated_at').first().ocd_id
+            leg_sessions_to_check = [settings.LEGISLATIVE_SESSIONS[-1]]
 
-            print("only looking at bills on the ocd api that have been updated since %s" %most_recent_date)
-            updated_at_filter = '&updated_at__gte=%s' %most_recent_date
-
-
-        for leg_session in leg_sessions_to_grab:
-            bill_url = base_url+'/bills/?from_organization_id=%s&legislative_session__identifier=%s%s' % (settings.OCD_CITY_COUNCIL_ID,leg_session, updated_at_filter)
+        for leg_session in leg_sessions_to_check:
+            bill_url = base_url+'/bills/?from_organization_id=%s&legislative_session__identifier=%s' % (settings.OCD_CITY_COUNCIL_ID,leg_session)
 
             print("\nadding bills: %s legislative session" %leg_session)
             r = requests.get(bill_url)
             page_json = json.loads(r.text)
+            leg_session_obj = LegislativeSession.objects.filter(identifier=page_json['legislative_session']['identifier']).first()
 
             for i in range(page_json['meta']['max_page']):
 
@@ -253,7 +249,7 @@ class Command(BaseCommand):
                 page_json = json.loads(r.text)
 
                 for result in page_json['results']:
-                    self.grab_bill(result['id'])
+                    self.grab_bill(result['id'], leg_session_obj)
 
     def grab_legislative_sessions(self):
 
@@ -268,14 +264,14 @@ class Command(BaseCommand):
             if created and DEBUG:
                 print('adding legislative session: %s' %obj.name)
 
-    def grab_bill(self, bill_id):
+    def grab_bill(self, bill_id, leg_session_obj):
 
         bill_url = base_url+'/'+bill_id
         r = requests.get(bill_url)
         page_json = json.loads(r.text)
 
         from_org = Organization.objects.filter(ocd_id=page_json['from_organization']['id']).first()
-        legislative_session = LegislativeSession.objects.filter(identifier=page_json['legislative_session']['identifier']).first()
+        
         
         if page_json['extras'].get('local_classification'):
             bill_type = page_json['extras']['local_classification']
@@ -307,10 +303,12 @@ class Command(BaseCommand):
             '_from_organization':from_org,
             'full_text':full_text,
             'abstract':abstract,
-            '_legislative_session':legislative_session,
+            '_legislative_session':leg_session_obj,
             'bill_type':bill_type,
         }
 
+        updated = False
+        created = False
         # look for existing bill
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
@@ -328,10 +326,11 @@ class Command(BaseCommand):
                 obj._from_organization=from_org
                 obj.full_text=full_text
                 obj.abstract=abstract
-                obj._legislative_session=legislative_session
+                obj._legislative_session=leg_session_obj
                 obj.bill_type=bill_type
 
                 obj.save()
+                updated = True
 
                 if DEBUG:
                     print('\u270E', end=' ', flush=True)
@@ -351,18 +350,19 @@ class Command(BaseCommand):
             if created and DEBUG:
                 print('\u263A', end=' ', flush=True)
 
-        action_order = 0
-        for action_json in page_json['actions']:
-            self.load_action(action_json, obj, action_order)
-            action_order+=1
+        if created or updated:
+            action_order = 0
+            for action_json in page_json['actions']:
+                self.load_action(action_json, obj, action_order)
+                action_order+=1
 
-        # update bill last_action_date with most recent action
-        obj.last_action_date = obj.get_last_action_date()
-        obj.save()
+            # update bill last_action_date with most recent action
+            obj.last_action_date = obj.get_last_action_date()
+            obj.save()
 
-        # update documents associated with a bill
-        for document_json in page_json['documents']:
-            self.load_bill_document(document_json, obj)
+            # update documents associated with a bill
+            for document_json in page_json['documents']:
+                self.load_bill_document(document_json, obj)
 
 
 
