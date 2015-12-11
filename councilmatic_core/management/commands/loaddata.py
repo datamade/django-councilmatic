@@ -77,7 +77,7 @@ class Command(BaseCommand):
             print("\ndone!", datetime.datetime.now())
         
     def grab_organizations(self, delete=False):
-        print("\nLOADING ORGANIZATIONS", datetime.datetime.now())
+        print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
         if delete:
             Organization.objects.all().delete()
             Post.objects.all().delete()
@@ -174,7 +174,7 @@ class Command(BaseCommand):
     def grab_people(self, delete=False):
         # find people associated with existing organizations & bills
 
-        print("\nLOADING PEOPLE", datetime.datetime.now())
+        print("\n\nLOADING PEOPLE", datetime.datetime.now())
         if delete:
             Person.objects.all().delete()
             Membership.objects.all().delete()
@@ -216,7 +216,7 @@ class Command(BaseCommand):
         # this grabs all bills & associated actions, documents from city council
         # organizations need to be populated before bills & actions are populated
 
-        print("\nLOADING BILLS", datetime.datetime.now())
+        print("\n\nLOADING BILLS", datetime.datetime.now())
         if delete:
             Bill.objects.all().delete()
             Action.objects.all().delete()
@@ -225,6 +225,9 @@ class Command(BaseCommand):
             Document.objects.all().delete()
             BillDocument.objects.all().delete()
             print("deleted all bills, actions, legislative sessions, documents\n")
+
+            # if everything is deleted, always look at full history in ocd
+            fullhistory = True
 
         # get legislative sessions
         self.grab_legislative_sessions()
@@ -241,7 +244,7 @@ class Command(BaseCommand):
             print("\nadding bills: %s legislative session" %leg_session)
             r = requests.get(bill_url)
             page_json = json.loads(r.text)
-            leg_session_obj = LegislativeSession.objects.filter(identifier=page_json['legislative_session']['identifier']).first()
+            leg_session_obj = LegislativeSession.objects.filter(identifier=leg_session).first()
 
             for i in range(page_json['meta']['max_page']):
 
@@ -351,6 +354,9 @@ class Command(BaseCommand):
                 print('\u263A', end=' ', flush=True)
 
         if created or updated:
+            # delete existing bill actions
+            obj.actions.all().delete()
+
             action_order = 0
             for action_json in page_json['actions']:
                 self.load_action(action_json, obj, action_order)
@@ -542,7 +548,7 @@ class Command(BaseCommand):
 
     def grab_events(self, delete=False):
 
-        print("\nLOADING EVENTS", datetime.datetime.now())
+        print("\n\nLOADING EVENTS", datetime.datetime.now())
         if delete:
             Event.objects.all().delete()
             EventParticipant.objects.all().delete()
