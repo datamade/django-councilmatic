@@ -43,7 +43,7 @@ class Command(BaseCommand):
         parser.add_argument('--delete',
             action='store_true',
             default=False,
-            help='delete data before loading')
+            help='deletes all data, and then loads all legislative sessions (by default, this task does not delete data & only loads new/updated data from current legislative session)')
 
         parser.add_argument('--fullhistory',
             action='store_true',
@@ -51,6 +51,10 @@ class Command(BaseCommand):
             help='look at all legislative sessions on the ocd api (by default, this task only looks at the current legislative session')
 
     def handle(self, *args, **options):
+
+        # if deleting stuff, should grab full history
+        if options['delete'] and not options['fullhistory']:
+            options['fullhistory'] = True
 
         if options['endpoint'] == 'organizations':
             self.grab_organizations(delete=options['delete'])
@@ -64,17 +68,24 @@ class Command(BaseCommand):
             self.grab_people(delete=options['delete'])
             print("\ndone!", datetime.datetime.now())
 
+        elif options['endpoint'] == 'sponsorships':
+            self.grab_sponsorships(delete=options['delete'])
+            print("\ndone!", datetime.datetime.now())
+
+
         elif options['endpoint'] == 'events':
             self.grab_events(delete=options['delete'])
             print("\ndone!", datetime.datetime.now())
 
         else:
-            print("\n** LOADING EVERYTHING! **\n")
+            print("\n** loading all data types! **\n")
             self.grab_organizations(delete=options['delete'])
-            self.grab_bills(delete=options['delete'])
             self.grab_people(delete=options['delete'])
+            self.grab_bills(delete=options['delete'], fullhistory=options['fullhistory'])
+            self.grab_sponsorships(delete=options['delete'])
             self.grab_events(delete=options['delete'])
             print("\ndone!", datetime.datetime.now())
+
         
     def grab_organizations(self, delete=False):
         print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
@@ -178,8 +189,7 @@ class Command(BaseCommand):
         if delete:
             Person.objects.all().delete()
             Membership.objects.all().delete()
-            Sponsorship.objects.all().delete()
-            print("deleted all people, memberships, sponsorships")
+            print("deleted all people, memberships")
 
         # grab people associated with all existing organizations
         orgs = Organization.objects.exclude(name='Democratic').exclude(name='Republican').all()
@@ -190,6 +200,12 @@ class Command(BaseCommand):
 
             for membership_json in page_json['memberships']:
                 self.grab_person_memberships(membership_json['person']['id'])
+
+    def grab_sponsorships(self, delete=False):
+        print("\n\nLOADING SPONSORSHIPS", datetime.datetime.now())
+        if delete:
+            Sponsorship.objects.all().delete()
+            print("deleted all sponsorships")
 
         # add sponsorships for all existing bills
         bills = Bill.objects.all()
@@ -225,9 +241,6 @@ class Command(BaseCommand):
             Document.objects.all().delete()
             BillDocument.objects.all().delete()
             print("deleted all bills, actions, legislative sessions, documents\n")
-
-            # if everything is deleted, always look at full history in ocd
-            fullhistory = True
 
         # get legislative sessions
         self.grab_legislative_sessions()
@@ -354,8 +367,10 @@ class Command(BaseCommand):
                 print('\u263A', end=' ', flush=True)
 
         if created or updated:
-            # delete existing bill actions
-            obj.actions.all().delete()
+
+            if updated:
+                # delete existing bill actions
+                obj.actions.all().delete()
 
             action_order = 0
             for action_json in page_json['actions']:
