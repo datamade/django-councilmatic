@@ -597,69 +597,93 @@ class Command(BaseCommand):
                 print("-"*60+"\n")
                 legistar_id = event_ocd_id
 
+            event_fields = {
+                'ocd_id':event_ocd_id,
+                'ocd_created_at':page_json['created_at'],
+                'ocd_updated_at':page_json['updated_at'],
+                'name':page_json['name'],
+                'description':page_json['description'],
+                'classification':page_json['classification'],
+                'start_time':parse_datetime(page_json['start_time']),
+                'end_time':parse_datetime(page_json['end_time']) if page_json['end_time'] else None,
+                'all_day':page_json['all_day'],
+                'status':page_json['status'],
+                'location_name':page_json['location']['name'],
+                'location_url':page_json['location']['url'],
+                'source_url':page_json['sources'][0]['url'],
+                'source_note':page_json['sources'][0]['note'],
+            }
+
+            updated = False
+            created = False
+
+            # look for existing event
             try:
-                event_obj, created = Event.objects.get_or_create(
-                        ocd_id = event_ocd_id,
-                        ocd_created_at=page_json['created_at'],
-                        ocd_updated_at=page_json['updated_at'],
-                        name = page_json['name'],
-                        description = page_json['description'],
-                        classification = page_json['classification'],
-                        start_time = parse_datetime(page_json['start_time']),
-                        end_time = parse_datetime(page_json['end_time']) if page_json['end_time'] else None,
-                        all_day = page_json['all_day'],
-                        status = page_json['status'],
-                        location_name = page_json['location']['name'],
-                        location_url = page_json['location']['url'],
-                        source_url = page_json['sources'][0]['url'],
-                        source_note = page_json['sources'][0]['note'],
-                        slug = legistar_id,
-                    )
+                event_obj = Event.objects.get(ocd_id=event_ocd_id)
 
-            except IntegrityError:
-                event_obj, created = Event.objects.get_or_create(
-                        ocd_id = event_ocd_id,
-                        ocd_created_at=page_json['created_at'],
-                        ocd_updated_at=page_json['updated_at'],
-                        name = page_json['name'],
-                        description = page_json['description'],
-                        classification = page_json['classification'],
-                        start_time = parse_datetime(page_json['start_time']),
-                        end_time = parse_datetime(page_json['end_time']) if page_json['end_time'] else None,
-                        all_day = page_json['all_day'],
-                        status = page_json['status'],
-                        location_name = page_json['location']['name'],
-                        location_url = page_json['location']['url'],
-                        source_url = page_json['sources'][0]['url'],
-                        source_note = page_json['sources'][0]['note'],
-                        slug = event_ocd_id,
-                    )
-                print("\n\n"+"-"*60)
-                print("WARNING: SLUG ALREADY EXISTS FOR %s" %event_ocd_id)
-                print("legistar id (what slug should be): %s" %legistar_id)
-                print("using ocd id as slug instead")
-                print("-"*60+"\n")
+                # check if it has been updated on api
+                # TO-DO: fix date comparison to handle timezone naive times from api
+                if event_obj.ocd_updated_at.isoformat() != page_json['updated_at']:
 
-            # if created and DEBUG:
-            #     print('   adding event: %s' % event_ocd_id)
-            if created and DEBUG:
-                print('\u263A', end=' ', flush=True)
+                    event_obj.ocd_created_at=page_json['created_at']
+                    event_obj.ocd_updated_at=page_json['updated_at']
+                    event_obj.name = page_json['name']
+                    event_obj.description = page_json['description']
+                    event_obj.classification = page_json['classification']
+                    event_obj.start_time = parse_datetime(page_json['start_time'])
+                    event_obj.end_time = parse_datetime(page_json['end_time']) if page_json['end_time'] else None
+                    event_obj.all_day = page_json['all_day']
+                    event_obj.status = page_json['status']
+                    event_obj.location_name = page_json['location']['name']
+                    event_obj.location_url = page_json['location']['url']
+                    event_obj.source_url = page_json['sources'][0]['url']
+                    event_obj.source_note = page_json['sources'][0]['note']
 
-            for participant_json in page_json['participants']:
-                obj, created = EventParticipant.objects.get_or_create(
-                        event = event_obj,
-                        note = participant_json['note'],
-                        entity_name = participant_json['entity_name'],
-                        entity_type = participant_json['entity_type']
-                    )
+                    event_obj.save()
+                    updated = True
+
+                    if DEBUG:
+                        print('\u270E', end=' ', flush=True)
+
+
+            # except if it doesn't exist, we need to make it
+            except:
+                try:
+                    event_fields['slug'] = legistar_id
+                    event_obj, created = Event.objects.get_or_create(**event_fields)
+
+                except IntegrityError:
+                    event_fields['slug'] = event_ocd_id
+                    event_obj, created = Event.objects.get_or_create(**event_fields)
+                    print("\n\n"+"-"*60)
+                    print("WARNING: SLUG ALREADY EXISTS FOR %s" %event_ocd_id)
+                    print("legistar id (what slug should be): %s" %legistar_id)
+                    print("using ocd id as slug instead")
+                    print("-"*60+"\n")
+
                 # if created and DEBUG:
-                #     print('      adding participant: %s' %obj.entity_name)
+                #     print('   adding event: %s' % event_ocd_id)
+                if created and DEBUG:
+                    print('\u263A', end=' ', flush=True)
+                    print(event_obj.ocd_id)
 
-            for document_json in page_json['documents']:
-                self.load_eventdocument(document_json, event_obj)
 
-            for agenda_item_json in page_json['agenda']:
-                self.load_eventagendaitem(agenda_item_json, event_obj)
+            if created or updated:
+                for participant_json in page_json['participants']:
+                    obj, created = EventParticipant.objects.get_or_create(
+                            event = event_obj,
+                            note = participant_json['note'],
+                            entity_name = participant_json['entity_name'],
+                            entity_type = participant_json['entity_type']
+                        )
+                    # if created and DEBUG:
+                    #     print('      adding participant: %s' %obj.entity_name)
+
+                for document_json in page_json['documents']:
+                    self.load_eventdocument(document_json, event_obj)
+
+                for agenda_item_json in page_json['agenda']:
+                    self.load_eventagendaitem(agenda_item_json, event_obj)
 
         else:
             print("\n\n"+"*"*60)
