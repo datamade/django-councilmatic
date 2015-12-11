@@ -669,6 +669,13 @@ class Command(BaseCommand):
 
 
             if created or updated:
+
+                if updated:
+                    # delete existing participants, documents, agenda items
+                    event_obj.participants.all().delete()
+                    event_obj.documents.all().delete()
+                    event_obj.agenda_items.all().delete()
+
                 for participant_json in page_json['participants']:
                     obj, created = EventParticipant.objects.get_or_create(
                             event = event_obj,
