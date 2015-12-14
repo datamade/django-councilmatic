@@ -364,8 +364,6 @@ class Command(BaseCommand):
 
     def load_bill_sponsorship(self, sponsor_json, bill):
 
-        print("LOADING SPONSOR")
-
         sponsor=Person.objects.filter(ocd_id=sponsor_json['entity_id']).first()
         if sponsor:
             obj, created = Sponsorship.objects.get_or_create(
