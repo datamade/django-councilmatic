@@ -16,6 +16,11 @@ class Migration(migrations.Migration):
             old_name='date_created',
             new_name='ocd_created_at',
         ),
+        migrations.RenameField(
+            model_name='bill',
+            old_name='date_updated',
+            new_name='ocd_updated_at',
+        ),
         migrations.RemoveField(
             model_name='action',
             name='bill',
@@ -27,10 +32,6 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='actionrelatedentity',
             name='action',
-        ),
-        migrations.RemoveField(
-            model_name='bill',
-            name='date_updated',
         ),
         migrations.RemoveField(
             model_name='bill',
@@ -92,11 +93,6 @@ class Migration(migrations.Migration):
             model_name='bill',
             name='_legislative_session',
             field=models.ForeignKey(null=True, related_name='bills', db_column='legislative_session_id', to='councilmatic_core.LegislativeSession'),
-        ),
-        migrations.AddField(
-            model_name='bill',
-            name='ocd_updated_at',
-            field=models.DateTimeField(default=None),
         ),
         migrations.AddField(
             model_name='event',
