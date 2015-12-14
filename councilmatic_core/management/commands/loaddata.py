@@ -364,7 +364,25 @@ class Command(BaseCommand):
 
     def load_bill_sponsorship(self, sponsor_json, bill):
 
-        sponsor=Person.objects.filter(ocd_id=sponsor_json['entity_id']).first()
+        # if the sponsor is a city council member, it has alread been loaded in grab_people
+        if sponsor_json['entity_id'] and sponsor_json['entity_type'] == 'person':
+            sponsor=Person.objects.filter(ocd_id=sponsor_json['entity_id']).first()
+        # otherwise, it is probably the mayor, or city clerk, or an org
+        # in which case, we may have to make a person
+        # non city council members will not have an ocd id or slug - just name
+        # (we might want to handle mayor differently?)
+        else:
+            sponsor, created = Person.objects.get_or_create(
+                    ocd_id = None,
+                    name = sponsor_json['entity_name'],
+                    headshot = '',
+                    source_url = '',
+                    source_note = '',
+                    website_url = '',
+                    email = '',
+                    slug = None,
+                )
+
         if sponsor:
             obj, created = Sponsorship.objects.get_or_create(
                     _bill=bill,
@@ -418,8 +436,11 @@ class Command(BaseCommand):
                     if org:
                         action_related_entity['organization_ocd_id'] = org.ocd_id
                     else:
-                        raise Exception('organization called {0} does not exist'\
-                                            .format(action_related_entity['entity_name']))
+                        print("\n\n"+"-"*60)
+                        print("WARNING: ORGANIZATION NOT FOUND %s" %action_related_entity['entity_name'])
+                        print("cannot find related entity for bill %s" %bill.ocd_id)
+                        print("-"*60+"\n")
+
                 else:
                     action_related_entity['organization_ocd_id'] = related_entity_json['organization_id']
             
@@ -435,7 +456,8 @@ class Command(BaseCommand):
                 else:
                     action_related_entity['person_ocd_id'] = related_entity_json['person_id']
 
-            obj, created = ActionRelatedEntity.objects.get_or_create(**action_related_entity)
+            if org:
+                obj, created = ActionRelatedEntity.objects.get_or_create(**action_related_entity)
 
             # if created and DEBUG:
             #     print('         adding related entity: %s' %obj.entity_name)
