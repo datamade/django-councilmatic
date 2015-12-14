@@ -77,7 +77,7 @@
                             {% if count %}
                                 <li class="small">
                                     <a href="#" class="filter-value" id="bill_type_exact:{{name}}" title="{{ name|title }}">
-                                        {% if bill_type in selected_facets.bill_type %}
+                                        {% if name in selected_facets.bill_type %}
                                             <strong>{{ name | title | short_title }}</strong>
                                         {% else %}
                                             {{ name | title | short_title }}
@@ -93,6 +93,7 @@
             </div>
             
             <!-- Topic -->
+            {% if facets.fields.topics %}
             <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-topic">
                     <h3 class="panel-title">
@@ -104,45 +105,43 @@
                 </div>
                 <div class="panel-body {% if 'topics' in selected_facets %}panel-show{% endif %} collapse" id="filter-topic">
 
-                    {% if facets.fields.topics %}
+                    <ul class="search-facet-list">
+                        {% for name, count in facets.fields.topics %}
+                            {% if count and name == 'Routine' or name == 'Non-Routine'%}
+                                <li class="small">
+                                    <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
+                                        {% if name in selected_facets.topics %}
+                                            <strong>{{ name | title | short_title }}</strong>
+                                        {% else %}
+                                            {{ name | title | short_title }}
+                                        {% endif %}
+                                    </a>
 
-                        <ul class="search-facet-list">
-                            {% for name, count in facets.fields.topics %}
-                                {% if count and name == 'Routine' or name == 'Non-Routine'%}
-                                    <li class="small">
-                                        <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
-                                            {% if name in selected_facets.topics %}
-                                                <strong>{{ name | title | short_title }}</strong>
-                                            {% else %}
-                                                {{ name | title | short_title }}
-                                            {% endif %}
-                                        </a>
+                                    <span class="badge badge-muted pull-right">{{ count }}</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        <hr/>
+                        {% for name, count in facets.fields.topics %}
+                            {% if count and name != 'Routine' and name != 'Non-Routine'%}
+                                <li class="small">
+                                    <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
+                                        {% if name in selected_facets.topics %}
+                                            <strong>{{ name | title | short_title }}</strong>
+                                        {% else %}
+                                            {{ name | title | short_title }}
+                                        {% endif %}
+                                    </a>
 
-                                        <span class="badge badge-muted pull-right">{{ count }}</span>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-                            <hr/>
-                            {% for name, count in facets.fields.topics %}
-                                {% if count and name != 'Routine' and name != 'Non-Routine'%}
-                                    <li class="small">
-                                        <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
-                                            {% if name in selected_facets.topics %}
-                                                <strong>{{ name | title | short_title }}</strong>
-                                            {% else %}
-                                                {{ name | title | short_title }}
-                                            {% endif %}
-                                        </a>
-
-                                        <span class="badge badge-muted pull-right">{{ count }}</span>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                                    <span class="badge badge-muted pull-right">{{ count }}</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
 
                 </div>
             </div>
+            {% endif %}
             
             <!-- Controlling Body -->
             <div class="panel panel-default panel-filter">
