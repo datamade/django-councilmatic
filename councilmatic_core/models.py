@@ -40,14 +40,14 @@ def override_relation(base_model):
 
 
 class Person(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, null=True)
     name = models.CharField(max_length=100)
     headshot = models.CharField(max_length=255, blank=True)
-    source_url = models.CharField(max_length=255)
+    source_url = models.CharField(max_length=255, blank=True)
     source_note = models.CharField(max_length=255, blank=True)
     website_url = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255, blank=True)
-    slug = models.CharField(max_length=255, unique=True)
+    slug = models.CharField(max_length=255, unique=True, null=True)
 
     def __str__(self):
         return self.name
@@ -69,7 +69,12 @@ class Person(models.Model):
 
     @property
     def link_html(self):
-        return '<a href="/person/'+self.slug+'" title="More on '+self.name+'">'+self.name+'</a>'
+        # if person is a city council member
+        if self.ocd_id and self.slug:
+            return '<a href="/person/'+self.slug+'" title="More on '+self.name+'">'+self.name+'</a>'
+        # otherwise, don't make a link
+        else:
+            return self.name
 
     @property
     def primary_sponsorships(self):
