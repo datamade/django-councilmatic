@@ -16,18 +16,13 @@ class BillIndex(indexes.SearchIndex):
     
     
     friendly_name = indexes.CharField()
-    
     sponsorships = indexes.MultiValueField(faceted=True)
-
     actions = indexes.MultiValueField()
-
     controlling_body = indexes.MultiValueField(faceted=True)
-    
     full_text = indexes.CharField(model_attr='full_text')
-    
     last_action_date = indexes.DateTimeField()
-
     inferred_status = indexes.CharField(faceted=True)
+    legislative_session = indexes.CharField(faceted=True)
 
     def get_model(self):
         return Bill
@@ -56,3 +51,6 @@ class BillIndex(indexes.SearchIndex):
     
     def prepare_inferred_status(self, obj):
         return obj.inferred_status
+
+    def prepare_legislative_session(self, obj):
+        return obj._legislative_session.identifier
