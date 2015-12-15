@@ -207,6 +207,43 @@
                 </div>
             </div>
 
+            <!-- Legislative Session -->
+            {% if facets.fields.legislative_session %}
+                <!-- only show leg sesh filter pane if there is more than one leg sesh to select from -->
+                {% if facets.fields.legislative_session|length > 1 %}
+                <div class="panel panel-default panel-filter">
+                    <div class="panel-heading" data-toggle="collapse" data-target="#filter-legislative-session">
+                        <h3 class="panel-title">
+                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Filter by Legislative Session
+                                <i class="fa fa-fw {% if 'legislative_session' in selected_facets %}fa-minus {% else %} fa-plus {% endif %} pull-right"></i>
+                            </a>
+                        </h3>
+                    </div>
+                    <div class="panel-body {% if 'legislative_session' in selected_facets %}panel-show{% endif %} collapse" id="filter-legislative-session">
+                        <ul class="search-facet-list">
+                            {% for name, count in facets.fields.legislative_session %}
+                                {% if count %}
+                                    <li class="small">
+                                        <a href="#" class="filter-value" id="inferred_status_exact:{{name}}" title="{{ name|title }}">
+                                            {% if name in selected_facets.legislative_session %}
+                                                <strong>{{ name | title | short_title }}</strong>
+                                            {% else %}
+                                                {{ name | title | short_title }}
+                                            {% endif %}
+                                        </a>
+                                        <span class="badge badge-muted pull-right">{{ count }}</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+
             {% if selected_facets %}
                 <br/>
                 <a href="/search" class="btn btn-sm btn-default">Clear Filters</a>
