@@ -42,6 +42,7 @@
                 </table>
             </div>
 
+            {% if subcommittees %}
             <h2>Subcommittees</h2>
             <div class="table-responsive">
                 <table class='table' id='subcommittees'>
@@ -69,6 +70,7 @@
                     </tbody>
                 </table>
             </div>
+            {% endif %}
 
 
             {% if taskforces %}
@@ -114,7 +116,7 @@
                 {% if taskforces %}
                 <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees, {{subcommittees | length }} Subcommittees and {{taskforces | length }} Task Forces.</p>
                 {% else %}
-                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees and {{subcommittees | length }} Subcommittees.</p>
+                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees{% if subcommittees %} and {{subcommittees | length }} Subcommittees{% endif %}.</p>
                 {% endif %}
 
                 <p><a href='/about/#about-city-council'>Read more about how City Council works ></a></p>
