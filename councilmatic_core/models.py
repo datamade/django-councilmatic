@@ -14,6 +14,12 @@ if not hasattr(settings, 'CITY_COUNCIL_NAME'):
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
+bill_document_choices = (
+    ('A', 'Attachment'),
+    ('V', 'Version'),
+)
+
+
 def override_relation(base_model):
     
     models_module = '{0}.models'.format(settings.APP_NAME)
@@ -451,12 +457,14 @@ class AgendaItemBill(models.Model):
 
 class Document(models.Model):
     note = models.TextField()
-    url = models.TextField()
+    url = models.TextField(blank=True)
+    full_text = models.TextField(blank=True)
 
 class BillDocument(models.Model):
     bill = models.ForeignKey('Bill', related_name='documents')
     document = models.ForeignKey('Document', related_name='bills')
-    
+    document_type = models.CharField(max_length=255, choices=bill_document_choices)
+
     def __init__(self, *args, **kwargs):
         super(BillDocument, self).__init__(*args, **kwargs)
         self.bill = override_relation(self.bill)
