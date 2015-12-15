@@ -356,7 +356,10 @@ class Command(BaseCommand):
 
             # update documents for with a bill
             for document_json in page_json['documents']:
-                self.load_bill_document(document_json, obj)
+                self.load_bill_attachment(document_json, obj)
+
+            for document_json in page_json['versions']:
+                self.load_bill_version(document_json, obj)
 
             # update sponsorships for a bill
             for sponsor_json in page_json['sponsorships']:
@@ -462,7 +465,7 @@ class Command(BaseCommand):
             # if created and DEBUG:
             #     print('         adding related entity: %s' %obj.entity_name)
 
-    def load_bill_document(self, document_json, bill):
+    def load_bill_attachment(self, document_json, bill):
 
         doc_obj, created = Document.objects.get_or_create(
                 note=document_json['note'],
@@ -472,10 +475,22 @@ class Command(BaseCommand):
         obj, created = BillDocument.objects.get_or_create(
                 bill = bill,
                 document = doc_obj,
+                document_type = 'A',
             )
 
-        # if created and DEBUG:
-        #     print('      adding document: %s' % doc_obj.note)
+
+    def load_bill_version(self, document_json, bill):
+
+        doc_obj, created = Document.objects.get_or_create(
+                note=document_json['note'],
+                url=document_json['links'][0]['url'],
+            )
+
+        obj, created = BillDocument.objects.get_or_create(
+                bill = bill,
+                document = doc_obj,
+                document_type = 'V',
+            )
 
 
     def grab_person_memberships(self, person_id):
