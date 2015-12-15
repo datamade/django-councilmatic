@@ -26,6 +26,7 @@
                     </thead>
                     <tbody>
                         {% for committee in committees %}
+                            {% if committee.memberships.all|length > 0 %}
                             <tr>
                                 <td align="left">
                                     <a href="/committee/{{committee.slug}}">{{ committee.name | committee_topic_only }}</a>
@@ -37,6 +38,7 @@
                                 </td>
                                 <td>{{ committee.memberships.all | length }}</td>
                             </tr>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
@@ -55,6 +57,7 @@
                     </thead>
                     <tbody>
                         {% for committee in subcommittees %}
+                            {% if committee.memberships.all|length > 0 %}
                             <tr>
                                 <td align="left">
                                     <a href="/committee/{{committee.slug}}">{{ committee.name | committee_topic_only}}</a>
@@ -66,6 +69,7 @@
                                 </td>
                                 <td>{{ committee.memberships.all | length }}</td>
                             </tr>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
@@ -86,6 +90,7 @@
                     </thead>
                     <tbody>
                         {% for committee in taskforces %}
+                            {% if committee.memberships.all|length > 0 %}
                             <tr>
                                 <td>
                                     <a href="/committee/{{committee.slug}}">{{ committee.name }}</a>
@@ -97,6 +102,7 @@
                                 </td>
                                 <td>{{ committee.memberships.all | length }}</td>
                             </tr>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
