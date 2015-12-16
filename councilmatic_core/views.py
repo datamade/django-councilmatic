@@ -146,7 +146,6 @@ class CommitteeDetailView(DetailView):
         context = super(CommitteeDetailView, self).get_context_data(**kwargs)
         
         committee = context['committee']
-        context['chairs'] = committee.memberships.filter(role='CHAIRPERSON')
         context['memberships'] = committee.memberships.filter(role='Committee Member')
         
         if getattr(settings, 'COMMITTEE_DESCRIPTIONS', None):
@@ -174,8 +173,6 @@ class PersonDetailView(DetailView):
         
         person = context['person']
         context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')[:10]]
-        context['chairs'] = person.memberships.filter(role="CHAIRPERSON")
-        context['memberships'] = person.memberships.filter(role="Committee Member")
 
         seo = {}
         seo.update(settings.SITE_META)
