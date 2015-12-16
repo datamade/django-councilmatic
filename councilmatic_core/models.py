@@ -251,7 +251,10 @@ class Organization(models.Model):
 
     @property
     def chairs(self):
-        return self.memberships.filter(role='CHAIRPERSON')
+        if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
+            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
+        else:
+            return None
 
     @property
     def link_html(self):
