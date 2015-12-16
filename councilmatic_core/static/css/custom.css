@@ -85,6 +85,10 @@ h1, h2, h3, h4 {
     margin-bottom: 0;
     padding-bottom: 0;
 }
+.no-pad-top{
+    margin-top: 0;
+    padding-top: 0;
+}
 .less-pad-list{
     padding-left: 12px;
 }

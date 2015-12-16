@@ -440,8 +440,11 @@ class Event(models.Model):
 
     @classmethod
     def next_city_council_meeting(cls):
-        return cls.objects.filter(name__icontains='City Council Stated Meeting')\
+        if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
+            return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
                   .filter(start_time__gt=datetime.now()).order_by('start_time').first()
+        else:
+            return None
 
     @classmethod
     def upcoming_committee_meetings(cls):
