@@ -67,7 +67,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for membership in chairs %}
+                        {% for membership in committee.chairs %}
                             <tr>
                                 <td>
                                     <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
@@ -83,7 +83,7 @@
                                 </td>
                             </tr>
                         {% endfor %}
-                        {% for membership in memberships %}
+                        {% for membership in committee.non_chair_members %}
                             <tr>
                                 <td>
                                     <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
