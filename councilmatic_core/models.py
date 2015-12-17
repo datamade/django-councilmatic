@@ -241,6 +241,14 @@ class Bill(models.Model):
             return self.abstract
         return self.description
 
+    @property
+    def full_text_doc_url(self):
+        """
+        override this if instead of having full text as string stored in
+        full_text, it is a PDF document that you can embed on the page
+        """
+        return None
+
     def get_last_action_date(self):
         """
         grabs date of most recent activity on a bill
