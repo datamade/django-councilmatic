@@ -114,7 +114,13 @@
                         <tr>
                             <th></th>
                             <th>Sponsor</th>
-                            <th>District</th>
+                            <th>
+                                {% if MUNICIPAL_DISTRICT_NAME %}
+                                    {{MUNICIPAL_DISTRICT_NAME}}
+                                {% else %}
+                                    District
+                                {% endif %}
+                            </th>
                             <th>Role</th>
                         </tr>
                     </thead>

@@ -57,6 +57,7 @@ def city_context(request):
         'CITY_COUNCIL_NAME': getattr(settings, 'CITY_COUNCIL_NAME', None),
         'CITY_NAME': getattr(settings, 'CITY_NAME', None),
         'CITY_NAME_SHORT': getattr(settings, 'CITY_NAME_SHORT', None),
+        'MUNICIPAL_DISTRICT_NAME': getattr(settings, 'MUNICIPAL_DISTRICT_NAME', None),
         'SEARCH_PLACEHOLDER_TEXT': getattr(settings,'SEARCH_PLACEHOLDER_TEXT', None),
         'LEGISLATION_TYPE_DESCRIPTIONS': getattr(settings,'LEGISLATION_TYPE_DESCRIPTIONS', None),
         'LEGISTAR_URL': getattr(settings,'LEGISTAR_URL', None),
