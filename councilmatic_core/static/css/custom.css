@@ -178,6 +178,10 @@ h1, h2, h3, h4 {
     color: #fff;
 }
 
+.big{
+    font-size: 1.4em;
+}
+
 .x-small{
     font-size: .75em;
 }

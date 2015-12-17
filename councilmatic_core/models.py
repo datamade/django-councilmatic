@@ -174,6 +174,13 @@ class Bill(models.Model):
         return self.actions.all().order_by('-order').first() if self.actions.all() else None
 
     @property
+    def first_action(self):
+        """
+        grabs the first action on a bill
+        """
+        return self.actions.all().order_by('order').first() if self.actions.all() else None
+
+    @property
     def date_passed(self):
         return self.actions.filter(classification='passage').order_by('-order').first().date if self.actions.all() else None
 
@@ -239,6 +246,35 @@ class Bill(models.Model):
         grabs date of most recent activity on a bill
         """
         return self.actions.all().order_by('-order').first().date if self.actions.all() else None
+
+    @classmethod
+    def bills_since(cls, date_cutoff):
+        """
+        grabs all bills that have had activity since a given date
+        """
+        return cls.objects.filter(last_action_date__gte=date_cutoff)
+
+    @classmethod
+    def new_bills_since(cls, date_cutoff):
+        """
+        grabs all bills that have been added since a given date
+        (bills_since = new_bills_since + updated_bills_since)
+        """
+        all_bills_since = cls.bills_since(date_cutoff)
+        new_bills_since = [b for b in all_bills_since if b.first_action.date >= date_cutoff]
+        return new_bills_since
+
+
+    @classmethod
+    def updated_bills_since(cls, date_cutoff):
+        """
+        grabs all previously existing bills that have had activity since a given date
+        (bills_since = new_bills_since + updated_bills_since)
+        """
+        all_bills_since = cls.bills_since(date_cutoff)
+        updated_bills_since = [b for b in all_bills_since if b.first_action.date < date_cutoff]
+        return updated_bills_since
+
 
 class Organization(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
@@ -443,6 +479,14 @@ class Event(models.Model):
         if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
             return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
                   .filter(start_time__gt=datetime.now()).order_by('start_time').first()
+        else:
+            return None
+
+    @classmethod
+    def most_recent_past_city_council_meeting(cls):
+        if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
+            return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
+                  .filter(start_time__lt=datetime.now()).order_by('-start_time').first()
         else:
             return None
 
