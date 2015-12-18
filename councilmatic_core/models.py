@@ -202,13 +202,13 @@ class Bill(models.Model):
         return self.sponsorships.filter(is_primary=True).first()
 
     @property
-    def topics(self):
+    def pseudo_topics(self):
         """
-        returns a list of topics for a bill
+        returns a list of artificial topics for a bill, from the committees 
+        that have been involved in the bill's history (the actions)
 
-        by default this returns the committees that have been
-        involved in the bill's history (the actions) -
-        override this in custom subclass for richer topic logic
+        this serves as a backup when there isn't data on the real topics, 
+        so that bill listings can still have some useful tags populated
         """
         if self.actions.all():
             
@@ -224,6 +224,15 @@ class Bill(models.Model):
             return list(orgs)
         else:
             return None
+
+    @property
+    def topics(self):
+        """
+        returns a list of topics for a bill
+
+        override this in custom subclass for richer topic logic
+        """
+        return None
 
     @property
     def inferred_status(self):

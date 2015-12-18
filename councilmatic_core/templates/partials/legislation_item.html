@@ -30,6 +30,14 @@
         <i class="fa fa-fw fa-tag"></i>
         {% for tag in legislation.topics %}
             <span class="badge badge-muted pseudo-topic-tag">
+                {{ tag }}
+            </span>&nbsp;
+        {% endfor %}
+        <br/>
+    {% else %}
+        <i class="fa fa-fw fa-tag"></i>
+        {% for tag in legislation.pseudo_topics %}
+            <span class="badge badge-muted pseudo-topic-tag">
                 {{ tag | committee_topic_only }}
             </span>&nbsp;
         {% endfor %}
