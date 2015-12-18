@@ -193,6 +193,11 @@ h1, h2, h3, h4 {
     margin-top: 16px;
 }
 
+.bill-page-title .label {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
 .label-stale{
     background-color: #777;
 }

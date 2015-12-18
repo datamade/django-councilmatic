@@ -13,6 +13,17 @@
                         {{ legislation.inferred_status | inferred_status_label | safe }}
                     </span>
                 </h1>
+                {% if legislation.topics %}
+                    <p>
+                        <i class="fa fa-fw fa-tag"></i>
+                        {% for tag in legislation.topics %}
+                            <span class="badge badge-muted badge-big pseudo-topic-tag">
+                                {{ tag }}
+                            </span>&nbsp;
+                        {% endfor %}
+                        <br/>
+                    </p>
+                {% endif %}
             </div>
         </div>
 

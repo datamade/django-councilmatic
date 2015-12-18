@@ -56,8 +56,8 @@
 
 
     {% if request.GET.view == 'desc' or request.GET.view == None %}
+        <h3>Description</h3>
         {% if legislation.abstract %}
-            <h3>Description</h3>
             <p class="small text-muted">
                 <i>{{ legislation.description }} </i>
             </p>
