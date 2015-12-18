@@ -71,7 +71,7 @@
   overflow: visible;
   border: 9px solid transparent;
   background-clip: content-box;
-  border-image: url(images/shadow.png) 9 9 repeat;
+  border-image: url(/static/images/shadow.png) 9 9 repeat;
   background-color: white;
 }
 
@@ -180,7 +180,7 @@ html {
 body {
   height: 100%;
   background-color: #404040;
-  background-image: url(images/texture.png);
+  background-image: url(/static/images/texture.png);
 }
 
 body,
@@ -414,7 +414,7 @@ html[dir='rtl'] #viewerContainer {
   width: 200px;
   height: 32px;
   background-color: #424242; /* fallback */
-  background-image: url(images/texture.png),
+  background-image: url(/static/images/texture.png),
                     linear-gradient(hsla(0,0%,30%,.99), hsla(0,0%,25%,.95));
 }
 html[dir='ltr'] #toolbarSidebar {
@@ -434,7 +434,7 @@ html[dir='rtl'] #toolbarSidebar {
   position: relative;
   height: 32px;
   background-color: #474747; /* fallback */
-  background-image: url(images/texture.png),
+  background-image: url(/static/images/texture.png),
                     linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
 }
 html[dir='ltr'] #toolbarContainer, .findbar, .secondaryToolbar {
@@ -539,7 +539,7 @@ html[dir='rtl'] .findbar {
 }
 
 #findInput[data-status="pending"] {
-  background-image: url(images/loading-small.png);
+  background-image: url(/static/images/loading-small.png);
   background-repeat: no-repeat;
   background-position: right;
 }
@@ -890,7 +890,7 @@ html[dir='rtl'] .dropdownToolbarButton {
   max-width: 120px;
   padding: 3px 2px 2px;
   overflow: hidden;
-  background: url(images/toolbarButton-menuArrows.png) no-repeat;
+  background: url(/static/images/toolbarButton-menuArrows.png) no-repeat;
 }
 html[dir='ltr'] .dropdownToolbarButton {
   background-position: 95%;
@@ -980,73 +980,73 @@ html[dir="rtl"] .secondaryToolbarButton::before {
 }
 
 html[dir='ltr'] .toolbarButton#sidebarToggle::before {
-  content: url(images/toolbarButton-sidebarToggle.png);
+  content: url(/static/images/toolbarButton-sidebarToggle.png);
 }
 html[dir='rtl'] .toolbarButton#sidebarToggle::before {
-  content: url(images/toolbarButton-sidebarToggle-rtl.png);
+  content: url(/static/images/toolbarButton-sidebarToggle-rtl.png);
 }
 
 html[dir='ltr'] .toolbarButton#secondaryToolbarToggle::before {
-  content: url(images/toolbarButton-secondaryToolbarToggle.png);
+  content: url(/static/images/toolbarButton-secondaryToolbarToggle.png);
 }
 html[dir='rtl'] .toolbarButton#secondaryToolbarToggle::before {
-  content: url(images/toolbarButton-secondaryToolbarToggle-rtl.png);
+  content: url(/static/images/toolbarButton-secondaryToolbarToggle-rtl.png);
 }
 
 html[dir='ltr'] .toolbarButton.findPrevious::before {
-  content: url(images/findbarButton-previous.png);
+  content: url(/static/images/findbarButton-previous.png);
 }
 html[dir='rtl'] .toolbarButton.findPrevious::before {
-  content: url(images/findbarButton-previous-rtl.png);
+  content: url(/static/images/findbarButton-previous-rtl.png);
 }
 
 html[dir='ltr'] .toolbarButton.findNext::before {
-  content: url(images/findbarButton-next.png);
+  content: url(/static/images/findbarButton-next.png);
 }
 html[dir='rtl'] .toolbarButton.findNext::before {
-  content: url(images/findbarButton-next-rtl.png);
+  content: url(/static/images/findbarButton-next-rtl.png);
 }
 
 html[dir='ltr'] .toolbarButton.pageUp::before {
-  content: url(images/toolbarButton-pageUp.png);
+  content: url(/static/images/toolbarButton-pageUp.png);
 }
 html[dir='rtl'] .toolbarButton.pageUp::before {
-  content: url(images/toolbarButton-pageUp-rtl.png);
+  content: url(/static/images/toolbarButton-pageUp-rtl.png);
 }
 
 html[dir='ltr'] .toolbarButton.pageDown::before {
-  content: url(images/toolbarButton-pageDown.png);
+  content: url(/static/images/toolbarButton-pageDown.png);
 }
 html[dir='rtl'] .toolbarButton.pageDown::before {
-  content: url(images/toolbarButton-pageDown-rtl.png);
+  content: url(/static/images/toolbarButton-pageDown-rtl.png);
 }
 
 .toolbarButton.zoomOut::before {
-  content: url(images/toolbarButton-zoomOut.png);
+  content: url(/static/images/toolbarButton-zoomOut.png);
 }
 
 .toolbarButton.zoomIn::before {
-  content: url(images/toolbarButton-zoomIn.png);
+  content: url(/static/images/toolbarButton-zoomIn.png);
 }
 
 .toolbarButton.presentationMode::before,
 .secondaryToolbarButton.presentationMode::before {
-  content: url(images/toolbarButton-presentationMode.png);
+  content: url(/static/images/toolbarButton-presentationMode.png);
 }
 
 .toolbarButton.print::before,
 .secondaryToolbarButton.print::before {
-  content: url(images/toolbarButton-print.png);
+  content: url(/static/images/toolbarButton-print.png);
 }
 
 .toolbarButton.openFile::before,
 .secondaryToolbarButton.openFile::before {
-  content: url(images/toolbarButton-openFile.png);
+  content: url(/static/images/toolbarButton-openFile.png);
 }
 
 .toolbarButton.download::before,
 .secondaryToolbarButton.download::before {
-  content: url(images/toolbarButton-download.png);
+  content: url(/static/images/toolbarButton-download.png);
 }
 
 .toolbarButton.bookmark,
@@ -1069,26 +1069,26 @@ html[dir='rtl'] .toolbarButton.pageDown::before {
 
 .toolbarButton.bookmark::before,
 .secondaryToolbarButton.bookmark::before {
-  content: url(images/toolbarButton-bookmark.png);
+  content: url(/static/images/toolbarButton-bookmark.png);
 }
 
 #viewThumbnail.toolbarButton::before {
-  content: url(images/toolbarButton-viewThumbnail.png);
+  content: url(/static/images/toolbarButton-viewThumbnail.png);
 }
 
 html[dir="ltr"] #viewOutline.toolbarButton::before {
-  content: url(images/toolbarButton-viewOutline.png);
+  content: url(/static/images/toolbarButton-viewOutline.png);
 }
 html[dir="rtl"] #viewOutline.toolbarButton::before {
-  content: url(images/toolbarButton-viewOutline-rtl.png);
+  content: url(/static/images/toolbarButton-viewOutline-rtl.png);
 }
 
 #viewAttachments.toolbarButton::before {
-  content: url(images/toolbarButton-viewAttachments.png);
+  content: url(/static/images/toolbarButton-viewAttachments.png);
 }
 
 #viewFind.toolbarButton::before {
-  content: url(images/toolbarButton-search.png);
+  content: url(/static/images/toolbarButton-search.png);
 }
 
 .secondaryToolbarButton {
@@ -1124,27 +1124,27 @@ html[dir="rtl"] .secondaryToolbarButton > span {
 }
 
 .secondaryToolbarButton.firstPage::before {
-  content: url(images/secondaryToolbarButton-firstPage.png);
+  content: url(/static/images/secondaryToolbarButton-firstPage.png);
 }
 
 .secondaryToolbarButton.lastPage::before {
-  content: url(images/secondaryToolbarButton-lastPage.png);
+  content: url(/static/images/secondaryToolbarButton-lastPage.png);
 }
 
 .secondaryToolbarButton.rotateCcw::before {
-  content: url(images/secondaryToolbarButton-rotateCcw.png);
+  content: url(/static/images/secondaryToolbarButton-rotateCcw.png);
 }
 
 .secondaryToolbarButton.rotateCw::before {
-  content: url(images/secondaryToolbarButton-rotateCw.png);
+  content: url(/static/images/secondaryToolbarButton-rotateCw.png);
 }
 
 .secondaryToolbarButton.handTool::before {
-  content: url(images/secondaryToolbarButton-handTool.png);
+  content: url(/static/images/secondaryToolbarButton-handTool.png);
 }
 
 .secondaryToolbarButton.documentProperties::before {
-  content: url(images/secondaryToolbarButton-documentProperties.png);
+  content: url(/static/images/secondaryToolbarButton-documentProperties.png);
 }
 
 .verticalToolbarSeparator {
@@ -1205,7 +1205,7 @@ html[dir='rtl'] .verticalToolbarSeparator {
 }
 
 .toolbarField.pageNumber.visiblePageIsLoading {
-  background-image: url(images/loading-small.png);
+  background-image: url(/static/images/loading-small.png);
   background-repeat: no-repeat;
   background-position: 1px;
 }
@@ -1479,7 +1479,7 @@ html[dir='rtl'] .attachmentsItem > button {
   font-size: 12px;
   line-height: 14px;
   background-color: #474747; /* fallback */
-  background-image: url(images/texture.png),
+  background-image: url(/static/images/texture.png),
                     linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
   box-shadow: inset 1px 0 0 hsla(0,0%,100%,.08),
               inset 0 1px 1px hsla(0,0%,0%,.15),
@@ -1687,131 +1687,131 @@ html[dir='rtl'] #documentPropertiesOverlay .row > * {
 
   .toolbarField.pageNumber.visiblePageIsLoading,
   #findInput[data-status="pending"] {
-    background-image: url(images/loading-small@2x.png);
+    background-image: url(/static/images/loading-small@2x.png);
     background-size: 16px 17px;
   }
 
   .dropdownToolbarButton {
-    background: url(images/toolbarButton-menuArrows@2x.png) no-repeat;
+    background: url(/static/images/toolbarButton-menuArrows@2x.png) no-repeat;
     background-size: 7px 16px;
   }
 
   html[dir='ltr'] .toolbarButton#sidebarToggle::before {
-    content: url(images/toolbarButton-sidebarToggle@2x.png);
+    content: url(/static/images/toolbarButton-sidebarToggle@2x.png);
   }
   html[dir='rtl'] .toolbarButton#sidebarToggle::before {
-    content: url(images/toolbarButton-sidebarToggle-rtl@2x.png);
+    content: url(/static/images/toolbarButton-sidebarToggle-rtl@2x.png);
   }
 
   html[dir='ltr'] .toolbarButton#secondaryToolbarToggle::before {
-    content: url(images/toolbarButton-secondaryToolbarToggle@2x.png);
+    content: url(/static/images/toolbarButton-secondaryToolbarToggle@2x.png);
   }
   html[dir='rtl'] .toolbarButton#secondaryToolbarToggle::before {
-    content: url(images/toolbarButton-secondaryToolbarToggle-rtl@2x.png);
+    content: url(/static/images/toolbarButton-secondaryToolbarToggle-rtl@2x.png);
   }
 
   html[dir='ltr'] .toolbarButton.findPrevious::before {
-    content: url(images/findbarButton-previous@2x.png);
+    content: url(/static/images/findbarButton-previous@2x.png);
   }
   html[dir='rtl'] .toolbarButton.findPrevious::before {
-    content: url(images/findbarButton-previous-rtl@2x.png);
+    content: url(/static/images/findbarButton-previous-rtl@2x.png);
   }
 
   html[dir='ltr'] .toolbarButton.findNext::before {
-    content: url(images/findbarButton-next@2x.png);
+    content: url(/static/images/findbarButton-next@2x.png);
   }
   html[dir='rtl'] .toolbarButton.findNext::before {
-    content: url(images/findbarButton-next-rtl@2x.png);
+    content: url(/static/images/findbarButton-next-rtl@2x.png);
   }
 
   html[dir='ltr'] .toolbarButton.pageUp::before {
-    content: url(images/toolbarButton-pageUp@2x.png);
+    content: url(/static/images/toolbarButton-pageUp@2x.png);
   }
   html[dir='rtl'] .toolbarButton.pageUp::before {
-    content: url(images/toolbarButton-pageUp-rtl@2x.png);
+    content: url(/static/images/toolbarButton-pageUp-rtl@2x.png);
   }
 
   html[dir='ltr'] .toolbarButton.pageDown::before {
-    content: url(images/toolbarButton-pageDown@2x.png);
+    content: url(/static/images/toolbarButton-pageDown@2x.png);
   }
   html[dir='rtl'] .toolbarButton.pageDown::before {
-    content: url(images/toolbarButton-pageDown-rtl@2x.png);
+    content: url(/static/images/toolbarButton-pageDown-rtl@2x.png);
   }
 
   .toolbarButton.zoomIn::before {
-    content: url(images/toolbarButton-zoomIn@2x.png);
+    content: url(/static/images/toolbarButton-zoomIn@2x.png);
   }
 
   .toolbarButton.zoomOut::before {
-    content: url(images/toolbarButton-zoomOut@2x.png);
+    content: url(/static/images/toolbarButton-zoomOut@2x.png);
   }
 
   .toolbarButton.presentationMode::before,
   .secondaryToolbarButton.presentationMode::before {
-    content: url(images/toolbarButton-presentationMode@2x.png);
+    content: url(/static/images/toolbarButton-presentationMode@2x.png);
   }
 
   .toolbarButton.print::before,
   .secondaryToolbarButton.print::before {
-    content: url(images/toolbarButton-print@2x.png);
+    content: url(/static/images/toolbarButton-print@2x.png);
   }
 
   .toolbarButton.openFile::before,
   .secondaryToolbarButton.openFile::before {
-    content: url(images/toolbarButton-openFile@2x.png);
+    content: url(/static/images/toolbarButton-openFile@2x.png);
   }
 
   .toolbarButton.download::before,
   .secondaryToolbarButton.download::before {
-    content: url(images/toolbarButton-download@2x.png);
+    content: url(/static/images/toolbarButton-download@2x.png);
   }
 
   .toolbarButton.bookmark::before,
   .secondaryToolbarButton.bookmark::before {
-    content: url(images/toolbarButton-bookmark@2x.png);
+    content: url(/static/images/toolbarButton-bookmark@2x.png);
   }
 
   #viewThumbnail.toolbarButton::before {
-    content: url(images/toolbarButton-viewThumbnail@2x.png);
+    content: url(/static/images/toolbarButton-viewThumbnail@2x.png);
   }
 
   html[dir="ltr"] #viewOutline.toolbarButton::before {
-    content: url(images/toolbarButton-viewOutline@2x.png);
+    content: url(/static/images/toolbarButton-viewOutline@2x.png);
   }
   html[dir="rtl"] #viewOutline.toolbarButton::before {
-    content: url(images/toolbarButton-viewOutline-rtl@2x.png);
+    content: url(/static/images/toolbarButton-viewOutline-rtl@2x.png);
   }
 
   #viewAttachments.toolbarButton::before {
-    content: url(images/toolbarButton-viewAttachments@2x.png);
+    content: url(/static/images/toolbarButton-viewAttachments@2x.png);
   }
 
   #viewFind.toolbarButton::before {
-    content: url(images/toolbarButton-search@2x.png);
+    content: url(/static/images/toolbarButton-search@2x.png);
   }
 
   .secondaryToolbarButton.firstPage::before {
-    content: url(images/secondaryToolbarButton-firstPage@2x.png);
+    content: url(/static/images/secondaryToolbarButton-firstPage@2x.png);
   }
 
   .secondaryToolbarButton.lastPage::before {
-    content: url(images/secondaryToolbarButton-lastPage@2x.png);
+    content: url(/static/images/secondaryToolbarButton-lastPage@2x.png);
   }
 
   .secondaryToolbarButton.rotateCcw::before {
-    content: url(images/secondaryToolbarButton-rotateCcw@2x.png);
+    content: url(/static/images/secondaryToolbarButton-rotateCcw@2x.png);
   }
 
   .secondaryToolbarButton.rotateCw::before {
-    content: url(images/secondaryToolbarButton-rotateCw@2x.png);
+    content: url(/static/images/secondaryToolbarButton-rotateCw@2x.png);
   }
 
   .secondaryToolbarButton.handTool::before {
-    content: url(images/secondaryToolbarButton-handTool@2x.png);
+    content: url(/static/images/secondaryToolbarButton-handTool@2x.png);
   }
 
   .secondaryToolbarButton.documentProperties::before {
-    content: url(images/secondaryToolbarButton-documentProperties@2x.png);
+    content: url(/static/images/secondaryToolbarButton-documentProperties@2x.png);
   }
 }
 
