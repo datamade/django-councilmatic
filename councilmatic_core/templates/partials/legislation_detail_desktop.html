@@ -42,7 +42,7 @@
             </a>
         </li>
 
-        {% if legislation.full_text != "" %}
+        {% if legislation.full_text != "" or legislation.full_text_doc_url %}
         <li role="presentation" {% if request.GET.view == 'text' %}class='active' {% endif %}>
             <a href="/legislation/{{legislation.slug}}?view=text">
                 <i class='fa fa-fw fa-file-text-o'></i>
@@ -159,13 +159,25 @@
         {% endif %}
     {% endif %}
 
-    {% if request.GET.view == 'text' and legislation.full_text != "" %}
+    {% if request.GET.view == 'text' %}
+        {% if legislation.full_text != "" %}
         <br/>
         <div class='panel panel-default'>
             <div class='panel-body'>
                 {{ legislation.full_text|safe }}
             </div>
         </div>
+        {% elif legislation.full_text_doc_url %}
+        <br/>
+        <iframe src="/pdfviewer/?file={{legislation.full_text_doc_url|urlencode}}"
+            id="result-image"
+            frameborder="0"
+            seamless="true"
+            width="75%"
+            height="600px">
+        </iframe>
+
+        {% endif %}
     {% endif %}
 
     
