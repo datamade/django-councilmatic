@@ -272,3 +272,6 @@ def flush(request, flush_key):
         print("\n\n** NOTE: to use flush-cache, set FLUSH_KEY in settings_local.py **\n\n")
 
     return redirect('index')
+
+def pdfviewer(request):
+    return render(request, 'councilmatic_core/pdfviewer.html')

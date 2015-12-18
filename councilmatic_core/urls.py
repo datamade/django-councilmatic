@@ -14,4 +14,5 @@ urlpatterns = [
     url(r'^events/$', views.EventsView.as_view(), name='events'),
     url(r'^event/(?P<slug>.*)/$', views.EventDetailView.as_view(), name='event_detail'),
     url(r'^flush-cache/(.*)/$', views.flush, name='flush'),
+    url(r'^pdfviewer/$', views.pdfviewer, name='pdfviewer'),
 ]
