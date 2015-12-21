@@ -258,6 +258,13 @@ class Bill(models.Model):
         """
         return None
 
+    @property
+    def attachments(self):
+        """
+        grabs that documents that are attachments (as opposed to versions)
+        """
+        return self.documents.filter(document_type='A').all()
+
     def get_last_action_date(self):
         """
         grabs date of most recent activity on a bill

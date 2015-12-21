@@ -51,12 +51,15 @@
         </li>
         {% endif %}
 
+
         <li role="presentation" {% if request.GET.view == 'documents' %}class='active' {% endif %}>
             <a href="/legislation/{{legislation.slug}}?view=documents">
                 <i class='fa fa-fw fa-paperclip'></i>
-                Attachments ({{ legislation.documents.all | length }})
+                Attachments ({{ legislation.attachments | length }})
             </a>
         </li>
+
+
         {% if DISQUS_SHORTNAME %}
             <li role="presentation" {% if request.GET.view == 'comments' %}class='active' {% endif %}>
                 <a href="/legislation/{{legislation.slug}}?view=comments">
@@ -145,17 +148,17 @@
     {% endif %}
 
     {% if request.GET.view == 'documents' %}
-        {% if legislation.documents.all %}
+        {% if legislation.attachments %}
             <br/>
             <ul>
-                {% for doc in legislation.documents.all %}
+                {% for doc in legislation.attachments %}
                     <li>
                         <a href="{{doc.document.url}}" target="blank">{{ doc.document.note }}</a>
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <h3>This legislation has no documents</h3>
+            <h3>This legislation has no attachments</h3>
         {% endif %}
     {% endif %}
 
