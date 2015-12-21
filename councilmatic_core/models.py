@@ -110,6 +110,7 @@ class Bill(models.Model):
     classification = models.CharField(max_length=100)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=255, blank=True)
 
     _from_organization = models.ForeignKey('Organization', 
                                            related_name='bills', 

@@ -273,6 +273,11 @@ class Command(BaseCommand):
         else:
             full_text = ''
 
+        if 'subject' in page_json and page_json['subject']:
+            subject = page_json['subject'][0]
+        else:
+            subject = ''
+
         if page_json['abstracts']:
             abstract = page_json['abstracts'][0]['abstract']
         else:
@@ -292,6 +297,7 @@ class Command(BaseCommand):
             'abstract':abstract,
             '_legislative_session':leg_session_obj,
             'bill_type':bill_type,
+            'subject': subject,
         }
 
         updated = False
@@ -315,6 +321,7 @@ class Command(BaseCommand):
                 obj.abstract=abstract
                 obj._legislative_session=leg_session_obj
                 obj.bill_type=bill_type
+                obj.subject=subject
 
                 obj.save()
                 updated = True
