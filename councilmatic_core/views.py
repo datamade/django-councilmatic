@@ -216,9 +216,18 @@ class EventsView(ListView):
         events_key = 'upcoming_events'
 
         upcoming_dates = Event.objects.filter(start_time__gt=date.today())
-        
+
         current_year = self.request.GET.get('year')
         current_month = self.request.GET.get('month')
+
+        # if there are no upcoming events, show the most recent month
+        # that has events populated
+        if not upcoming_dates and not current_year and not current_month:
+
+            most_recent_past_starttime = Event.objects.order_by('-start_time').first().start_time
+            current_year = most_recent_past_starttime.month
+            current_month = most_recent_past_starttime.year
+
         if current_year and current_month:
             events_key = 'month_events'
             upcoming_dates = Event.objects\
