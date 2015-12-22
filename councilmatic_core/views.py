@@ -61,7 +61,8 @@ def city_context(request):
         'SEARCH_PLACEHOLDER_TEXT': getattr(settings,'SEARCH_PLACEHOLDER_TEXT', None),
         'LEGISLATION_TYPE_DESCRIPTIONS': getattr(settings,'LEGISLATION_TYPE_DESCRIPTIONS', None),
         'LEGISTAR_URL': getattr(settings,'LEGISTAR_URL', None),
-        'DISQUS_SHORTNAME': getattr(settings, 'DISQUS_SHORTNAME', None)
+        'DISQUS_SHORTNAME': getattr(settings, 'DISQUS_SHORTNAME', None),
+        'IMAGES': getattr(settings, 'IMAGES', None),
     }
 
 class IndexView(TemplateView):

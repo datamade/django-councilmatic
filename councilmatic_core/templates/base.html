@@ -7,7 +7,7 @@
 
     {% include 'partials/seo.html' %}
 
-    <link href="{% static 'images/favicon.png' %}" rel="shortcut icon">
+    <link href="{% static IMAGES.favicon %}" rel="shortcut icon">
 
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700,300italic' rel='stylesheet' type='text/css'>
@@ -25,7 +25,7 @@
         <div class="container-fluid container-fluid-nav">
             <div id="nav-title">
                 <a class="navbar-brand" href="/">
-                    <img id="logo" src="{% static 'images/logo.png'%}"></img>
+                    <img id="logo" src="{% static IMAGES.logo %}"></img>
                     <span id="logo-text">{{ CITY_NAME_SHORT }} Councilmatic</span>
                 </a>
             </div>
