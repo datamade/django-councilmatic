@@ -187,7 +187,7 @@ class Command(BaseCommand):
 
         # grab boundary listing
         bndry_set_url = base_url+'/boundaries/'+settings.BOUNDARY_SET
-        r = requests.get(bndry_set_url)
+        r = requests.get(bndry_set_url+'/?limit=0')
         page_json = json.loads(r.text)
 
         # loop through boundary listing
