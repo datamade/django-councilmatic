@@ -13,53 +13,11 @@
 
     <div class="row-fluid">
         <div class="col-sm-8 no-pad-mobile">
-            <div class="table-responsive">
-                <table class='table' id='council-members'>
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Council Member</th>
-                            <th>
-                                {% if MUNICIPAL_DISTRICT_NAME %}
-                                    {{MUNICIPAL_DISTRICT_NAME}}
-                                {% else %}
-                                    District
-                                {% endif %}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for post in posts %}
-                            <tr>
-                                <td>
-                                    {% if post.current_member %}
-                                        <img src='{{post.current_member.person.headshot_url}}' alt='{{post.current_member.person.name}}' title='{{post.current_member.person.name}}' class='img-responsive img-thumbnail' />
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if post.current_member %}
-                                        {{ post.current_member.person.link_html | safe }}
-                                        {% if post.current_member.person.is_speaker %}
-                                            <br /><span class='label label-default'>Council Speaker</span>
-                                            <span class='label label-success'><i class='fa fa-fw fa-check-square-o'></i> Verified</span>
-                                        {% endif %}
-                                    {% else %}
-                                        Vacant
-                                    {% endif %}
-                                </td>
-                                <td>{{post.label}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include 'partials/council_member_table.html' %}
 
         </div>
         <div class='col-sm-4'>
-            <div class='well'>
-                <h4><i class='fa fa-fw fa-info-circle'></i> What does City Council do?</h4>
-                <p>{{CITY_COUNCIL_NAME}} monitors the operation and performance of city agencies, makes land use decisions and has sole responsibility for approving the city's budget. It also legislates on a wide range of other subjects. The Council is an equal partner with the Mayor in the governing of {{ CITY_NAME }}. <a href='/about/#about-city-council'>Read more about how City Council works ></a></p>
-            </div>
+            {% include 'partials/council_info_blurb.html' %}
         </div>
         </div>
     </div>
