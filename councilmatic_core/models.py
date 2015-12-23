@@ -410,7 +410,9 @@ class Post(models.Model):
     label = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
     _organization = models.ForeignKey('Organization', related_name='posts', db_column='organization_id', null=True)
-    
+    division_ocd_id = models.CharField(max_length=255)
+    shape = models.TextField(blank=True)
+
     @property
     def organization(self):
         return override_relation(self._organization)
