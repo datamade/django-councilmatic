@@ -107,6 +107,10 @@ class Command(BaseCommand):
 
                 self.grab_organization_posts(result['id'])
 
+        # update relevant posts with shapes
+        if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
+            self.populate_council_district_shapes()
+
 
     def grab_organization_posts(self, organization_ocd_id, parent=None):
 
@@ -163,12 +167,12 @@ class Command(BaseCommand):
             print('\u263A', end=' ', flush=True)
 
         for post_json in page_json['posts']:
-
             obj, created = Post.objects.get_or_create(
                     ocd_id = post_json['id'],
                     label = post_json['label'],
                     role = post_json['role'],
                     _organization = org_obj,
+                    division_ocd_id = post_json['division_id'],
                 )
 
             # if created and DEBUG:
@@ -177,6 +181,22 @@ class Command(BaseCommand):
         for child in page_json['children']:
             self.grab_organization_posts(child['id'], org_obj)
 
+    def populate_council_district_shapes(self):
+
+        print("\n\npopulating boundaries: %s" %settings.BOUNDARY_SET)
+
+        # grab boundary listing
+        bndry_set_url = base_url+'/boundaries/'+settings.BOUNDARY_SET
+        r = requests.get(bndry_set_url)
+        page_json = json.loads(r.text)
+
+        # loop through boundary listing
+        for bndry_json in page_json['objects']:
+            # grab boundary shape
+            shape_url = bndry_set_url+'/'+bndry_json['name']+'/shape'
+            r = requests.get(shape_url)
+            # update the right post(s) with the shape
+            Post.objects.filter(division_ocd_id=bndry_json['external_id']).update(shape=r.text)
 
     def grab_people(self, delete=False):
         # find people associated with existing organizations & bills
