@@ -1,6 +1,15 @@
 {% extends "base_with_margins.html" %}
 {% load staticfiles %}
 {% block title %}{{CITY_COUNCIL_NAME}} Members{% endblock %}
+
+
+{% block extra_css %}
+    {% if MAP_CONFIG %}
+        <link rel="stylesheet" href="{% static 'css/leaflet.css' %}" />
+    {% endif %}
+{% endblock %}
+
+
 {% block content %}
 
     <div class="row-fluid">
@@ -12,17 +21,26 @@
     </div>
 
     <div class="row-fluid">
-        <div class="col-sm-8 no-pad-mobile">
-            {% include 'partials/council_member_table.html' %}
-
-        </div>
-        <div class='col-sm-4'>
-            {% include 'partials/council_info_blurb.html' %}
-        </div>
-        </div>
+        {% if MAP_CONFIG %}
+            <div class='col-sm-7'>
+                {% include 'partials/map.html' %}
+            </div>
+            <div class="col-sm-5 no-pad-mobile">
+                {% include 'partials/council_member_table.html' %}
+            </div>
+        {% else %}
+            <div class="col-sm-8 no-pad-mobile">
+                {% include 'partials/council_member_table.html' %}
+            </div>
+            <div class='col-sm-4'>
+                {% include 'partials/council_info_blurb.html' %}
+            </div>
+        {% endif %}
     </div>
 
 {% endblock %}
+
+
 {% block extra_js %}
     <script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
@@ -42,4 +60,13 @@
             ]
         });
     </script>
+
+
+    {% if MAP_CONFIG %}
+        <link src="{% static 'js/leaflet.js' %}" />
+        <script>
+        </script>
+    {% endif %}
+
+
 {% endblock %}
