@@ -51,19 +51,25 @@ class CouncilmaticSearchForm(FacetedSearchForm):
 # into the context of every page.
 
 def city_context(request):
-    return {
-        'SITE_META': getattr(settings, 'SITE_META', None),
-        'FOOTER_CREDITS': getattr(settings, 'FOOTER_CREDITS', None),
-        'CITY_COUNCIL_NAME': getattr(settings, 'CITY_COUNCIL_NAME', None),
-        'CITY_NAME': getattr(settings, 'CITY_NAME', None),
-        'CITY_NAME_SHORT': getattr(settings, 'CITY_NAME_SHORT', None),
-        'MUNICIPAL_DISTRICT_NAME': getattr(settings, 'MUNICIPAL_DISTRICT_NAME', None),
-        'SEARCH_PLACEHOLDER_TEXT': getattr(settings,'SEARCH_PLACEHOLDER_TEXT', None),
-        'LEGISLATION_TYPE_DESCRIPTIONS': getattr(settings,'LEGISLATION_TYPE_DESCRIPTIONS', None),
-        'LEGISTAR_URL': getattr(settings,'LEGISTAR_URL', None),
-        'DISQUS_SHORTNAME': getattr(settings, 'DISQUS_SHORTNAME', None),
-        'IMAGES': getattr(settings, 'IMAGES', None),
-    }
+    relevant_settings = [
+        'SITE_META',
+        'FOOTER_CREDITS',
+        'CITY_COUNCIL_NAME',
+        'CITY_NAME',
+        'CITY_NAME_SHORT',
+        'MUNICIPAL_DISTRICT_NAME',
+        'SEARCH_PLACEHOLDER_TEXT',
+        'LEGISLATION_TYPE_DESCRIPTIONS',
+        'LEGISTAR_URL',
+        'DISQUS_SHORTNAME',
+        'IMAGES',
+        'MAP_CONFIG',
+    ]
+
+    city_context = { s: getattr(settings, s, None) for s in relevant_settings}
+
+    return city_context
+
 
 class IndexView(TemplateView):
      
