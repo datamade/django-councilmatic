@@ -139,6 +139,10 @@ h1, h2, h3, h4 {
 }
 
 
+/* map */
+#map {
+    height: 500px;
+}
 
 
 /* homepage stuff */
