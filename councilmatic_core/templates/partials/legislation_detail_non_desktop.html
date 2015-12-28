@@ -102,6 +102,16 @@
                 </table>
             </div>
 
+            {% if legislation.unique_related_events %}
+                <h3><i class='fa fa-fw fa-calendar-o'></i> Relevant Events</h3>
+
+                {% for event in legislation.unique_related_events %}
+                    <p>
+                        {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
+                    </p>
+                {% endfor %}
+            {% endif %}
+
         {% endif %}
     {% endif %}
 

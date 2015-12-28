@@ -300,6 +300,11 @@ class Bill(models.Model):
         updated_bills_since = [b for b in all_bills_since if b.first_action.date < date_cutoff]
         return updated_bills_since
 
+    @property
+    def unique_related_events(self):
+        events = [r.agenda_item.event for r in self.related_agenda_items.all()]
+        return list(set(events))
+
 
 class Organization(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True)
