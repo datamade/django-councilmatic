@@ -1,4 +1,4 @@
-{% extends "base_with_margins.html" %}
+{% extends "base_no_footer.html" %}
 {% load staticfiles %}
 {% block title %}{{CITY_COUNCIL_NAME}} Members{% endblock %}
 
@@ -10,8 +10,16 @@
 {% endblock %}
 
 
-{% block content %}
-
+{% block full_content %}
+<div class="container-fluid">
+    {% if MAP_CONFIG %}
+    <div class="row-fluid non-desktop-only">
+        <div class="col-sm-12">
+            <h1>City Council Members</h1>
+        </div>
+    </div>
+    <br/>
+    {% else %}
     <div class="row-fluid">
         <div class="col-sm-12">
             <br/>
@@ -19,6 +27,7 @@
             <hr />
         </div>
     </div>
+    {% endif %}
 
     <div class="row-fluid">
         {% if MAP_CONFIG %}
@@ -26,7 +35,9 @@
                 {% include 'partials/map.html' %}
             </div>
             <div class="col-sm-5 no-pad-mobile">
-                {% include 'partials/council_member_table.html' %}
+                <div id="council-member-scroll-area">
+                    {% include 'partials/council_member_table.html' %}
+                </div>
             </div>
         {% else %}
             <div class="col-sm-8 no-pad-mobile">
@@ -37,7 +48,7 @@
             </div>
         {% endif %}
     </div>
-
+</div>
 {% endblock %}
 
 

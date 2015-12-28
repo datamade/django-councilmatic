@@ -116,6 +116,12 @@ h1, h2, h3, h4 {
 }
 
 
+.img-thumbnail{
+    padding: 0px;
+    border: none;
+}
+
+
 
 
 
@@ -142,6 +148,11 @@ h1, h2, h3, h4 {
 /* map */
 #map {
     height: 500px;
+}
+
+#council-member-scroll-area{
+    height: 500px;
+    overflow-y: scroll;
 }
 
 
@@ -367,6 +378,10 @@ select {
 
     #person-detail-headshot{
         max-height: 160px;
+    }
+
+    #map{
+        height: 260px;
     }
 
     .desktop-only{
