@@ -193,7 +193,7 @@ class Command(BaseCommand):
         # loop through boundary listing
         for bndry_json in page_json['objects']:
             # grab boundary shape
-            shape_url = bndry_set_url+'/'+bndry_json['name']+'/shape'
+            shape_url = base_url+bndry_json['url']+'shape'
             r = requests.get(shape_url)
             # update the right post(s) with the shape
             Post.objects.filter(division_ocd_id=bndry_json['external_id']).update(shape=r.text)
