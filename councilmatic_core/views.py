@@ -232,8 +232,8 @@ class EventsView(ListView):
         if not upcoming_dates and not current_year and not current_month:
 
             most_recent_past_starttime = Event.objects.order_by('-start_time').first().start_time
-            current_year = most_recent_past_starttime.month
-            current_month = most_recent_past_starttime.year
+            current_year = most_recent_past_starttime.year
+            current_month = most_recent_past_starttime.month
 
         if current_year and current_month:
             events_key = 'month_events'
