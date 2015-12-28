@@ -40,7 +40,15 @@
             <p>
                 <ol>
                     {% for agenda_item in event.clean_agenda_items %}
-                        {{agenda_item}}<br />
+                        <li>
+                            {% if agenda_item.related_bills %}
+                                <a href="/legislation/{{agenda_item.related_bills.first.bill.slug}}">
+                                    {{agenda_item.related_bills.first.bill.friendly_name}}
+                                </a>
+                                <br/>
+                            {% endif %}
+                            {{agenda_item.description}}
+                        </li>
                     {% endfor %}
                 </ol>
             </p>

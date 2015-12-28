@@ -495,9 +495,11 @@ class Event(models.Model):
     def clean_agenda_items(self):
         agenda_items = self.agenda_items.order_by('order').all()
         agenda_deduped = []
+        descriptions_seen = []
         for a in agenda_items:
-            if a.description not in agenda_deduped:
-                agenda_deduped.append(a.description)
+            if a.description not in descriptions_seen:
+                descriptions_seen.append(a.description)
+                agenda_deduped.append(a)
 
         return agenda_deduped
 
