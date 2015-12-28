@@ -28,7 +28,8 @@
         var feature = {
             "type": "Feature",
             "properties": {
-                "popupContent": "{{post.label}} - {{post.current_member.person.name}}"
+                "popupContent": "{{post.label}} - {{post.current_member.person.name}}",
+                "select_id": "polygon-{{post.current_member.person.slug}}"
             },
             "geometry":{{post.shape | safe}}
         }

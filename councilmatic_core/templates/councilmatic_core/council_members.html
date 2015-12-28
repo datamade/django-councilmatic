@@ -15,7 +15,7 @@
     {% if MAP_CONFIG %}
     <div class="row-fluid non-desktop-only">
         <div class="col-sm-12">
-            <h1>City Council Members</h1>
+            <h1>Council Members</h1>
         </div>
     </div>
     <br/>
@@ -70,6 +70,22 @@
                 { "sType": "num-html" }
             ]
         });
+
+        {% if MAP_CONFIG %}
+        $('tbody').on( 'click', 'tr', function () {
+            hoverOnRow(this.id);
+        } );
+
+
+        function hoverOnRow(select_id) {
+            map.eachLayer(function (layer) {
+                if (typeof layer.feature !== "undefined" && layer.feature.properties.select_id === select_id){
+                    layer.openPopup()
+                }
+            });
+
+        }
+        {% endif %}
     </script>
 
 
