@@ -40,15 +40,22 @@
                         </thead>
                         <tbody>
                             {% for action in committee.recent_activity %}
-                                <tr>
+                                <tr class="activity-row">
                                     <td class='nowrap text-muted small'>{{action.date|date:'n/d/Y'}}</td>
                                     <td><a href="/legislation/{{action.bill.slug}}">{{action.bill.friendly_name}}</a></td>
                                     <td><span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span></td>
                                 </tr>
                             {% endfor %}
+                            <tr>
+                                <td colspan="3" align="center">
+                                    <a href="" id="more-activity"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
+                                    <a href="" id="less-activity"><i class="fa fa-fw fa-chevron-up"></i>Show less</a>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
+
                 {% else %}
                     <p>No recent activity</p>
                 {% endif %}
@@ -131,6 +138,27 @@
                 { "sType": "num-html" },
                 null
             ]
+        });
+
+        function collapseActivity(){
+            $(".activity-row:gt(4)").hide();
+            $("#more-activity").show();
+            $("#less-activity").hide();
+        }
+        function expandActivity(){
+            $(".activity-row:gt(4)").show();
+            $("#more-activity").hide();
+            $("#less-activity").show();
+        }
+
+        collapseActivity();
+        $("#more-activity").click(function() {
+            expandActivity();
+            return false;
+        });
+        $("#less-activity").click(function() {
+            collapseActivity();
+            return false;
         });
 
         // for reference purposes
