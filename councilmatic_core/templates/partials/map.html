@@ -16,9 +16,14 @@
     var layer = new L.StamenTileLayer("toner-lite");
     map.addLayer(layer);
 
+    var customOptions =
+        {
+        'className' : 'custom'
+        }
+
     function onEachFeature(feature, layer) {
         if (feature.properties && feature.properties.popupContent) {
-            layer.bindPopup(feature.properties.popupContent);
+            layer.bindPopup(feature.properties.popupContent, customOptions);
         }
     }
 

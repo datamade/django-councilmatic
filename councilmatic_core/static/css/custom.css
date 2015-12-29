@@ -150,6 +150,15 @@ h1, h2, h3, h4 {
     height: 500px;
 }
 
+.custom .leaflet-popup-tip,
+.custom .leaflet-popup-content-wrapper {
+    background: rgba(255, 255, 255, .8);
+    color: #000;
+}
+.custom .leaflet-popup-content{
+    margin: 3px 18px 3px 6px;
+}
+
 #council-member-scroll-area{
     height: 500px;
     overflow-y: scroll;
