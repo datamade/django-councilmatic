@@ -4,7 +4,7 @@
 
 
 {% block extra_css %}
-    {% if MAP_CONFIG %}
+    {% if map_geojson %}
         <link rel="stylesheet" href="{% static 'css/leaflet.css' %}" />
     {% endif %}
 {% endblock %}
@@ -12,7 +12,7 @@
 
 {% block full_content %}
 <div class="container-fluid">
-    {% if MAP_CONFIG %}
+    {% if map_geojson %}
     <div class="row-fluid non-desktop-only">
         <div class="col-sm-12">
             <h1>Council Members</h1>
@@ -30,7 +30,7 @@
     {% endif %}
 
     <div class="row-fluid">
-        {% if MAP_CONFIG %}
+        {% if map_geojson %}
             <div class='col-sm-7'>
                 {% include 'partials/map.html' %}
             </div>
@@ -71,7 +71,7 @@
             ]
         });
 
-        {% if MAP_CONFIG %}
+        {% if map_geojson %}
         $('tbody tr').on( 'mouseover', function () {
             hoverOnRow(this.id);
             $('tr').css('background-color', 'inherit')
@@ -79,27 +79,29 @@
         } );
 
         $('tbody tr').on( "mouseout", function() {
-            $('tr').css('background-color', 'inherit')
-            map.eachLayer(function (layer) {
-                if (typeof layer.feature !== "undefined"){
-                    layer.setStyle({'fillOpacity': .2})
-                    // close popup here
+            $('tr').css('background-color', 'inherit');
+            hoverOffRow(this.id);
+        } )
+
+        function hoverOffRow(select_id){
+            geojson.eachLayer(function (layer) {
+
+                if (layer.feature.properties.select_id === select_id){
+                    layer.fire('tableout');
                 }
 
             });
-        } )
 
+        }
 
         function hoverOnRow(select_id) {
-            map.eachLayer(function (layer) {
-                if (typeof layer.feature !== "undefined"){
+            geojson.eachLayer(function (layer) {
 
-                    layer.setStyle({'fillOpacity': .2})
+                layer.setStyle({'fillOpacity': .2})
 
-                    if (layer.feature.properties.select_id === select_id){
-                        layer.openPopup()
-                        layer.setStyle({'fillOpacity': .8})
-                    }
+
+                if (layer.feature.properties.select_id === select_id){
+                    layer.fire('tableover');
                 }
 
             });

@@ -23,34 +23,45 @@
 
     function onEachFeature(feature, layer) {
         if (feature.properties && feature.properties.popupContent) {
-            layer.bindPopup(feature.properties.popupContent, customOptions);
+            //layer.bindLabel(feature.properties.popupContent, customOptions);
+
+            var center = layer.getBounds().getCenter();
+
+            if (map){
+                layer.layerPopup = L.popup(customOptions)
+                                    .setLatLng(center)
+                                    .setContent(feature.properties.popupContent);
+
+                layer.on('mouseover', function(e){
+                    e.target.setStyle({'fillOpacity': 0.8});
+                    e.target.layerPopup.openOn(map);
+                });
+
+                layer.on('mouseout', function(e){
+                    e.target.setStyle({'fillOpacity': 0.2})
+                });
+
+                layer.on('tableover', function(e){
+                    e.target.layerPopup.openOn(map);
+                    e.target.setStyle({'fillOpacity': 0.8})
+                });
+
+                layer.on('tableout', function(e){
+                    e.target.setStyle({'fillOpacity': 0.2})
+                    map.closePopup(e.target.layerPopup);
+                });
+            }
         }
     }
 
-
-    {% for post in posts %}
-        {% if post.shape %}
-        var feature = {
-            "type": "Feature",
-            "properties": {
-                "popupContent": "{{post.label}} - {{post.current_member.person.name}}",
-                "select_id": "polygon-{{post.current_member.person.slug}}"
+    var geojson = L.geoJson({{ map_geojson|safe }}, {
+        style: {
+                "color": "{{MAP_CONFIG.color}}",
+                "weight": 2,
+                "opacity": 0.8,
+                "fillOpacity": .2
             },
-            "geometry":{{post.shape | safe}}
-        }
-        L.geoJson(feature, {
-            style: {
-                    "color": "{{MAP_CONFIG.color}}",
-                    "weight": 2,
-                    "opacity": 0.8,
-                    "fillOpacity": .2
-                },
-            onEachFeature: onEachFeature
-        }).addTo(map);
-
-        {% endif %}
-    {% endfor %}
-
-
+        onEachFeature: onEachFeature
+    }).addTo(map);
 
 </script>

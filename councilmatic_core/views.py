@@ -16,6 +16,7 @@ from operator import attrgetter
 
 import pytz
 import re
+import json
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
@@ -118,6 +119,38 @@ class CouncilMembersView(ListView):
     def get_queryset(self):
         return Organization.objects.get(ocd_id=settings.OCD_CITY_COUNCIL_ID).posts.all()
         # return Post.objects.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CouncilMembersView, self).get_context_data(**kwargs)
+        
+        context['map_geojson'] = None
+
+        if settings.MAP_CONFIG:
+            map_geojson = {
+                'type': 'FeatureCollection',
+                'features': []
+            }
+
+            for post in self.object_list:
+                if post.shape:
+                    
+                    popup_content = '{label} - {name}'.format(label=post.label,
+                                                              name=post.current_member.person.name)
+
+                    feature = {
+                        'type': 'Feature',
+                        'geometry': json.loads(post.shape),
+                        'properties': {
+                            'popupContent': popup_content,
+                            'select_id': 'polygon-{}'.format(post.current_member.person.slug),
+                        }
+                    }
+
+                    map_geojson['features'].append(feature)
+            
+            context['map_geojson'] = json.dumps(map_geojson)
+        
+        return context
 
 class BillDetailView(DetailView):
     model = Bill
