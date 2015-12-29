@@ -134,14 +134,12 @@ class CouncilMembersView(ListView):
             for post in self.object_list:
                 if post.shape:
                     
-                    popup_content = '{label} - {name}'.format(label=post.label,
-                                                              name=post.current_member.person.name)
-
                     feature = {
                         'type': 'Feature',
                         'geometry': json.loads(post.shape),
                         'properties': {
-                            'popupContent': popup_content,
+                            'district': post.label,
+                            'council_member': post.current_member.person.name,
                             'select_id': 'polygon-{}'.format(post.current_member.person.slug),
                         }
                     }

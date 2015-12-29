@@ -16,39 +16,62 @@
     var layer = new L.StamenTileLayer("toner-lite");
     map.addLayer(layer);
 
+    var infoBox = L.control({'position': 'bottomleft'});
+
+    infoBox.onAdd = function() {
+        this._div = L.DomUtil.create('div', 'infobox');
+        this.update();
+        return this._div;
+    }
+
+    infoBox.update = function(properties){
+        if(properties){
+            var info = '<h4>' + properties.district + '</h4>';
+            info += '<p>' + properties.council_member + '</p>';
+            this._div.innerHTML = info;
+        }
+    }
+
+    infoBox.clear = function(){
+        this._div.innerHTML = '';
+    }
+
+    infoBox.addTo(map);
+
     var customOptions =
         {
         'className' : 'custom'
         }
-
     function onEachFeature(feature, layer) {
-        if (feature.properties && feature.properties.popupContent) {
-            //layer.bindLabel(feature.properties.popupContent, customOptions);
+        if (feature.properties) {
 
             var center = layer.getBounds().getCenter();
 
             if (map){
-                layer.layerPopup = L.popup(customOptions)
+                layer.layerPopup = L.popup(customOptions, layer)
                                     .setLatLng(center)
                                     .setContent(feature.properties.popupContent);
 
+
                 layer.on('mouseover', function(e){
+                    infoBox.update(e.target.feature.properties);
                     e.target.setStyle({'fillOpacity': 0.8});
-                    e.target.layerPopup.openOn(map);
                 });
 
                 layer.on('mouseout', function(e){
-                    e.target.setStyle({'fillOpacity': 0.2})
-                });
+                    infoBox.clear();
+                    e.target.setStyle({'fillOpacity': 0.2});
+                })
 
                 layer.on('tableover', function(e){
-                    e.target.layerPopup.openOn(map);
+                    infoBox.update(e.target.feature.properties);
                     e.target.setStyle({'fillOpacity': 0.8})
                 });
 
                 layer.on('tableout', function(e){
-                    e.target.setStyle({'fillOpacity': 0.2})
+                    infoBox.clear();
                     map.closePopup(e.target.layerPopup);
+                    e.target.setStyle({'fillOpacity': 0.2});
                 });
             }
         }
