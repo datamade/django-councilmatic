@@ -72,16 +72,25 @@
         });
 
         {% if MAP_CONFIG %}
-        $('tbody').on( 'click', 'tr', function () {
+        $('tbody tr').on( 'mouseover', function () {
             hoverOnRow(this.id);
+            $('tr').css('background-color', 'inherit')
+            $(this).css('background-color', '#eee');
         } );
 
 
         function hoverOnRow(select_id) {
             map.eachLayer(function (layer) {
-                if (typeof layer.feature !== "undefined" && layer.feature.properties.select_id === select_id){
-                    layer.openPopup()
+                if (typeof layer.feature !== "undefined"){
+
+                    layer.setStyle({'fillOpacity': .2})
+
+                    if (layer.feature.properties.select_id === select_id){
+                        layer.openPopup()
+                        layer.setStyle({'fillOpacity': .8})
+                    }
                 }
+
             });
 
         }
