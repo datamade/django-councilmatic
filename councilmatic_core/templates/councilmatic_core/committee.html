@@ -27,7 +27,7 @@
             </ul>
 
             {% if request.GET.view != 'members' %}
-                <h3><i class='fa fa-fw fa-list-ul'></i> Committee Activity</h3>
+                <h3><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity</h3>
                 {% if committee.recent_activity %}
                 <div class="table-responsive">
                     <table class='table' id='committee-actions'>
@@ -55,6 +55,13 @@
                         </tbody>
                     </table>
                 </div>
+
+                <h3><i class='fa fa-fw fa-calendar-o'></i> Recent Committee Events</h3>
+                {% for event in committee.recent_events %}
+                    <p>
+                    {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
+                    </p>
+                {% endfor %}
 
                 {% else %}
                     <p>No recent activity</p>

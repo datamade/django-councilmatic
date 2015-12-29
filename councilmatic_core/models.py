@@ -330,6 +330,12 @@ class Organization(models.Model):
         return self.actions.order_by('-date', '-_bill__identifier', '-order') if self.actions.all() else None
 
     @property
+    def recent_events(self):
+        # need to look up event participants by name
+        events = Event.objects.filter(participants__entity_type='organization').filter(participants__entity_name=self.name).order_by('-start_time').all()
+        return events
+
+    @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
