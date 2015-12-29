@@ -48,24 +48,28 @@
                             {% endfor %}
                             <tr>
                                 <td colspan="3" align="center">
-                                    <a href="" id="more-activity"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
-                                    <a href="" id="less-activity"><i class="fa fa-fw fa-chevron-up"></i>Show less</a>
+                                    <a href="" id="more-actions"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
+                                    <a href="" id="fewer-actions"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <h3><i class='fa fa-fw fa-calendar-o'></i> Recent Committee Events</h3>
-                {% for event in committee.recent_events %}
-                    <p>
-                    {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
-                    </p>
-                {% endfor %}
-
                 {% else %}
-                    <p>No recent activity</p>
+                    <p>No recent legislative activity</p>
                 {% endif %}
+
+                {% if committee.recent_events %}
+                    <h3><i class='fa fa-fw fa-calendar-o'></i> Recent Committee Events</h3>
+                    {% for event in committee.recent_events %}
+                        <p class='event-listing'>
+                            {{event.start_time | date:'n/d/Y' }} - {{event.link_html | safe}}
+                        </p>
+                    {% endfor %}
+                    <a href="" id="more-events"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
+                    <a href="" id="fewer-events"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
+                {% endif %}
+
             {% endif %}
 
 
@@ -149,22 +153,42 @@
 
         function collapseActivity(){
             $(".activity-row:gt(4)").hide();
-            $("#more-activity").show();
-            $("#less-activity").hide();
+            $("#more-actions").show();
+            $("#fewer-actions").hide();
         }
         function expandActivity(){
             $(".activity-row:gt(4)").show();
-            $("#more-activity").hide();
-            $("#less-activity").show();
+            $("#more-actions").hide();
+            $("#fewer-actions").show();
+        }
+        function collapseEvents(){
+            $(".event-listing:gt(4)").hide();
+            $("#more-events").show();
+            $("#fewer-events").hide();
+        }
+        function expandEvents(){
+            $(".event-listing:gt(4)").show();
+            $("#more-events").hide();
+            $("#fewer-events").show();
         }
 
         collapseActivity();
-        $("#more-activity").click(function() {
+        collapseEvents();
+
+        $("#more-actions").click(function() {
             expandActivity();
             return false;
         });
-        $("#less-activity").click(function() {
+        $("#fewer-actions").click(function() {
             collapseActivity();
+            return false;
+        });
+        $("#more-events").click(function() {
+            expandEvents();
+            return false;
+        });
+        $("#fewer-events").click(function() {
+            collapseEvents();
             return false;
         });
 
