@@ -78,6 +78,17 @@
             $(this).css('background-color', '#eee');
         } );
 
+        $('tbody tr').on( "mouseout", function() {
+            $('tr').css('background-color', 'inherit')
+            map.eachLayer(function (layer) {
+                if (typeof layer.feature !== "undefined"){
+                    layer.setStyle({'fillOpacity': .2})
+                    // close popup here
+                }
+
+            });
+        } )
+
 
         function hoverOnRow(select_id) {
             map.eachLayer(function (layer) {
@@ -92,8 +103,8 @@
                 }
 
             });
-
         }
+
         {% endif %}
     </script>
 
