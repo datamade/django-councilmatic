@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Max, Min
 from django.core.cache import cache
+from django.utils.text import slugify
 from .models import Person, Bill, Organization, Action, Event, Post
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
@@ -134,13 +135,14 @@ class CouncilMembersView(ListView):
             for post in self.object_list:
                 if post.shape:
                     
+                    council_member = post.current_member.person.name if post.current_member else 'Vacant'
                     feature = {
                         'type': 'Feature',
                         'geometry': json.loads(post.shape),
                         'properties': {
                             'district': post.label,
-                            'council_member': post.current_member.person.name,
-                            'select_id': 'polygon-{}'.format(post.current_member.person.slug),
+                            'council_member': council_member,
+                            'select_id': 'polygon-{}'.format(slugify(post.label)),
                         }
                     }
 
