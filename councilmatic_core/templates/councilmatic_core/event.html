@@ -41,7 +41,7 @@
                 <ol>
                     {% for agenda_item in event.clean_agenda_items %}
                         <li>
-                            {% if agenda_item.related_bills %}
+                            {% if agenda_item.related_bills.all %}
                                 <a href="/legislation/{{agenda_item.related_bills.first.bill.slug}}">
                                     {{agenda_item.related_bills.first.bill.friendly_name}}
                                 </a>
