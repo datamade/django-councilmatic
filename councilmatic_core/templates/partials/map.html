@@ -33,10 +33,11 @@
     }
 
     infoBox.clear = function(){
-        this._div.innerHTML = '';
+        this._div.innerHTML = '<h4>{{CITY_NAME_SHORT}} Council Districts</h4><p><i class="fa fa-hand-pointer-o fa-fw"></i>Hover for details</p>';
     }
 
     infoBox.addTo(map);
+    infoBox.clear();
 
     var customOptions =
         {

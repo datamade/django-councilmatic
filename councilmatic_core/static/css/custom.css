@@ -166,15 +166,16 @@ h1, h2, h3, h4 {
 
 .infobox {
     padding: 6px 8px;
+    min-width: 210px;
     font: 14px/16px Arial, Helvetica, sans-serif;
     background: white;
     background: rgba(255,255,255,0.8);
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
 }
-.infobox h4 {
+.infobox h4, .infobox p {
     margin: 0 0 5px;
-    color: #777;
+    color: #000;
 }
 
 /* homepage stuff */
