@@ -51,6 +51,9 @@
                                     .setLatLng(center)
                                     .setContent(feature.properties.popupContent);
 
+                layer.on('click', function(e){
+                    window.location = feature.properties.detail_link
+                });
 
                 layer.on('mouseover', function(e){
                     infoBox.update(e.target.feature.properties);

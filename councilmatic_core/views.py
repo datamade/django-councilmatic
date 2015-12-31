@@ -134,14 +134,20 @@ class CouncilMembersView(ListView):
 
             for post in self.object_list:
                 if post.shape:
-                    
-                    council_member = post.current_member.person.name if post.current_member else 'Vacant'
+
+                    council_member = "Vacant"
+                    detail_link = ""
+                    if post.current_member:
+                        council_member = post.current_member.person.name
+                        detail_link = post.current_member.person.slug
+
                     feature = {
                         'type': 'Feature',
                         'geometry': json.loads(post.shape),
                         'properties': {
                             'district': post.label,
                             'council_member': council_member,
+                            'detail_link': '/person/' + detail_link,
                             'select_id': 'polygon-{}'.format(slugify(post.label)),
                         }
                     }
