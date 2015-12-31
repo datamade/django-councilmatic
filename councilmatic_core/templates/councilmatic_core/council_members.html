@@ -31,10 +31,10 @@
 
     <div class="row-fluid">
         {% if map_geojson %}
-            <div class='col-sm-7'>
-                {% include 'partials/map.html' %}
+            <div class='col-sm-6'>
+                <div id="map"></div>
             </div>
-            <div class="col-sm-5 no-pad-mobile">
+            <div class="col-sm-6 no-pad-mobile">
                 <div id="council-member-scroll-area">
                     {% include 'partials/council_member_table.html' %}
                 </div>
@@ -53,6 +53,7 @@
 
 
 {% block extra_js %}
+    {% include 'partials/map.html' %}
     <script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
     <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
