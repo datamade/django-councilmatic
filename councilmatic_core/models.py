@@ -118,6 +118,7 @@ class Bill(models.Model):
                                            db_column='from_organization_id')
 
     full_text = models.TextField(blank=True)
+    ocr_full_text = models.TextField(blank=True)
     abstract = models.TextField(blank=True)
     last_action_date = models.DateTimeField(default=None, null=True)
     

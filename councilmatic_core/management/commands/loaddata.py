@@ -292,6 +292,11 @@ class Command(BaseCommand):
             full_text = page_json['extras']['full_text']
         else:
             full_text = ''
+        if 'ocr_full_text' in page_json['extras']:
+            ocr_full_text = page_json['extras']['ocr_full_text']
+        else:
+            ocr_full_text = ''
+
 
         if 'subject' in page_json and page_json['subject']:
             subject = page_json['subject'][0]
@@ -314,6 +319,7 @@ class Command(BaseCommand):
             'source_note':page_json['sources'][0]['note'],
             '_from_organization':from_org,
             'full_text':full_text,
+            'ocr_full_text':ocr_full_text,
             'abstract':abstract,
             '_legislative_session':leg_session_obj,
             'bill_type':bill_type,
@@ -338,6 +344,7 @@ class Command(BaseCommand):
                 obj.source_note=page_json['sources'][0]['note']
                 obj._from_organization=from_org
                 obj.full_text=full_text
+                obj.ocr_full_text=ocr_full_text
                 obj.abstract=abstract
                 obj._legislative_session=leg_session_obj
                 obj.bill_type=bill_type
