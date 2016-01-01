@@ -11,5 +11,8 @@
     {{ a.organization.name }}
     {{ a.description }}
 {% endfor %}
+{% for t in object.topics %}
+	{{t}}
+{% endfor %}
 {{ object.full_text|clean_html }}
 {{ object.ocr_full_text }}
