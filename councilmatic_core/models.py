@@ -12,6 +12,8 @@ if not hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
 if not hasattr(settings, 'CITY_COUNCIL_NAME'):
     raise ImproperlyConfigured('You must define a CITY_COUNCIL_NAME in settings.py')
 
+MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
+
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 bill_document_choices = (
@@ -70,6 +72,8 @@ class Person(models.Model):
     def headshot_url(self):
         if self.headshot:
             return '/static/images/' + self.ocd_id + ".jpg"
+        elif self.slug in MANUAL_HEADSHOTS:
+            return '/static/images/' + MANUAL_HEADSHOTS[self.slug]
         else:
             return '/static/images/headshot_placeholder.png'
 
