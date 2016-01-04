@@ -261,7 +261,7 @@
                             {% for name, count in facets.fields.legislative_session %}
                                 {% if count %}
                                     <li class="small">
-                                        <a href="#" class="filter-value" id="inferred_status_exact:{{name}}" title="{{ name|title }}">
+                                        <a href="#" class="filter-value" id="legislative_session_exact:{{name}}" title="{{ name|title }}">
                                             {% if name in selected_facets.legislative_session %}
                                                 <strong>{{ name | title | short_title }}</strong>
                                             {% else %}
