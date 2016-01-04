@@ -94,7 +94,9 @@
                         {% for membership in committee.chairs %}
                             <tr>
                                 <td>
-                                    <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                                    <div class="thumbnail-square">
+                                        <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                                    </div>
                                 </td>
                                 <td>
                                     {{ membership.person.link_html | safe }}
@@ -110,7 +112,9 @@
                         {% for membership in committee.non_chair_members %}
                             <tr>
                                 <td>
-                                    <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                                    <div class="thumbnail-square">
+                                        <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                                    </div>
                                 </td>
                                 <td>
                                     {{ membership.person.link_html | safe }}
@@ -150,6 +154,13 @@
                 null
             ]
         });
+
+        $('.thumbnail-square img').each(function() {
+            if ($(this).width() > $(this).height()) {
+                $(this).addClass('landscape');
+            }
+        });
+
 
         function collapseActivity(){
             $(".activity-row:gt(4)").hide();

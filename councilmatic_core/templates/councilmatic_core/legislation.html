@@ -115,6 +115,12 @@
             ]
         });
 
+        $('.thumbnail-square img').each(function() {
+            if ($(this).width() > $(this).height()) {
+                $(this).addClass('landscape');
+            }
+        });
+
         // for reference purposes
         console.log( "OCD ID: {{legislation.ocd_id}}" )
 

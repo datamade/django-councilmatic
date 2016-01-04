@@ -138,7 +138,11 @@
                         {% for s in legislation.sponsorships.all %}
                             <tr>
                                 <td>
-                                    <img src='{{s.person.headshot_url}}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                    <div>
+                                        <div class="thumbnail-square">
+                                            <img src='{{s.person.headshot_url}}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     {{ s.person.link_html | safe }}
