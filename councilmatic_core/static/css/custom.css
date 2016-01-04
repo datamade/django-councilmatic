@@ -126,9 +126,6 @@ h1, h2, h3, h4 {
 
 
 /* council members listings */
-#council-members img {
-    width: 50px;
-}
 .img-padded{
     margin-top: 16px;
     margin-bottom: 16px;
@@ -143,6 +140,24 @@ h1, h2, h3, h4 {
 .table-responsive{
     border: none;
 }
+.thumbnail-square{
+    width: 50px;
+    height: 50px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: top;
+}
+.thumbnail-square img{
+    border-radius: 0px;
+    max-width: 100%;
+    height: auto;
+    width: auto;
+}
+.thumbnail-square img.landscape {
+  max-width: none;
+  max-height: 100%;
+}
+
 
 
 /* map */
