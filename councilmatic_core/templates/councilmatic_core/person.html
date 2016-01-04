@@ -10,7 +10,11 @@
             <h1>
                 <span>{{person.name}}</span>
                 <small>
-                    {{ person.current_council_seat }}
+                    {% if person.current_council_seat %}
+                        {{ person.current_council_seat }}
+                    {% elif person.latest_council_seat %}
+                        Ex-Council Member, {{ person.latest_council_seat }}
+                    {% endif %}
                 </small>
             </h1>
         </div>
