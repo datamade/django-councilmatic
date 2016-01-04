@@ -189,19 +189,55 @@
                 <div class="panel-body {% if 'sponsorships' in selected_facets %}panel-show{% endif %} collapse" id="filter-sponsor">
 
                     <ul class="search-facet-list">
-                        {% for name, count in facets.fields.sponsorships %}
-                            {% if count %}
-                                <li class="small">
-                                    <a href="#" class="filter-value" id="sponsorships_exact:{{name}}" title="{{ name|title }}">
-                                        {% if name in selected_facets.sponsorships %}
-                                            <strong>{{ name | title | short_title }}</strong>
-                                        {% else %}
-                                            {{ name | title | short_title }}
-                                        {% endif %}
-                                    </a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
+                        <!-- show current vs separate if there are multiple leg sessions -->
+                        {% if facets.fields.legislative_session|length > 1 %}
+
+                            {% for name, count in facets.fields.sponsorships %}
+                                {% if count and name in current_council_members %}
+                                    <li class="small">
+                                        <a href="#" class="filter-value" id="sponsorships_exact:{{name}}" title="{{ name|title }}">
+                                            {% if name in selected_facets.sponsorships %}
+                                                <strong>{{ name | title | short_title }}</strong>
+                                            {% else %}
+                                                {{ name | title | short_title }}
+                                            {% endif %}
+                                        </a>
+                                        <span class="text-muted pull-right">{{ current_council_members|get_item:name }}</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            <hr/>
+                            {% for name, count in facets.fields.sponsorships %}
+                                {% if count and name not in current_council_members %}
+                                    <li class="small">
+                                        <a href="#" class="filter-value" id="sponsorships_exact:{{name}}" title="{{ name|title }}">
+                                            {% if name in selected_facets.sponsorships %}
+                                                <strong>{{ name | title | short_title }}</strong>
+                                            {% else %}
+                                                {{ name | title | short_title }}
+                                            {% endif %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+
+                        {% else %}
+                            {% for name, count in facets.fields.sponsorships %}
+                                {% if count %}
+                                    <li class="small">
+                                        <a href="#" class="filter-value" id="sponsorships_exact:{{name}}" title="{{ name|title }}">
+                                            {% if name in selected_facets.sponsorships %}
+                                                <strong>{{ name | title | short_title }}</strong>
+                                            {% else %}
+                                                {{ name | title | short_title }}
+                                            {% endif %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
                     </ul>
 
                 </div>
@@ -327,9 +363,9 @@
 
 
         {% empty %}
-            <p>This site has data from the current legislative session, which
-            goes back to 2014. If you're searching for something older, you can
-            browse the
+            <p>
+                This site has data from the current legislative session. 
+                If you're searching for something older, you can browse the
                 <a href="{{ LEGISTAR_URL }}" target="_blank">
                     {{ CITY_COUNCIL_NAME }} Legistar site
                 </a>.
