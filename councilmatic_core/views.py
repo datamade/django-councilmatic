@@ -223,9 +223,9 @@ class PersonDetailView(DetailView):
 
         seo = {}
         seo.update(settings.SITE_META)
-        if person.council_seat:
+        if person.current_council_seat:
             short_name = re.sub(r',.*','', person.name)
-            seo['site_desc'] = '%s - %s representative in %s. See what %s has been up to!' %(person.name, person.council_seat, settings.CITY_COUNCIL_NAME, short_name)
+            seo['site_desc'] = '%s - %s representative in %s. See what %s has been up to!' %(person.name, person.current_council_seat, settings.CITY_COUNCIL_NAME, short_name)
         else:
             seo['site_desc'] = 'Details on %s, %s' %(person.name, settings.CITY_COUNCIL_NAME)
         seo['title'] = '%s - %s' %(person.name, settings.SITE_META['site_name'])

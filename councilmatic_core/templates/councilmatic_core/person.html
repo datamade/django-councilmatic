@@ -10,7 +10,7 @@
             <h1>
                 <span>{{person.name}}</span>
                 <small>
-                    {{ person.council_seat }}
+                    {{ person.current_council_seat }}
                 </small>
             </h1>
         </div>
@@ -147,7 +147,9 @@
           "@type": "Person",
           "email": "{{person.email}}",
           "image": "{{person.headshot_url}}",
-          "jobTitle": "{{ person.council_seat }} Representative",
+          {% if person.current_council_seat %}
+          "jobTitle": "{{ person.current_council_seat }} Representative",
+          {% endif %}
           "affiliation":    {
                                 "@type": "Organization",
                                 "name": "{{ CITY_COUNCIL_NAME }}"

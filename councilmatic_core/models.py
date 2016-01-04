@@ -61,8 +61,22 @@ class Person(models.Model):
         return self.name
 
     @property
-    def council_seat(self):
-        return self.memberships.filter(_organization__ocd_id=settings.OCD_CITY_COUNCIL_ID).first().post.label if self.memberships.filter(_organization__ocd_id=settings.OCD_CITY_COUNCIL_ID) else None
+    def latest_council_membership(self):
+        return self.memberships.filter(_organization__ocd_id=settings.OCD_CITY_COUNCIL_ID).order_by('-start_date', '-end_date').first() if self.memberships.filter(_organization__ocd_id=settings.OCD_CITY_COUNCIL_ID) else None
+
+    @property
+    def current_council_seat(self):
+        m = self.latest_council_membership
+        if m and self == m.post.current_member.person:
+            return m.post.label
+        return ''
+
+    @property
+    def latest_council_seat(self):
+        m = self.latest_council_membership
+        if m:
+            return m.post.label
+        return ''
 
     @property
     def is_speaker(self):
