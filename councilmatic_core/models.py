@@ -84,10 +84,10 @@ class Person(models.Model):
 
     @property
     def headshot_url(self):
-        if self.headshot:
-            return '/static/images/' + self.ocd_id + ".jpg"
-        elif self.slug in MANUAL_HEADSHOTS:
+        if self.slug in MANUAL_HEADSHOTS:
             return '/static/images/' + MANUAL_HEADSHOTS[self.slug]
+        elif self.headshot:
+            return '/static/images/' + self.ocd_id + ".jpg"
         else:
             return '/static/images/headshot_placeholder.png'
 
