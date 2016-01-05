@@ -255,6 +255,15 @@ class Bill(models.Model):
         return None
 
     @property
+    def addresses(self):
+        """
+        returns a list of relevant addresses for a bill
+
+        override this in custom subclass
+        """
+        return []
+
+    @property
     def inferred_status(self):
         """
         infers bill status, to be displayed in colored labels next to bill names
