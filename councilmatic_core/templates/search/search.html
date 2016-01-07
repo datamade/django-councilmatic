@@ -29,6 +29,15 @@
     <div class="row">
         <div class="col-sm-4">
 
+            {% if selected_facets %}
+                <p>
+                    <a href="/search" class="btn btn-sm btn-default">
+                    <i class='fa fa-times'></i>
+                    Clear filters
+                    </a>
+                </p>
+            {% endif %}
+
             <!-- Legislation Status -->
             <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-status">
@@ -278,13 +287,6 @@
                 </div>
                 {% endif %}
             {% endif %}
-
-
-            {% if selected_facets %}
-                <br/>
-                <a href="/search" class="btn btn-sm btn-default">Clear Filters</a>
-            {% endif %}
-
         </div>
 
 
@@ -344,7 +346,7 @@
                     <i class="fa fa-fw fa-tag"></i>
                     {% for tag in result.object.topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            {{ tag }}
+                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag }}'>{{ tag }}</a>
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
@@ -352,7 +354,7 @@
                     <i class="fa fa-fw fa-tag"></i>
                     {% for tag in result.object.pseudo_topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            {{ tag | committee_topic_only }}
+                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag | committee_topic_only }}'>{{ tag | committee_topic_only }}</a
                         </span>&nbsp;
                     {% endfor %}
                     <br/>

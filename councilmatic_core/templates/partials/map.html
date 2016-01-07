@@ -14,7 +14,7 @@
     var layer = new L.StamenTileLayer("toner-lite");
     map.addLayer(layer);
 
-    var infoBox = L.control({'position': 'bottomleft'});
+    var infoBox = L.control({'position': 'topright'});
 
     infoBox.onAdd = function() {
         this._div = L.DomUtil.create('div', 'infobox');
