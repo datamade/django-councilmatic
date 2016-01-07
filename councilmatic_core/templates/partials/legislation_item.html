@@ -30,7 +30,7 @@
         <i class="fa fa-fw fa-tag"></i>
         {% for tag in legislation.topics %}
             <span class="badge badge-muted pseudo-topic-tag">
-                {{ tag }}
+                <a href='/search/?q=&selected_facets=topics_exact:{{ tag }}'>{{ tag }}</a>
             </span>&nbsp;
         {% endfor %}
         <br/>
@@ -38,7 +38,7 @@
         <i class="fa fa-fw fa-tag"></i>
         {% for tag in legislation.pseudo_topics %}
             <span class="badge badge-muted pseudo-topic-tag">
-                {{ tag | committee_topic_only }}
+                <a href='/search/?q=&selected_facets=topics_exact:{{ tag | committee_topic_only}}'>{{ tag | committee_topic_only }}</a>
             </span>&nbsp;
         {% endfor %}
         <br/>

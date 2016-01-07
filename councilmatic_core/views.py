@@ -61,6 +61,7 @@ def city_context(request):
         'CITY_COUNCIL_NAME',
         'CITY_NAME',
         'CITY_NAME_SHORT',
+        'CITY_SOURCE_NAME',
         'MUNICIPAL_DISTRICT_NAME',
         'SEARCH_PLACEHOLDER_TEXT',
         'LEGISLATION_TYPE_DESCRIPTIONS',
