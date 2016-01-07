@@ -167,16 +167,25 @@ class Command(BaseCommand):
             print('\u263A', end=' ', flush=True)
 
         for post_json in page_json['posts']:
-            obj, created = Post.objects.get_or_create(
-                    ocd_id = post_json['id'],
-                    label = post_json['label'],
-                    role = post_json['role'],
-                    _organization = org_obj,
-                    division_ocd_id = post_json['division_id'],
-                )
 
-            # if created and DEBUG:
-            #     print('      adding post: %s %s' %(post_json['role'], post_json['label']))
+            try:
+                obj = Post.objects.get(ocd_id=post_json['id'])
+
+                obj.label = post_json['label']
+                obj.role = post_json['role']
+                obj._organization = org_obj
+                obj.division_ocd_id = post_json['division_id']
+
+                obj.save()
+
+            except Post.DoesNotExist:
+                obj, created = Post.objects.get_or_create(
+                        ocd_id = post_json['id'],
+                        label = post_json['label'],
+                        role = post_json['role'],
+                        _organization = org_obj,
+                        division_ocd_id = post_json['division_id'],
+                    )
 
         for child in page_json['children']:
             self.grab_organization_posts(child['id'], org_obj)
