@@ -1,3 +1,4 @@
+
 from councilmatic_core.models import Bill
 from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
@@ -20,6 +21,7 @@ class BillIndex(indexes.SearchIndex):
     actions = indexes.MultiValueField()
     controlling_body = indexes.MultiValueField(faceted=True)
     full_text = indexes.CharField(model_attr='full_text')
+    ocr_full_text = indexes.CharField(model_attr='ocr_full_text')
     last_action_date = indexes.DateTimeField()
     inferred_status = indexes.CharField(faceted=True)
     legislative_session = indexes.CharField(faceted=True)
