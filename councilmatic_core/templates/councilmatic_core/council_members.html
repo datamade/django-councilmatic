@@ -108,7 +108,7 @@
         } )
 
         function hoverOffRow(select_id){
-            geojson.eachLayer(function (layer) {
+            districts.eachLayer(function (layer) {
 
                 if (layer.feature.properties.select_id === select_id){
                     layer.fire('tableout');
@@ -119,7 +119,7 @@
         }
 
         function hoverOnRow(select_id) {
-            geojson.eachLayer(function (layer) {
+            districts.eachLayer(function (layer) {
 
                 layer.setStyle({'fillOpacity': .2})
 

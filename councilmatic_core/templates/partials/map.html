@@ -12,6 +12,7 @@
     var locationScope = '{{CITY_NAME}}';
     var currentPinpoint = null;
     var centerMark = null;
+    var districts = null;
     var search_result = null;
     var geocoder = new google.maps.Geocoder();
 
@@ -89,7 +90,7 @@
         }
     }
 
-    var geojson = L.geoJson({{ map_geojson|safe }}, {
+    districts = L.geoJson({{ map_geojson|safe }}, {
         style: {
                 "color": "{{MAP_CONFIG.color}}",
                 "weight": 1,
@@ -111,7 +112,6 @@
             if (status == google.maps.GeocoderStatus.OK) {
               currentPinpoint = [results[0].geometry.location.lat(), results[0].geometry.location.lng()];
               $.address.parameter('address', encodeURIComponent(address));
-              map.setView(new L.LatLng( currentPinpoint[0], currentPinpoint[1] ), 16)
               centerMark = new L.Marker(currentPinpoint, { icon: (new L.Icon({
                 iconUrl: "{% static 'images/blue-pushpin.png' %}",
                 iconSize: [32, 32],
@@ -119,11 +119,11 @@
               }))}).addTo(map);
 
               // find the district here
-              search_result = leafletPip.pointInLayer([currentPinpoint[1], currentPinpoint[0]], geojson);
+              search_result = leafletPip.pointInLayer([currentPinpoint[1], currentPinpoint[0]], districts);
 
               if (search_result.length > 0) {
                 search_result = search_result[0]
-                map.removeLayer(geojson);
+                map.removeLayer(districts);
                 search_result.addTo(map);
                 map.fitBounds(search_result.getBounds(), {padding: [50,50]});
 
@@ -140,7 +140,7 @@
           });
         }
         else { //search without geocoding callback
-          map.fitBounds(geojson.getBounds(), {padding: [50,50]});
+          map.fitBounds(districts.getBounds(), {padding: [50,50]});
         }
     }
 
@@ -149,9 +149,6 @@
           map.removeLayer(search_result);
         if (centerMark) 
           map.removeLayer(centerMark);
-        $('search_address').val('');
-        
-        map.fitBounds(geojson.getBounds(), {padding: [50,50]});
     }
 
     function findMe() {
@@ -183,23 +180,36 @@
         });
     }
 
+    //converts a slug or query string in to readable text
+    function convertToPlainString(text) {
+        if (text == undefined) return '';
+        return decodeURIComponent(text);
+    }
+
+    function initialize(){
+        $("#search_address").val(convertToPlainString($.address.parameter('address')));
+
+        if ($("#search_address").val() != "") {
+            doSearch();
+        }
+        else {
+            districts.addTo(map);
+            map.fitBounds(districts.getBounds(), {padding: [50,50]});
+        }
+    }
+
     $(function() {
-        geojson.addTo(map);
-        map.fitBounds(geojson.getBounds(), {padding: [50,50]});
+        initialize();
 
         $('#btn_search').click(function(){
             doSearch();
-        });
-
-        $('#find_me').click(function(){
-            findMe();
-            return false;
         });
 
         $('#reset').click(function(){
             $.address.parameter('address','');
             $.address.parameter('radius','');
             clearSearch();
+            initialize();
             return false;
         });
 
