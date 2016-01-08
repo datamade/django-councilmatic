@@ -1,4 +1,3 @@
-
 from councilmatic_core.models import Bill
 from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
@@ -56,3 +55,6 @@ class BillIndex(indexes.SearchIndex):
 
     def prepare_legislative_session(self, obj):
         return obj._legislative_session.identifier
+
+    def prepare_ocr_full_text(self, obj):
+        return clean_html(obj.ocr_full_text)
