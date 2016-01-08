@@ -142,7 +142,7 @@
           });
         }
         else { //search without geocoding callback
-          map.fitBounds(districts.getBounds(), {padding: [50,50]});
+          map.fitBounds(districts.getBounds());
         }
     }
 
@@ -198,7 +198,7 @@
         }
         else {
             districts.addTo(map);
-            map.fitBounds(districts.getBounds(), {padding: [50,50]});
+            map.fitBounds(districts.getBounds());
         }
     }
 

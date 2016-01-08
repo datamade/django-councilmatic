@@ -338,9 +338,6 @@ class EventDetailView(DetailView):
         
         return context
 
-def not_found(request):
-    return render(request, 'councilmatic_core/404.html')
-
 def flush(request, flush_key):
 
     try:
