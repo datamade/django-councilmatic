@@ -1,5 +1,5 @@
 {% extends "base_with_margins.html" %}
-{% block title %}Events{% endblock %}
+{% block title %}Meetings{% endblock %}
 {% block content %}
 
     <div class="row-fluid">
@@ -29,7 +29,7 @@
                 {% endfor %}
             </select>
 
-            <a href="/events/?year={{this_year}}&month={{this_month}}" id="view-events-btn" class="btn btn-default btn-sm">View Events</a>
+            <a href="/events/?year={{this_year}}&month={{this_month}}" id="view-events-btn" class="btn btn-default btn-sm">View meetings</a>
 
         </div>
 
@@ -39,26 +39,26 @@
         <div class="col-sm-8 no-pad-mobile">
             {% if not show_upcoming %}
                 {% if month_events %}
-                    <h2>Events: {{first_date | date:"F Y"}}</h2>
+                    <h2>Meetings: {{first_date | date:"F Y"}}</h2>
                     <hr />
 
                     {% for date, event_list in month_events %}
                         {% include "partials/event_day.html" %}
                     {% endfor %}
                 {% else %}
-                    <h2>No events to show</h2>
+                    <h2>No meetings to show</h2>
 
                 {% endif %}
 
             {% else %}
                 {% if upcoming_events %}
-                    <h2>Upcoming Events</h2>
+                    <h2>Upcoming meetings</h2>
                     <hr/>
                     {% for date, event_list in upcoming_events %}
                         {% include "partials/event_day.html" %}
                     {% endfor %}
                 {% else %}
-                    <h2>No Upcoming Events</h2>
+                    <h2>No upcoming meetings</h2>
                     <hr/>
                 {% endif %}
 
@@ -66,7 +66,7 @@
         </div>
         <div class="col-sm-4 no-pad-mobile">
             <div class='well'>
-                <h4><i class='fa fa-fw fa-info-circle'></i> What are these events?</h4>
+                <h4><i class='fa fa-fw fa-info-circle'></i> What are these meetings?</h4>
                 <p>
                     Most of the Council's legislative action happens in <a href='/committees/'>committees</a>. Each committee meets in public hearings 2-3 times per month where proposed legislation is debated. Members of other government branches, as well as the public, are able to attend and comment at these hearings.
                 </p>

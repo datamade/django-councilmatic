@@ -1,13 +1,13 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
 {% load staticfiles %}
-{% block title %}{{event.name}}{% endblock %}
+{% block title %}{{event.name}} meeting{% endblock %}
 {% block content %}
 
     <div class="row-fluid">
         <div class="col-sm-8">
             <br/>
-            <p><a href='/events'>< back to Events</a></p>
+            <p><a href='/events'>< back to Meetings</a></p>
             <h1>{{event.name}}</h1>
             <p>{{event.description}}</p>
 

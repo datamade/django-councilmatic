@@ -1,9 +1,17 @@
 {% load staticfiles %}
 
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false&libraries=places&v=3.17"></script>
 <script src="{% static 'js/leaflet.js' %}" /></script>
 <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
+<script type="text/javascript" src="{% static 'js/leaflet-google.js' %}" ></script>
+<script type="text/javascript" src="{% static 'js/jquery.address.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/leaflet-pip.min.js' %}"></script>
 
 <script>
+
+    var locationScope = '{{CITY_NAME}}';
+    var currentPinpoint = null;
+    var geocoder = new google.maps.Geocoder();
 
     var map = L.map('map', {
         scrollWheelZoom: false,
@@ -89,9 +97,109 @@
         onEachFeature: onEachFeature
     });
 
+    function doSearch() {
+        clearSearch();
+        var address = $("#search_address").val();
+
+        if (address != "") {
+          if (address.toLowerCase().indexOf(locationScope) == -1)
+            address = address + " " + locationScope;
+          
+          geocoder.geocode( { 'address': address}, function(results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+              currentPinpoint = [results[0].geometry.location.lat(), results[0].geometry.location.lng()];
+              $.address.parameter('address', encodeURIComponent(address));
+              map.setView(new L.LatLng( currentPinpoint[0], currentPinpoint[1] ), 16)
+              centerMark = new L.Marker(currentPinpoint, { icon: (new L.Icon({
+                iconUrl: "{% static 'images/blue-pushpin.png' %}",
+                iconSize: [32, 32],
+                iconAnchor: [10, 32]
+              }))}).addTo(map);
+
+              // find the district here
+              var results = leafletPip.pointInLayer([currentPinpoint[1], currentPinpoint[0]], geojson);
+
+              console.log(results);
+
+            } 
+            else {
+              alert("We could not find your address: " + status);
+            }
+          });
+        }
+        else { //search without geocoding callback
+          map.fitBounds(geojson.getBounds(), {padding: [50,50]});
+        }
+    }
+
+    function clearSearch(){
+        // if (CartoDbLib.lastClickedLayer) {
+        //   CartoDbLib.map.removeLayer(CartoDbLib.lastClickedLayer);
+        // }
+        // if (CartoDbLib.centerMark)
+        //   CartoDbLib.map.removeLayer( CartoDbLib.centerMark );
+        // if (CartoDbLib.circle)
+        //   CartoDbLib.map.removeLayer( CartoDbLib.circle );
+
+        // CartoDbLib.map.setView(new L.LatLng( CartoDbLib.map_centroid[0], CartoDbLib.map_centroid[1] ), CartoDbLib.defaultZoom)
+    }
+
+    function findMe() {
+        // Try W3C Geolocation (Preferred)
+        var foundLocation;
+
+        if(navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+            foundLocation = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+            addrFromLatLng(foundLocation);
+            }, null);
+        }
+        else {
+            alert("Sorry, we could not find your location.");
+        }
+    }
+
+    function addrFromLatLng(latLngPoint) {
+        geocoder.geocode({'latLng': latLngPoint}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            if (results[1]) {
+              $('#search_address').val(results[1].formatted_address);
+              $('.hint').focus();
+              doSearch();
+            }
+          } else {
+            alert("Geocoder failed due to: " + status);
+          }
+        });
+    }
+
     $(function() {
         geojson.addTo(map);
         map.fitBounds(geojson.getBounds(), {padding: [50,50]});
+
+        $('#btn_search').click(function(){
+            doSearch();
+        });
+
+        $('#find_me').click(function(){
+            findMe();
+            return false;
+        });
+
+        $('#reset').click(function(){
+            $.address.parameter('address','');
+            $.address.parameter('radius','');
+            initialize();
+            return false;
+        });
+
+        $("#search_address").keydown(function(e){
+          var key =  e.keyCode ? e.keyCode : e.which;
+          if(key == 13) {
+              $('#btn_search').click();
+              return false;
+          }
+        });
     });
 
 </script>
