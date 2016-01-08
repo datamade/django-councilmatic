@@ -20,7 +20,7 @@
                     {% if person.current_council_seat %}
                         {{ person.current_council_seat }}
                     {% elif person.latest_council_seat %}
-                        Former Council Member, {{ person.latest_council_seat }}
+                        Former {{ CITY_VOCAB.COUNCIL_MEMBER_NAME }}, {{ person.latest_council_seat }}
                     {% endif %}
                 </small>
             </h1>
