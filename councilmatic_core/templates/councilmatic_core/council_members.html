@@ -17,6 +17,20 @@
         <div class="col-sm-6">
             <h1>{{ CITY_VOCAB.COUNCIL_MEMBERS }}</h1>
         </div>
+        <div class="col-sm-6">
+            <h4>Look up your council member</h4>
+            <div class="input-group">
+                <input name="search_address" id='search_address' type="text" class="form-control" placeholder="Enter your address">
+                <div class='input-group-btn'>
+                    <button id='btn_search' class="btn btn-primary" title='Search'>
+                        <i class='fa fa-fw fa-search'></i> Search
+                    </button>
+                    <a class='btn btn-default' id='reset' title='Reset the map' href='#'>
+                        <i class='glyphicon glyphicon-repeat'></i> Reset
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
     <br/>
     {% else %}
@@ -59,9 +73,8 @@
     <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
 
     <script>
-        $("#council-members").DataTable({
+        var council_member_table = $("#council-members").DataTable({
             "info": false,
-            "searching": false,
             "bLengthChange": false,
             "paging": false,
             "aaSorting": [ [2,'asc'] ],
@@ -94,7 +107,7 @@
         } )
 
         function hoverOffRow(select_id){
-            geojson.eachLayer(function (layer) {
+            districts.eachLayer(function (layer) {
 
                 if (layer.feature.properties.select_id === select_id){
                     layer.fire('tableout');
@@ -105,7 +118,7 @@
         }
 
         function hoverOnRow(select_id) {
-            geojson.eachLayer(function (layer) {
+            districts.eachLayer(function (layer) {
 
                 layer.setStyle({'fillOpacity': .2})
 

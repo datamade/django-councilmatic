@@ -158,6 +158,10 @@ h1, h2, h3, h4 {
   max-height: 100%;
 }
 
+#council-members_filter {
+    display: none;
+}
+
 
 
 /* map */
@@ -168,6 +172,13 @@ h1, h2, h3, h4 {
 #map-detail {
     height: 250px;
     width: 250px;
+}
+
+.leaflet-google-layer{
+    z-index: 0 !important;
+}
+.leaflet-map-pane{
+    z-index: 100;
 }
 
 .custom .leaflet-popup-tip,
