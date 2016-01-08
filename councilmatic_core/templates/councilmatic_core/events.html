@@ -39,26 +39,26 @@
         <div class="col-sm-8 no-pad-mobile">
             {% if not show_upcoming %}
                 {% if month_events %}
-                    <h2>{{ CITY_VOCAB.EVENTS_NAME }}: {{first_date | date:"F Y"}}</h2>
+                    <h2>{{ CITY_VOCAB.EVENTS }}: {{first_date | date:"F Y"}}</h2>
                     <hr />
 
                     {% for date, event_list in month_events %}
                         {% include "partials/event_day.html" %}
                     {% endfor %}
                 {% else %}
-                    <h2>No {{ CITY_VOCAB.EVENTS_NAME | lower }}no to show</h2>
+                    <h2>No {{ CITY_VOCAB.EVENTS | lower }}no to show</h2>
 
                 {% endif %}
 
             {% else %}
                 {% if upcoming_events %}
-                    <h2>Upcoming {{ CITY_VOCAB.EVENTS_NAME }}</h2>
+                    <h2>Upcoming {{ CITY_VOCAB.EVENTS }}</h2>
                     <hr/>
                     {% for date, event_list in upcoming_events %}
                         {% include "partials/event_day.html" %}
                     {% endfor %}
                 {% else %}
-                    <h2>No Upcoming {{ CITY_VOCAB.EVENTS_NAME }}</h2>
+                    <h2>No Upcoming {{ CITY_VOCAB.EVENTS }}</h2>
                     <hr/>
                 {% endif %}
 
@@ -66,7 +66,7 @@
         </div>
         <div class="col-sm-4 no-pad-mobile">
             <div class='well'>
-                <h4><i class='fa fa-fw fa-info-circle'></i> What are these {{ CITY_VOCAB.EVENTS_NAME | lower}}?</h4>
+                <h4><i class='fa fa-fw fa-info-circle'></i> What are these {{ CITY_VOCAB.EVENTS | lower}}?</h4>
                 <p>
                     Most of the Council's legislative action happens in <a href='/committees/'>committees</a>. Each committee meets in public hearings 2-3 times per month where proposed legislation is debated. Members of other government branches, as well as the public, are able to attend and comment at these hearings.
                 </p>
