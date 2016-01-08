@@ -234,6 +234,26 @@ class PersonDetailView(DetailView):
         seo['title'] = '%s - %s' %(person.name, settings.SITE_META['site_name'])
         seo['image'] = person.headshot_url
         context['seo'] = seo
+
+        context['map_geojson'] = None
+
+        if settings.MAP_CONFIG and person.latest_council_membership and person.latest_council_membership.post.shape:
+            map_geojson = {
+                'type': 'FeatureCollection',
+                'features': []
+            }
+
+            feature = {
+                'type': 'Feature',
+                'geometry': json.loads(person.latest_council_membership.post.shape),
+                'properties': {
+                    'district': person.latest_council_membership.post.label,
+                }
+            }
+
+            map_geojson['features'].append(feature)
+            
+            context['map_geojson'] = json.dumps(map_geojson)
         
         return context
 

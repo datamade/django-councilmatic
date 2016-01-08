@@ -165,6 +165,11 @@ h1, h2, h3, h4 {
     height: 500px;
 }
 
+#map-detail {
+    height: 250px;
+    width: 250px;
+}
+
 .custom .leaflet-popup-tip,
 .custom .leaflet-popup-content-wrapper {
     background: rgba(255, 255, 255, .8);
@@ -351,8 +356,6 @@ select {
 .pdf-viewer{
     max-width: 700px;
 }
-
-
 
 
 .mobile-only {

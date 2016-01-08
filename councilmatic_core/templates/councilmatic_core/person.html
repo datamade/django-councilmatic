@@ -1,6 +1,13 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
+{% load staticfiles %}
 {% block title %}{{ person.name }}{% endblock %}
+
+{% block extra_css %}
+    {% if map_geojson %}
+        <link rel="stylesheet" href="{% static 'css/leaflet.css' %}" />
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 
@@ -36,10 +43,20 @@
                 {% endif %}
             </p>
 
+            {% if map_geojson %}
+                <hr />
+                <h4>
+                    {% if person.current_council_seat %}
+                        {{ person.current_council_seat }} map
+                    {% endif %}
+                </h4>
+                <div id='map-detail'></div>
+            {% endif %}
+
+            <hr />
             <p class='small'>
                 <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_SOURCE_NAME}} website</a>
             </p>
-            <hr/>
         </div>
 
         <div class="col-sm-4 mobile-only">
@@ -166,6 +183,45 @@
 {% endblock %}
 
 {% block extra_js %}
+    
+    {% if map_geojson %}
+
+        <script src="{% static 'js/leaflet.js' %}" /></script>
+
+        <script>
+
+            var map = L.map('map-detail', {
+                scrollWheelZoom: false,
+                dragging: false,
+                touchZoom: false,
+                doubleClickZoom: false,
+                center: {{MAP_CONFIG.center}},
+                zoom: {{MAP_CONFIG.zoom}},
+                zoomControl: false
+            });
+
+            var layer = L.tileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
+                attribution: '<a href="http://maps.stamen.com/toner-lite/" target="_blank">Stamen</a>'
+            }).addTo(map);
+
+            var geojson = L.geoJson({{ map_geojson|safe }}, {
+                style: {
+                        "color": "{{MAP_CONFIG.color}}",
+                        "weight": 2,
+                        "opacity": 1,
+                        "fillOpacity": .4
+                    }
+            });
+
+            $(function() {
+                geojson.addTo(map);
+                map.fitBounds(geojson.getBounds());
+            });
+
+        </script>
+
+    {% endif %}
+
     <script>
 
         // for reference purposes
