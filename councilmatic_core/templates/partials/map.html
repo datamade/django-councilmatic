@@ -127,7 +127,7 @@
                 map.fitBounds(search_result.getBounds(), {padding: [50,50]});
 
                 if (council_member_table) {
-                    council_member_table.search(search_result.feature.properties.district).draw();
+                    council_member_table.search("\\b" + search_result.feature.properties.district + "\\b", true, false).draw();
                 }
               }
               else {
