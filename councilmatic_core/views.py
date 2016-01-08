@@ -224,6 +224,16 @@ class PersonDetailView(DetailView):
         person = context['person']
         context['sponsored_legislation'] = [s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')[:10]]
 
+        title = ''
+        if person.current_council_seat:
+            title = '%s %s' %(person.current_council_seat, settings.CITY_VOCAB['COUNCIL_MEMBER'])
+        elif person.latest_council_seat:
+            title = 'Former %s, %s' %(settings.CITY_VOCAB['COUNCIL_MEMBER'], person.latest_council_seat)
+        elif person.slug in settings.EXTRA_TITLES:
+            title = settings.EXTRA_TITLES[person.slug]
+        context['title'] = title
+
+
         seo = {}
         seo.update(settings.SITE_META)
         if person.current_council_seat:

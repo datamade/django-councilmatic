@@ -16,12 +16,9 @@
             <br/>
             <h1>
                 <span>{{person.name}}</span>
+                <br class="non-desktop-only"/>
                 <small>
-                    {% if person.current_council_seat %}
-                        {{ person.current_council_seat }}
-                    {% elif person.latest_council_seat %}
-                        Former {{ CITY_VOCAB.COUNCIL_MEMBER }}, {{ person.latest_council_seat }}
-                    {% endif %}
+                    {{ title }}
                 </small>
             </h1>
         </div>
