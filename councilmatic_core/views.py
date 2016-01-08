@@ -68,6 +68,7 @@ def city_context(request):
         'DISQUS_SHORTNAME',
         'IMAGES',
         'MAP_CONFIG',
+        'ANALYTICS_TRACKING_CODE',
     ]
 
     city_context = { s: getattr(settings, s, None) for s in relevant_settings}

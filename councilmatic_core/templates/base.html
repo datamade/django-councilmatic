@@ -77,6 +77,9 @@
 
     {% block extra_js %}{% endblock %}
 
+    <script>
+        var analyticsTrackingCode = '{{ANALYTICS_TRACKING_CODE}}';
+    </script>
     <script src="{% static 'js/analytics_lib.js' %}"></script>
 
 </body>
