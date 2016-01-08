@@ -229,7 +229,7 @@ class PersonDetailView(DetailView):
             title = '%s %s' %(person.current_council_seat, settings.CITY_VOCAB['COUNCIL_MEMBER'])
         elif person.latest_council_seat:
             title = 'Former %s, %s' %(settings.CITY_VOCAB['COUNCIL_MEMBER'], person.latest_council_seat)
-        elif person.slug in settings.EXTRA_TITLES:
+        elif getattr(settings, 'EXTRA_TITLES', None) and person.slug in settings.EXTRA_TITLES:
             title = settings.EXTRA_TITLES[person.slug]
         context['title'] = title
 
