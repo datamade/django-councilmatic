@@ -11,6 +11,8 @@
 
     var locationScope = '{{CITY_NAME}}';
     var currentPinpoint = null;
+    var centerMark = null;
+    var search_result = null;
     var geocoder = new google.maps.Geocoder();
 
     var map = L.map('map', {
@@ -117,9 +119,19 @@
               }))}).addTo(map);
 
               // find the district here
-              var results = leafletPip.pointInLayer([currentPinpoint[1], currentPinpoint[0]], geojson);
+              search_result = leafletPip.pointInLayer([currentPinpoint[1], currentPinpoint[0]], geojson);
 
-              console.log(results);
+              if (search_result.length > 0) {
+                search_result = search_result[0]
+                map.removeLayer(geojson);
+                search_result.addTo(map);
+                map.fitBounds(search_result.getBounds(), {padding: [50,50]});
+
+              }
+              else {
+                alert("'" + address + "' is not within {{CITY_NAME}}");
+              }
+              
 
             } 
             else {
@@ -133,15 +145,13 @@
     }
 
     function clearSearch(){
-        // if (CartoDbLib.lastClickedLayer) {
-        //   CartoDbLib.map.removeLayer(CartoDbLib.lastClickedLayer);
-        // }
-        // if (CartoDbLib.centerMark)
-        //   CartoDbLib.map.removeLayer( CartoDbLib.centerMark );
-        // if (CartoDbLib.circle)
-        //   CartoDbLib.map.removeLayer( CartoDbLib.circle );
-
-        // CartoDbLib.map.setView(new L.LatLng( CartoDbLib.map_centroid[0], CartoDbLib.map_centroid[1] ), CartoDbLib.defaultZoom)
+        if (search_result) 
+          map.removeLayer(search_result);
+        if (centerMark) 
+          map.removeLayer(centerMark);
+        $('search_address').val('');
+        
+        map.fitBounds(geojson.getBounds(), {padding: [50,50]});
     }
 
     function findMe() {
@@ -189,7 +199,7 @@
         $('#reset').click(function(){
             $.address.parameter('address','');
             $.address.parameter('radius','');
-            initialize();
+            clearSearch();
             return false;
         });
 
