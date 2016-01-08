@@ -158,6 +158,10 @@ h1, h2, h3, h4 {
   max-height: 100%;
 }
 
+#council-members_filter {
+    display: none;
+}
+
 
 
 /* map */

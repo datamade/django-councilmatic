@@ -73,9 +73,8 @@
     <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
 
     <script>
-        $("#council-members").DataTable({
+        var council_member_table = $("#council-members").DataTable({
             "info": false,
-            "searching": false,
             "bLengthChange": false,
             "paging": false,
             "aaSorting": [ [2,'asc'] ],

@@ -9,7 +9,7 @@
 
 <script>
 
-    var locationScope = '{{CITY_NAME}}';
+    var locationScope = '{{CITY_NAME}}'.toLowerCase();
     var currentPinpoint = null;
     var centerMark = null;
     var districts = null;
@@ -127,6 +127,9 @@
                 search_result.addTo(map);
                 map.fitBounds(search_result.getBounds(), {padding: [50,50]});
 
+                if (council_member_table) {
+                    council_member_table.search(search_result.feature.properties.district).draw();
+                }
               }
               else {
                 alert("'" + address + "' is not within {{CITY_NAME}}");
@@ -149,6 +152,8 @@
           map.removeLayer(search_result);
         if (centerMark) 
           map.removeLayer(centerMark);
+
+        council_member_table.search('').draw();
     }
 
     function findMe() {
