@@ -45,8 +45,8 @@
             {% endif %}
 
             <p class="small">
-                <a href='{{legislation.source_url}}' title='View on the {{CITY_SOURCE_NAME}} website' target="_blank">
-                    <i class='fa fa-fw fa-external-link'></i> View on the {{CITY_SOURCE_NAME}} website
+                <a href='{{legislation.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
+                    <i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website
                 </a>
             </p>
 
@@ -59,11 +59,7 @@
                                 <th></th>
                                 <th>Sponsor</th>
                                 <th>
-                                    {% if MUNICIPAL_DISTRICT_NAME %}
-                                        {{MUNICIPAL_DISTRICT_NAME}}
-                                    {% else %}
-                                        District
-                                    {% endif %}
+                                    {{CITY_VOCAB.MUNICIPAL_DISTRICT}}
                                 </th>
                                 <th>Role</th>
                             </tr>
@@ -122,7 +118,7 @@
 
                 {% if legislation.unique_related_events %}
                     <hr />
-                    <h4><i class='fa fa-fw fa-calendar-o'></i> Relevant Events</h4>
+                    <h4><i class='fa fa-fw fa-calendar-o'></i> Upcoming {{ CITY_VOCAB.EVENTS }}</h4>
 
                     {% for event in legislation.unique_related_events %}
                         <p>

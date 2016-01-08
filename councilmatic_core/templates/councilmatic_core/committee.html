@@ -13,9 +13,9 @@
             {% endif %}
             {% if committee.source_url %}
                 <p class="small">
-                    <a href='{{committee.source_url}}' title='View on the {{CITY_SOURCE_NAME}} website' target="_blank">
+                    <a href='{{committee.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
                         <i class='fa fa-fw fa-external-link'></i> 
-                        View on the {{CITY_SOURCE_NAME}} website
+                        View on the {{CITY_VOCAB.SOURCE}} website
                     </a>
                 </p>
             {% endif %}
@@ -75,11 +75,7 @@
                         <th></th>
                         <th>Committee Member</th>
                         <th>
-                            {% if MUNICIPAL_DISTRICT_NAME %}
-                                {{MUNICIPAL_DISTRICT_NAME}}
-                            {% else %}
-                                District
-                            {% endif %}
+                            {{CITY_VOCAB.MUNICIPAL_DISTRICT}}
                         </th>
                         <th>Role</th>
                     </tr>
