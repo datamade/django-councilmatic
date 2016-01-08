@@ -118,7 +118,7 @@
 
                 {% if legislation.unique_related_events %}
                     <hr />
-                    <h4><i class='fa fa-fw fa-calendar-o'></i> Relevant Events</h4>
+                    <h4><i class='fa fa-fw fa-calendar-o'></i> Upcoming {{ CITY_VOCAB.EVENTS_NAME }}</h4>
 
                     {% for event in legislation.unique_related_events %}
                         <p>
