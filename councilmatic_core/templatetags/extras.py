@@ -85,8 +85,13 @@ def alternative_identifiers(id_original):
     id_3 = re.sub(" ", "", id_1)
     return id_original+' '+id_1+' '+id_2+' '+id_3
 
-
-
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+@register.filter
+def format_date_sort(s, fmt='%Y%m%d%H%M'):
+    if s:
+        return s.strftime(fmt)
+    else:
+        return '0'

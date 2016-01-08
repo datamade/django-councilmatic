@@ -5,7 +5,7 @@
 {% block content %}
 
     <div class="row-fluid">
-        <div class="col-sm-12">
+        <div class="col-sm-8">
             <br/>
             <h1>{{committee.name}}</h1>
             {% if committee_description %}
@@ -13,123 +13,116 @@
             {% endif %}
             {% if committee.source_url %}
                 <p class="small">
-                    <a href='{{committee.source_url}}' title='View the source for this page' target="_blank">
+                    <a href='{{committee.source_url}}' title='View on the {{CITY_SOURCE_NAME}} website' target="_blank">
                         <i class='fa fa-fw fa-external-link'></i> 
-                        View the source for this page
+                        View on the {{CITY_SOURCE_NAME}} website
                     </a>
                 </p>
             {% endif %}
 
             <hr />
-            <ul class="nav nav-pills">
-              <li role="presentation" {% if request.GET.view != 'members' %}class='active' {% endif %}><a href="/committee/{{committee.slug}}?view=actions"><i class='fa fa-fw fa-list-ul'></i><span class="desktop-only"> Committee</span> Activity</a></li>
-              <li role="presentation" {% if request.GET.view == 'members' %}class='active' {% endif %}><a href="/committee/{{committee.slug}}?view=members"><i class='fa fa-fw fa-group'></i><span class="desktop-only"> Committee</span> Members ({{ committee.memberships.all|length }})</a></li>
-            </ul>
 
-            {% if request.GET.view != 'members' %}
-                <h3><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity</h3>
-                {% if committee.recent_activity %}
-                <div class="table-responsive">
-                    <table class='table' id='committee-actions'>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Legislation</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for action in committee.recent_activity %}
-                                <tr class="activity-row">
-                                    <td class='nowrap text-muted small'>{{action.date|date:'n/d/Y'}}</td>
-                                    <td><a href="/legislation/{{action.bill.slug}}">{{action.bill.friendly_name}}</a></td>
-                                    <td><span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span></td>
-                                </tr>
-                            {% endfor %}
-                            <tr>
-                                <td colspan="3" align="center">
-                                    <a href="" id="more-actions"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
-                                    <a href="" id="fewer-actions"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                    <p>No recent legislative activity</p>
-                {% endif %}
-
-                {% if committee.recent_events %}
-                    <h3><i class='fa fa-fw fa-calendar-o'></i> Recent Committee Events</h3>
-                    {% for event in committee.recent_events %}
-                        <p class='event-listing'>
-                            {{event.start_time | date:'n/d/Y' }} - {{event.link_html | safe}}
-                        </p>
-                    {% endfor %}
-                    <a href="" id="more-events"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
-                    <a href="" id="fewer-events"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
-                {% endif %}
-
-            {% endif %}
-
-
-            {% if request.GET.view == 'members' %}
-                <h3><i class='fa fa-fw fa-group'></i> Committee Members</h3>
-                <table class='table' id='council-members'>
+            
+            <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity</h4>
+            {% if committee.recent_activity %}
+            <div class="table-responsive">
+                <table class='table' id='committee-actions'>
                     <thead>
                         <tr>
-                            <th></th>
-                            <th>Committee Member</th>
-                            <th>
-                                {% if MUNICIPAL_DISTRICT_NAME %}
-                                    {{MUNICIPAL_DISTRICT_NAME}}
-                                {% else %}
-                                    District
-                                {% endif %}
-                            </th>
-                            <th>Role</th>
+                            <th>Date</th>
+                            <th>Legislation</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for membership in committee.chairs %}
-                            <tr>
-                                <td>
-                                    <div class="thumbnail-square">
-                                        <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
-                                    </div>
-                                </td>
-                                <td>
-                                    {{ membership.person.link_html | safe }}
-                                </td>
-                                <td>
-                                    {{membership.person.current_council_seat}}
-                                </td>
-                                <td>
-                                    Chairperson
-                                </td>
+                        {% for action in committee.recent_activity %}
+                            <tr class="activity-row">
+                                <td class='nowrap text-muted small'>{{action.date|date:'n/d/Y'}}</td>
+                                <td><a href="/legislation/{{action.bill.slug}}">{{action.bill.friendly_name}}</a></td>
+                                <td><span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span></td>
                             </tr>
                         {% endfor %}
-                        {% for membership in committee.non_chair_members %}
-                            <tr>
-                                <td>
-                                    <div class="thumbnail-square">
-                                        <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
-                                    </div>
-                                </td>
-                                <td>
-                                    {{ membership.person.link_html | safe }}
-                                </td>
-                                <td>
-                                    {{membership.person.current_council_seat}}
-                                </td>
-                                <td>
-                                    Member
-                                </td>
-                            </tr>
-                        {% endfor %}
+                        <tr>
+                            <td colspan="3" align="center">
+                                <a href="" id="more-actions"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
+                                <a href="" id="fewer-actions"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+            {% else %}
+                <p>No recent legislative activity</p>
             {% endif %}
+
+            {% if committee.recent_events %}
+                <hr />
+                <h4><i class='fa fa-fw fa-calendar-o'></i> Recent Committee Events</h4>
+                {% for event in committee.recent_events %}
+                    <p class='event-listing'>
+                        {{event.start_time | date:'n/d/Y' }} - {{event.link_html | safe}}
+                    </p>
+                {% endfor %}
+                <a href="" id="more-events"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
+                <a href="" id="fewer-events"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
+            {% endif %}
+
+            <hr />
+            <h4><i class='fa fa-fw fa-group'></i> Committee Members ({{ committee.memberships.all|length }})</h4>
+            <table class='table' id='council-members'>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Committee Member</th>
+                        <th>
+                            {% if MUNICIPAL_DISTRICT_NAME %}
+                                {{MUNICIPAL_DISTRICT_NAME}}
+                            {% else %}
+                                District
+                            {% endif %}
+                        </th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for membership in committee.chairs %}
+                        <tr>
+                            <td>
+                                <div class="thumbnail-square">
+                                    <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                                </div>
+                            </td>
+                            <td>
+                                {{ membership.person.link_html | safe }}
+                            </td>
+                            <td>
+                                {{membership.person.current_council_seat}}
+                            </td>
+                            <td>
+                                Chairperson
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    {% for membership in committee.non_chair_members %}
+                        <tr>
+                            <td>
+                                <div class="thumbnail-square">
+                                    <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                                </div>
+                            </td>
+                            <td>
+                                {{ membership.person.link_html | safe }}
+                            </td>
+                            <td>
+                                {{membership.person.current_council_seat}}
+                            </td>
+                            <td>
+                                Member
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 

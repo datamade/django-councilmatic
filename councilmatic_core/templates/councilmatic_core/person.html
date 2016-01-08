@@ -13,7 +13,7 @@
                     {% if person.current_council_seat %}
                         {{ person.current_council_seat }}
                     {% elif person.latest_council_seat %}
-                        Ex-Council Member, {{ person.latest_council_seat }}
+                        Former Council Member, {{ person.latest_council_seat }}
                     {% endif %}
                 </small>
             </h1>
@@ -37,7 +37,7 @@
             </p>
 
             <p class='small'>
-                <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View the source for this page</a>
+                <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_SOURCE_NAME}} website</a>
             </p>
             <hr/>
         </div>
@@ -62,7 +62,7 @@
                     </p>
 
                     <p class='small'>
-                        <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View the source for this page</a>
+                        <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_SOURCE_NAME}} website</a>
                     </p>
                 </div>
             </div>
@@ -78,7 +78,7 @@
                         <span class="small-pill">
                             <i class='fa fa-fw fa-files-o'></i>
                             <span class="desktop-only">Sponsored </span>
-                            Legislation
+                            legislation
                         </span>
                     </a>
                 </li>
@@ -93,7 +93,7 @@
 
             {% if request.GET.view == 'bills' or request.GET.view == None %}
                 <h3>
-                    Recently sponsored
+                    Sponsored legislation
                     <small><a href='/search/?q=&selected_facets=sponsorships_exact:{{person.name}}'>View all <i class='fa fa-fw fa-chevron-right'></i></a></small>
                 </h3>
                 <p>Legislation that {{person.name}} is the primary sponsor of.</p><br/>

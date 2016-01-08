@@ -45,55 +45,12 @@
             {% endif %}
 
             <p class="small">
-                <a href='{{legislation.source_url}}' title='View the source for this page' target="_blank">
+                <a href='{{legislation.source_url}}' title='View on the {{CITY_SOURCE_NAME}} website' target="_blank">
                     <i class='fa fa-fw fa-external-link'></i> View on the {{CITY_SOURCE_NAME}} website
                 </a>
             </p>
 
-            <hr />
-
-
-            {% if actions %}
-                <h4><i class='fa fa-fw fa-list-ul'></i> History</h4>
-                <div class="table-responsive">
-                    <table class='table table-responsive' id='committee-actions'>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Action</th>
-                                <th>Legislative body</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for action in actions %}
-                                <tr>
-                                    <td class='nowrap text-muted small'>{{action.date|date:'M d, Y'}}</td>
-                                    <td><span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span></td>
-                                    <td>{{action.organization.link_html|safe}}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                {% if legislation.unique_related_events %}
-                    <h4><i class='fa fa-fw fa-calendar-o'></i> Relevant Events</h4>
-
-                    {% for event in legislation.unique_related_events %}
-                        <p>
-                            {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
-                        </p>
-                    {% endfor %}
-                {% endif %}
-
-            {% endif %}
-
             {% if legislation.sponsorships.all %}
-                <hr />
-                <h4>
-                    <i class='fa fa-fw fa-group'></i>
-                    Sponsors ({{ legislation.sponsorships.all | length }})
-                </h4>
 
                 <div class="table-responsive">
                     <table class='table table-responsive' id='council-members'>
@@ -139,7 +96,45 @@
                 </div>
             {% endif %}
 
+            {% if actions %}
+                <hr />
+                <h4><i class='fa fa-fw fa-list-ul'></i> History</h4>
+                <div class="table-responsive">
+                    <table class='table table-responsive' id='committee-actions'>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Legislative body</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in actions %}
+                                <tr>
+                                    <td class='nowrap text-muted small'><span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'M d, Y'}}</span></td>
+                                    <td><span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span></td>
+                                    <td>{{action.organization.link_html|safe}}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if legislation.unique_related_events %}
+                    <hr />
+                    <h4><i class='fa fa-fw fa-calendar-o'></i> Relevant Events</h4>
+
+                    {% for event in legislation.unique_related_events %}
+                        <p>
+                            {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
+                        </p>
+                    {% endfor %}
+                {% endif %}
+
+            {% endif %}
+
             {% if legislation.addresses %}
+                <hr />
                 <h4><i class='fa fa-map-marker'></i> Locations mentioned</h4>
                     <ul class="list-unstyled">
                       {% for address in legislation.addresses %}
@@ -245,6 +240,19 @@
     <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
 
     <script>
+
+        $("#committee-actions").DataTable({
+            "info": false,
+            "searching": false,
+            "bLengthChange": false,
+            "paging": false,
+            "aaSorting": [ [0,'desc'] ],
+            "aoColumns": [
+                { "sType": "datetime" },
+                null,
+                null
+            ]
+        });
 
         $("#council-members").DataTable({
             "info": false,
