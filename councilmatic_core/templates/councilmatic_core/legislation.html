@@ -116,11 +116,11 @@
                     </table>
                 </div>
 
-                {% if legislation.unique_related_events %}
+                {% if legislation.unique_related_upcoming_events %}
                     <hr />
                     <h4><i class='fa fa-fw fa-calendar-o'></i> Upcoming {{ CITY_VOCAB.EVENTS }}</h4>
 
-                    {% for event in legislation.unique_related_events %}
+                    {% for event in legislation.unique_related_upcoming_events %}
                         <p>
                             {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
                         </p>

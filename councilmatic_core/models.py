@@ -329,8 +329,8 @@ class Bill(models.Model):
         return updated_bills_since
 
     @property
-    def unique_related_events(self):
-        events = [r.agenda_item.event for r in self.related_agenda_items.all()]
+    def unique_related_upcoming_events(self):
+        events = [r.agenda_item.event for r in self.related_agenda_items.filter(agenda_item__event__start_time__gte=datetime.now()).all()]
         return list(set(events))
 
 
