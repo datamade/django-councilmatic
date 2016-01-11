@@ -29,17 +29,29 @@
                 <table class='table' id='committee-actions'>
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Legislation</th>
                             <th>Action</th>
+                            <th>Legislation</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for action in committee.recent_activity %}
                             <tr class="activity-row">
-                                <td class='nowrap text-muted small'>{{action.date|date:'n/d/Y'}}</td>
-                                <td><a href="/legislation/{{action.bill.slug}}">{{action.bill.friendly_name}}</a></td>
-                                <td><span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span></td>
+                                <td class='nowrap'>
+                                    <p class="text-muted small no-pad-bottom">
+                                        {{action.date|date:'n/d/Y'}}
+                                    </p>
+                                    <p class="small no-pad-bottom">
+                                        <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p class="small no-pad-bottom">
+                                        <a href="/legislation/{{action.bill.slug}}">{{action.bill.friendly_name}}</a>
+                                    </p>
+                                    <p class="small no-pad-bottom">
+                                        {{action.bill.description | short_blurb}}
+                                    </p>
+                                </td>
                             </tr>
                         {% endfor %}
                         <tr>
