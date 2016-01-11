@@ -31,7 +31,7 @@
         {% for tag in legislation.topics %}
             <span class="badge badge-muted pseudo-topic-tag">
                 <a href='/search/?q=&selected_facets=topics_exact:{{ tag }}'>{{ tag }}</a>
-            </span>&nbsp;
+            </span>
         {% endfor %}
         <br/>
     {% else %}
@@ -39,7 +39,7 @@
         {% for tag in legislation.pseudo_topics %}
             <span class="badge badge-muted pseudo-topic-tag">
                 <a href='/search/?q=&selected_facets=topics_exact:{{ tag | committee_topic_only}}'>{{ tag | committee_topic_only }}</a>
-            </span>&nbsp;
+            </span>
         {% endfor %}
         <br/>
     {% endif %}
