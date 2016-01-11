@@ -355,7 +355,8 @@ class Organization(models.Model):
 
     @property
     def recent_activity(self):
-        return self.actions.order_by('-date', '-_bill__identifier', '-order') if self.actions.all() else None
+        # setting arbitrary max of 300 b/c otherwise page will take forever to load
+        return self.actions.order_by('-date', '-_bill__identifier', '-order')[:300] if self.actions.all() else None
 
     @property
     def recent_events(self):
