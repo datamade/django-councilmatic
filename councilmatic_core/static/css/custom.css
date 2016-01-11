@@ -543,6 +543,12 @@ select {
     }
 
 
+    /* pdf */
+    .pdf-viewer{
+        max-width: 290px;
+    }
+
+
     .footer p{
         font-size: .7em;
         margin-bottom: 6px;
