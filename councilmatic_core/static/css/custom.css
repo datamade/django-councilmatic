@@ -79,6 +79,8 @@ h1, h2, h3, h4 {
 .footer img {
     margin-right: 25px;
     margin-left: 25px;
+    max-height: 60px;
+    max-width: 120px;
 }
 
 
@@ -533,6 +535,18 @@ select {
     .btn-bill-detail{
         padding: 36px 0px;
         top: 38px;
+    }
+
+
+    .footer p{
+        font-size: .7em;
+        margin-bottom: 6px;
+    }
+    .footer img {
+        max-height: 45px;
+        max-width: 90px;
+        margin-right: 10px;
+        margin-left: 10px;
     }
 
 
