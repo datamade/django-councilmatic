@@ -437,6 +437,11 @@ select {
         height: 260px;
     }
 
+    #council-member-scroll-area{
+        height: 100%;
+        overflow-y: none;
+    }
+
     .desktop-only{
         display: none;
     }
