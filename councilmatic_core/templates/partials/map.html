@@ -41,7 +41,7 @@
     }
 
     infoBox.clear = function(){
-        this._div.innerHTML = '<h4>{{CITY_NAME_SHORT}} Council Districts</h4><p><i class="fa fa-hand-pointer-o fa-fw"></i>Hover for details</p>';
+        this._div.innerHTML = '<h4>{{CITY_NAME_SHORT}} Council Districts</h4><p><i class="fa fa-hand-pointer-o fa-fw"></i><span class="non-mobile-only">Hover</span><span class="mobile-only">Tap</span> for details</p>';
     }
 
     infoBox.addTo(map);
