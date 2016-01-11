@@ -8,6 +8,9 @@
     <meta name="description" content="{{seo.site_desc}}">
     <meta name="author" content="{{seo.site_author}}">
 
+    {% if seo.nofollow %}
+        <meta name="robots" content="noindex">
+    {% endif %}
 
     <!-- Facebook -->
     <meta property="og:site_name" content="{{seo.site_name}}">
