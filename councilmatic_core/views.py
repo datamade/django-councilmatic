@@ -22,8 +22,9 @@ import json
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 class CouncilmaticFacetedSearchView(FacetedSearchView):
-
+    
     def extra_context(self):
+
         extra = super(FacetedSearchView, self).extra_context()
         extra['request'] = self.request
         extra['facets'] = self.results.facet_counts()
@@ -53,7 +54,7 @@ class CouncilmaticSearchForm(FacetedSearchForm):
         super(CouncilmaticSearchForm, self).__init__(*args, **kwargs)
 
     def no_query_found(self):
-        return self.searchqueryset.all()
+        return self.searchqueryset.order_by('-last_action_date').all()
 
 # This is used by a context processor in settings.py to render these variables
 # into the context of every page.

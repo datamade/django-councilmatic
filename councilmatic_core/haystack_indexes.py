@@ -9,10 +9,10 @@ class BillIndex(indexes.SearchIndex):
     ocd_id = indexes.CharField(model_attr='ocd_id', indexed=False)
     bill_type = indexes.CharField(model_attr='bill_type', faceted=True)
     identifier = indexes.CharField(model_attr='identifier')
-    description = indexes.CharField(model_attr='description')
+    description = indexes.CharField(model_attr='description', boost=1.25)
     source_url = indexes.CharField(model_attr='source_url', indexed=False)
     source_note = indexes.CharField(model_attr='source_note')
-    abstract = indexes.CharField(model_attr='abstract')
+    abstract = indexes.CharField(model_attr='abstract', boost=1.25)
     
     
     friendly_name = indexes.CharField()
