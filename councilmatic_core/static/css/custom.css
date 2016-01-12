@@ -470,6 +470,13 @@ select {
 /* lil screens */
 @media only screen and (max-width : 360px) {
 
+    body {
+        padding-top: 50px;
+    }
+    .navbar-default{
+        min-height: 50px;
+    }
+
     .container-fluid-nav{
         padding-left: 0;
         padding-right: 0;
@@ -478,6 +485,9 @@ select {
     .navbar-brand {
         padding-left: 5px;
         padding-right: 5px;
+        padding-bottom: 0px;
+        padding-top: 3px;
+        height: 28px;
     }
     #logo {
         height: 35px;
@@ -488,6 +498,8 @@ select {
         font-size: 12px;
         padding-left: 5px;
         padding-right: 5px;
+        padding-top: 0px;
+        padding-bottom: 1px;
     }
 
     .col-sm-12, .table-col, .no-pad-mobile {
