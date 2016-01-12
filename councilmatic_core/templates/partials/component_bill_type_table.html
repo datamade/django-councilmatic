@@ -8,7 +8,7 @@
     <tbody>
     {% for leg_type in LEGISLATION_TYPE_DESCRIPTIONS %}
         <tr>
-            <td>
+            <td class='nowrap'>
                 <i class="fa fa-fw fa-{{leg_type.fa_icon}}"></i>
                 <a href="/search/?q=&selected_facets=bill_type_exact:{{leg_type.search_term}}">
                     {{leg_type.name}}
