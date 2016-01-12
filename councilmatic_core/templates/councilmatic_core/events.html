@@ -67,13 +67,8 @@
         <div class="col-sm-4 no-pad-mobile">
             <div class='well'>
                 <h4><i class='fa fa-fw fa-info-circle'></i> What are these {{ CITY_VOCAB.EVENTS | lower}}?</h4>
-                <p>
-                    Most of the Council's legislative action happens in <a href='/committees/'>committees</a>. Each committee meets in public hearings 2-3 times per month where proposed legislation is debated. Members of other government branches, as well as the public, are able to attend and comment at these hearings.
-                </p>
-
-                <p>
-                    Meetings of the entire Council, referred to as Stated Meetings, occur twice a month at City Hall.
-                </p>
+                
+                {{ ABOUT_BLURBS.EVENTS | safe }}
 
                 <p><a href='/about/#about-city-council'>Read more about how City Council works ></a></p>
             </div>

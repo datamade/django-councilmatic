@@ -69,6 +69,7 @@ def city_context(request):
         'IMAGES',
         'MAP_CONFIG',
         'ANALYTICS_TRACKING_CODE',
+        'ABOUT_BLURBS',
     ]
 
     city_context = { s: getattr(settings, s, None) for s in relevant_settings}
