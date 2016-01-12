@@ -92,6 +92,15 @@ class Person(models.Model):
             return '/static/images/headshot_placeholder.png'
 
     @property
+    def headshot_source(self):
+        if self.slug in MANUAL_HEADSHOTS:
+            return MANUAL_HEADSHOTS[self.slug]['source']
+        elif self.headshot:
+            return settings.CITY_VOCAB['SOURCE']
+        else:
+            return None
+
+    @property
     def link_html(self):
         # if person is a city council member
         if self.ocd_id and self.slug:

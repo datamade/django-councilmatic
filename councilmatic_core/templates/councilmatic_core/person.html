@@ -51,6 +51,11 @@
             {% endif %}
 
             <hr />
+            {% if person.headshot_source %}
+                <p class='small'>
+                    <i class='fa fa-fw fa-camera'></i> Credit: {{person.headshot_source}}
+                </p>
+            {% endif %}
             <p class='small'>
                 <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website</a>
             </p>
