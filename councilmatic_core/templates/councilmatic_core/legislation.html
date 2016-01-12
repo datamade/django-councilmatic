@@ -57,15 +57,38 @@
                         <thead>
                             <tr>
                                 <th></th>
-                                <th>Sponsor</th>
+                                <th>
+                                    {% if legislation.sponsorships.all|length > 1 %}
+                                    Sponsors ({{legislation.sponsorships.all|length}})
+                                    {% else %}
+                                    Sponsor
+                                    {% endif %}
+                                </th>
                                 <th>
                                     {{CITY_VOCAB.MUNICIPAL_DISTRICT}}
                                 </th>
-                                <th>Role</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for s in legislation.sponsorships.all %}
+                                {% if s.is_primary %}
+                                <tr>
+                                    <td>
+                                        <div class="thumbnail-square">
+                                            <img src='{{s.person.headshot_url}}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ s.person.link_html | safe }} <span class="badge badge-default">Primary Sponsor</span>
+                                    </td>
+                                    <td>
+                                        {{s.person.current_council_seat}}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                            {% for s in legislation.sponsorships.all %}
+                                {% if not s.is_primary %}
                                 <tr>
                                     <td>
                                         <div class="thumbnail-square">
@@ -78,14 +101,8 @@
                                     <td>
                                         {{s.person.current_council_seat}}
                                     </td>
-                                    <td>
-                                        {% if s.is_primary %}
-                                            Primary sponsor
-                                        {% else %}
-                                            Sponsor
-                                        {% endif %}
-                                    </td>
                                 </tr>
+                                {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -255,12 +272,10 @@
             "searching": false,
             "bLengthChange": false,
             "paging": false,
-            "aaSorting": [ [3,'asc'] ],
             "aoColumns": [
                 { "bSortable": false },
                 null,
                 { "sType": "num-html" },
-                null
             ]
         });
 
