@@ -108,7 +108,6 @@ class Person(models.Model):
     def chair_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(_organization__name__startswith='Committee')
-            ######
         else:
             return None
 

@@ -263,6 +263,16 @@ h1, h2, h3, h4 {
 }
 
 
+.address-search > input {
+    border: 0px;
+    background-color: #eee;
+    box-shadow: none;
+}
+.address-search, .address-search > input, .address-search > .input-group-btn > .btn{
+    border-radius: 0;
+}
+
+
 
 
 /* bill detail listing */
@@ -519,12 +529,12 @@ select {
         margin-right: 0px;
     }
 
-    .site-intro-search > input {
+    .site-intro-search > input, .address-search > input {
         height: 30px;
         padding: 2px 2px 2px 8px;
         font-size: 14px;
     }
-    .site-intro-search > .input-group-btn > button{
+    .site-intro-search > .input-group-btn > button, .address-search > .input-group-btn > button{
         height: 30px;
         width: 30px;
         font-size: 14px;
