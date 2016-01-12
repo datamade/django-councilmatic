@@ -28,6 +28,10 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
         extra['request'] = self.request
         extra['facets'] = self.results.facet_counts()
 
+        q_filters = ''
+        q_filters += "%s" % "&".join(["%s=%s" % (key, value) for (key, value) in self.request.GET.items() if not key=='page' ])
+        extra['q_filters'] = q_filters
+
         selected_facets = {}
         for val in self.request.GET.getlist("selected_facets"):
             [k,v] = val.split('_exact:',1)

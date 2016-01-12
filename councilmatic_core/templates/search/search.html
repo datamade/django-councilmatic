@@ -388,7 +388,7 @@
                     <ul class="pagination">
                         {% if page.has_previous %}
                             <li>
-                                <a href="?q={{ query }}&amp;page={{ page.previous_page_number }}" aria-label="Previous"><span aria-hidden="true">&laquo; Previous</span></a>
+                                <a href="?{{ q_filters }}&amp;page={{ page.previous_page_number }}" aria-label="Previous"><span aria-hidden="true">&laquo; Previous</span></a>
                             </li>
                         {% else %}
                             <li class="disabled">
@@ -398,7 +398,7 @@
 
                         {% if page.has_next %}
                             <li>
-                                <a href="?q={{ query }}&amp;page={{ page.next_page_number }}" aria-label="Next"><span aria-hidden="true">Next &raquo;</span></a>
+                                <a href="?{{ q_filters }}&amp;page={{ page.next_page_number }}" aria-label="Next"><span aria-hidden="true">Next &raquo;</span></a>
                             </li>
                         {% else %}
                             <li class="disabled">
@@ -431,18 +431,12 @@
 
             $(".filter-value").click(function() {
 
-                var current_url = window.location.href
                 var addtl_filter = this.id
+                window.location = '/search/?{{ q_filters }}&selected_facets=' + addtl_filter;
 
-                if(current_url.indexOf('selected_facets') >= 0) {
-                    // if adding a filter onto existing filters
-                    window.location = current_url + '&selected_facets=' + addtl_filter;
-                } 
-                else {
-                    // if adding first filter
-                    window.location = '/search/?q={{query}}&selected_facets=' + addtl_filter;
-                }
             });
+
+
         });
     </script>
 {% endblock %}
