@@ -195,10 +195,12 @@
 
         if ($("#search_address").val() != "") {
             doSearch();
+            $("#reset").show()
         }
         else {
             districts.addTo(map);
             map.fitBounds(districts.getBounds());
+            $("#reset").hide()
         }
     }
 
