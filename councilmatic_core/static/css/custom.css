@@ -515,6 +515,20 @@ select {
         padding: 20px;
     }
 
+    #search-jumbotron {
+        background-color: inherit;
+        padding: 0px;
+    }
+    #search-jumbotron input{
+        background-color: #eee;
+    }
+    #search-jumbotron .h4{
+        margin-top: 0px;
+        margin-bottom: 10px;
+        font-size: 18px;
+        font-weight: 900;
+    }
+
     h1, .h1 {
         font-size: 28px;
     }

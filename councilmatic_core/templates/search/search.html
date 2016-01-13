@@ -10,9 +10,9 @@
 {% endblock %}
 {% block content %}
     <br/>
-    <div class='jumbotron'>
+    <div class='jumbotron' id='search-jumbotron'>
         <p class="h4">
-            Search {{CITY_NAME}} legislation
+            Search {{CITY_NAME}} Legislation
         </p>
         <form method="get" action=".">
             <div class="input-group site-intro-search">
@@ -287,6 +287,7 @@
                 </div>
                 {% endif %}
             {% endif %}
+            <div class="divider"></div>
         </div>
 
 
@@ -416,10 +417,8 @@
     <script>
         $(function() {
             // filters are collapsed be default b/c they are long
-            // on wide screens, filters w/ class panel-show are expanded
-            if ($(window).width() >= 768) {
-                $('.panel-show').addClass('in');
-            }
+            // filters w/ class panel-show (i.e. filters that have been selected) are expanded
+            $('.panel-show').addClass('in');
 
             $(".panel-heading").click(function () {
                 if ($(this).parent().children().eq(1).hasClass("in")){
