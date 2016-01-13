@@ -4,6 +4,7 @@ from django.conf import settings
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.text import slugify
 from django.db.utils import IntegrityError, DataError
+from django.db.models import Max
 from councilmatic_core.models import Person, Bill, Organization, Action, ActionRelatedEntity, \
                         Post, Membership, Sponsorship, LegislativeSession, \
                         Document, BillDocument, Event, EventParticipant, EventDocument, \
@@ -44,11 +45,6 @@ class Command(BaseCommand):
             action='store_true',
             default=False,
             help='deletes all data, and then loads all legislative sessions (by default, this task does not delete data & only loads new/updated data from current legislative session)')
-
-        parser.add_argument('--fullhistory',
-            action='store_true',
-            default=False,
-            help='look at all legislative sessions on the ocd api (by default, this task only looks at the current legislative session')
 
     def handle(self, *args, **options):
 
@@ -244,28 +240,47 @@ class Command(BaseCommand):
 
         # get legislative sessions
         self.grab_legislative_sessions()
+        
+        query_params = {
+            'from_organization': settings.OCD_CITY_COUNCIL_ID
+        }
 
-        if fullhistory:
-            #grab all legislative sessions
-            leg_sessions_to_check = settings.LEGISLATIVE_SESSIONS
-        else:
-            leg_sessions_to_check = [settings.LEGISLATIVE_SESSIONS[-1]]
+        #grab all legislative sessions
+        max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
+        
+        if max_updated == None:
+            max_updated = datetime.datetime(1900,1,1)
 
-        for leg_session in leg_sessions_to_check:
-            bill_url = base_url+'/bills/?from_organization_id=%s&legislative_session__identifier=%s' % (settings.OCD_CITY_COUNCIL_ID,leg_session)
+        query_params['sort'] = 'updated_at'
+        query_params['updated_at__gte'] = max_updated.isoformat()
+        
+        print('grabbing bills since', query_params['updated_at__gte'])
 
-            print("\nadding bills: %s legislative session" %leg_session)
-            r = requests.get(bill_url)
-            page_json = json.loads(r.text)
-            leg_session_obj = LegislativeSession.objects.filter(identifier=leg_session).first()
+        search_url = '{}/bills/'.format(base_url)
+        search_results = requests.get(search_url, params=query_params)
+        page_json = search_results.json()
+        
+        leg_session_obj = None
 
-            for i in range(page_json['meta']['max_page']):
+        for page_num in range(page_json['meta']['max_page']):
+            
+            query_params['page'] = int(page_num) + 1
+            result_page = requests.get(search_url, params=query_params)
 
-                r = requests.get(bill_url+'&page='+str(i+1))
-                page_json = json.loads(r.text)
+            for result in result_page.json()['results']:
+                
+                bill_url = '{base}/{bill_id}'.format(base=base_url, bill_id=result['id'])
+                bill_detail = requests.get(bill_url)
+                
+                leg_session_id = bill_detail.json()['legislative_session']['identifier']
+                
+                if leg_session_obj == None:
+                    leg_session_obj = LegislativeSession.objects.get(identifier=leg_session_id)
+                
+                elif leg_session_obj.identifier != leg_session_id:
+                    leg_session_obj = LegislativeSession.objects.get(identifier=leg_session_id)
 
-                for result in page_json['results']:
-                    self.grab_bill(result['id'], leg_session_obj)
+                self.grab_bill(bill_detail.json(), leg_session_obj)
 
     def grab_legislative_sessions(self):
 
@@ -280,29 +295,29 @@ class Command(BaseCommand):
             if created and DEBUG:
                 print('adding legislative session: %s' %obj.name)
 
-    def grab_bill(self, bill_id, leg_session_obj):
-
-        bill_url = base_url+'/'+bill_id
-        r = requests.get(bill_url)
-        page_json = json.loads(r.text)
-
-        from_org = Organization.objects.filter(ocd_id=page_json['from_organization']['id']).first()
+    def grab_bill(self, page_json, leg_session_obj):
         
+        from_org = Organization.objects.get(ocd_id=page_json['from_organization']['id'])
         
         if page_json['extras'].get('local_classification'):
             bill_type = page_json['extras']['local_classification']
+
         elif len(page_json['classification']) == 1:
             bill_type = page_json['classification'][0]
+
         else:
             raise Exception(page_json['classification'])
 
 
         if 'full_text' in page_json['extras']:
             full_text = page_json['extras']['full_text']
+
         else:
             full_text = ''
+
         if 'ocr_full_text' in page_json['extras']:
             ocr_full_text = page_json['extras']['ocr_full_text']
+
         else:
             ocr_full_text = ''
 
@@ -316,6 +331,8 @@ class Command(BaseCommand):
             abstract = page_json['abstracts'][0]['abstract']
         else:
             abstract = ''
+        
+        bill_id = page_json['id']
 
         bill_fields = {
             'ocd_id': bill_id,
@@ -340,7 +357,7 @@ class Command(BaseCommand):
         # look for existing bill
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
-
+            
             # check if it has been updated on api
             if obj.ocd_updated_at.isoformat() != page_json['updated_at']:
 
