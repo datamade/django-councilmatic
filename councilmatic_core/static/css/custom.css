@@ -424,6 +424,8 @@ select {
         padding-top: 4px;
         padding-bottom: 8px;
         line-height: 21px;
+        padding-left: 6px;
+        padding-right: 0px;
     }
 
     .nav-pills > li > a{
