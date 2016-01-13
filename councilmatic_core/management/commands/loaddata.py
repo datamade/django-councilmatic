@@ -48,16 +48,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        # if deleting stuff, should grab full history
-        if options['delete'] and not options['fullhistory']:
-            options['fullhistory'] = True
-
         if options['endpoint'] == 'organizations':
             self.grab_organizations(delete=options['delete'])
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'bills':
-            self.grab_bills(delete=options['delete'], fullhistory=options['fullhistory'])
+            self.grab_bills(delete=options['delete'])
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'people':
@@ -73,7 +69,7 @@ class Command(BaseCommand):
 
             self.grab_organizations(delete=options['delete'])
             self.grab_people(delete=options['delete'])
-            self.grab_bills(delete=options['delete'], fullhistory=options['fullhistory'])
+            self.grab_bills(delete=options['delete'])
             self.grab_events(delete=options['delete'])
 
             print("\ndone!", datetime.datetime.now())
@@ -223,7 +219,7 @@ class Command(BaseCommand):
                 self.grab_person_memberships(membership_json['person']['id'])
 
 
-    def grab_bills(self, delete=False, fullhistory=False):
+    def grab_bills(self, delete=False):
         # this grabs all bills & associated actions, documents from city council
         # organizations need to be populated before bills & actions are populated
 
