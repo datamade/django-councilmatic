@@ -14,6 +14,7 @@ from haystack.views import FacetedSearchView
 from datetime import date, timedelta, datetime
 import itertools
 from operator import attrgetter
+import urllib
 
 import pytz
 import re
@@ -30,7 +31,13 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
         extra['facets'] = self.results.facet_counts()
 
         q_filters = ''
-        q_filters += "%s" % "&".join(["%s=%s" % (key, value) for (key, value) in self.request.GET.items() if not key=='page' ])
+        url_params = [(p,val) for (p,val) in self.request.GET.items() if p!='page' and p!='selected_facets' ]
+        selected_facet_vals = self.request.GET.getlist('selected_facets')
+        for facet_val in selected_facet_vals:
+            url_params.append(('selected_facets', facet_val))
+        if url_params:
+            q_filters = urllib.parse.urlencode(url_params)
+
         extra['q_filters'] = q_filters
 
         selected_facets = {}
