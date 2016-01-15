@@ -18,6 +18,7 @@ import pytz
 import os.path
 import re
 import datetime
+import psycopg2
 
 for configuration in ['OCD_JURISDICTION_ID', 
                       'OCD_CITY_COUNCIL_ID', 
@@ -47,6 +48,15 @@ class Command(BaseCommand):
             help='deletes all data, and then loads all legislative sessions (by default, this task does not delete data & only loads new/updated data from current legislative session)')
 
     def handle(self, *args, **options):
+        
+        db_conn = settings.DATABASES['default']
+        self.db_conn_kwargs = {
+            'database': db_conn['NAME'],
+            'user': db_conn['USER'],
+            'password': db_conn['PASSWORD'],
+            'host': db_conn['HOST'],
+            'port': db_conn['PORT'],
+        }
 
         if options['endpoint'] == 'organizations':
             self.grab_organizations(delete=options['delete'])
@@ -78,8 +88,10 @@ class Command(BaseCommand):
     def grab_organizations(self, delete=False):
         print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
         if delete:
-            Organization.objects.all().delete()
-            Post.objects.all().delete()
+            with psycopg2.connect(**self.db_conn_kwargs) as conn:
+                with conn.cursor() as curs:
+                    curs.execute('TRUNCATE councilmatic_core_organization CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_post CASCADE')
             print("deleted all organizations and posts")
 
         # first grab city council root
@@ -204,8 +216,10 @@ class Command(BaseCommand):
 
         print("\n\nLOADING PEOPLE", datetime.datetime.now())
         if delete:
-            Person.objects.all().delete()
-            Membership.objects.all().delete()
+            with psycopg2.connect(**self.db_conn_kwargs) as conn:
+                with conn.cursor() as curs:
+                    curs.execute('TRUNCATE councilmatic_core_person CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_membership CASCADE')
             print("deleted all people, memberships")
 
         # grab people associated with all existing organizations
@@ -225,13 +239,15 @@ class Command(BaseCommand):
 
         print("\n\nLOADING BILLS", datetime.datetime.now())
         if delete:
-            Bill.objects.all().delete()
-            Action.objects.all().delete()
-            ActionRelatedEntity.objects.all().delete()
-            LegislativeSession.objects.all().delete()
-            Document.objects.all().delete()
-            BillDocument.objects.all().delete()
-            Sponsorship.objects.all().delete()
+            with psycopg2.connect(**self.db_conn_kwargs) as conn:
+                with conn.cursor() as curs:
+                    curs.execute('TRUNCATE councilmatic_core_bill CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_action CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_actionrelatedentity CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_legislativesession CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_document CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_billdocument CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_sponsorship CASCADE')
             print("deleted all bills, actions, legislative sessions, documents, sponsorships\n")
 
         # get legislative sessions
@@ -651,11 +667,13 @@ class Command(BaseCommand):
 
         print("\n\nLOADING EVENTS", datetime.datetime.now())
         if delete:
-            Event.objects.all().delete()
-            EventParticipant.objects.all().delete()
-            EventDocument.objects.all().delete()
-            EventAgendaItem.objects.all().delete()
-            AgendaItemBill.objects.all().delete()
+            with psycopg2.connect(**self.db_conn_kwargs) as conn:
+                with conn.cursor() as curs:
+                    curs.execute('TRUNCATE councilmatic_core_event CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_eventparticipant CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_eventdocument CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_eventagendaitem CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_agendaitembill CASCADE')
             print("deleted all events, participants, documents, agenda items, agenda item bill references")
 
         # this grabs a paginated listing of all events within a jurisdiction
