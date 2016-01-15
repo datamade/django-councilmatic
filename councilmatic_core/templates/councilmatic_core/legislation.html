@@ -191,10 +191,10 @@
                     Legislation text
                 </h4>
                 <p>
-                    <a target='_blank' href='{{legislation.full_text_doc_url}}'><i class='fa fa-download'></i> Download PDF</a>
+                    <a id="pdf-download-link" target='_blank' href='{{legislation.full_text_doc_url}}'><i class='fa fa-fw fa-download'></i> Download PDF</a>
                 </p>
-                <iframe src="/pdfviewer/?file={{legislation.full_text_doc_url|urlencode}}"
-                    id="result-image"
+                <iframe 
+                    id="pdf-embed"
                     class="pdf-viewer"
                     frameborder="0"
                     seamless="true"
@@ -284,6 +284,14 @@
                 $(this).addClass('landscape');
             }
         });
+
+        if (window.screen.width > 768){
+            $("#pdf-embed").attr("src", "/pdfviewer/?file={{legislation.full_text_doc_url|urlencode}}");
+        }
+        else{
+            $('#pdf-embed').hide()
+            $('#pdf-download-link').html("<i class='fa fa-fw fa-external-link'></i> View PDF")
+        }
 
         // for reference purposes
         console.log( "OCD ID: {{legislation.ocd_id}}" )
