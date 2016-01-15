@@ -443,6 +443,13 @@ class Action(models.Model):
 
         else: return 'info'
 
+    @classmethod
+    def actions_on_date(cls, date_match):
+        """
+        grabs all actions that occurred on a day
+        """
+        return cls.objects.filter(date__date=date_match)
+
 class ActionRelatedEntity(models.Model):
     _action = models.ForeignKey('Action', related_name='related_entities', db_column='action_id', null=True)
     entity_type = models.CharField(max_length=100)
