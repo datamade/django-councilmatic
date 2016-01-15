@@ -448,7 +448,7 @@ class Action(models.Model):
         """
         grabs all actions that occurred on a day
         """
-        return cls.objects.filter(date__date=date_match)
+        return cls.objects.filter(date__startswith=date_match)
 
 class ActionRelatedEntity(models.Model):
     _action = models.ForeignKey('Action', related_name='related_entities', db_column='action_id', null=True)
