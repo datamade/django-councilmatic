@@ -313,7 +313,8 @@ class Command(BaseCommand):
 
         if 'ocr_full_text' in page_json['extras']:
             ocr_full_text = page_json['extras']['ocr_full_text']
-
+        elif 'plain_text' in page_json['extras']:
+            ocr_full_text = page_json['extras']['plain_text']
         else:
             ocr_full_text = ''
 
