@@ -344,6 +344,11 @@ class Command(BaseCommand):
             abstract = page_json['abstracts'][0]['abstract']
         else:
             abstract = ''
+
+        source_url = ''
+        for source in page_json['sources']:
+            if source['note'] == 'web':
+                source_url = source['url']
         
         bill_id = page_json['id']
 
@@ -354,7 +359,7 @@ class Command(BaseCommand):
             'description':page_json['title'],
             'identifier':page_json['identifier'],
             'classification':page_json['classification'][0],
-            'source_url':page_json['sources'][0]['url'],
+            'source_url':source_url,
             'source_note':page_json['sources'][0]['note'],
             '_from_organization':from_org,
             'full_text':full_text,
@@ -379,7 +384,7 @@ class Command(BaseCommand):
                 obj.description=page_json['title']
                 obj.identifier=page_json['identifier']
                 obj.classification=page_json['classification'][0]
-                obj.source_url=page_json['sources'][0]['url']
+                obj.source_url=source_url
                 obj.source_note=page_json['sources'][0]['note']
                 obj._from_organization=from_org
                 obj.full_text=full_text
