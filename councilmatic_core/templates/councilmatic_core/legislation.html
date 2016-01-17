@@ -124,9 +124,19 @@
                         <tbody>
                             {% for action in actions %}
                                 <tr>
-                                    <td class='nowrap text-muted small'><span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'M d, Y'}}</span></td>
-                                    <td><span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span></td>
-                                    <td>{{action.organization.link_html|safe}}</td>
+                                    <td class='nowrap text-muted small'>
+                                        <span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'M d, Y'}}</span>
+                                    </td>
+                                    <td class="small">
+                                        <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
+                                        {% if action.related_organization %}
+                                            to
+                                            {{action.related_organization.link_html|safe}}
+                                        {% endif %}
+                                    </td>
+                                    <td class="small">
+                                        {{action.organization.link_html|safe}}
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

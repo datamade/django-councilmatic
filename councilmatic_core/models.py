@@ -424,6 +424,15 @@ class Action(models.Model):
     def organization(self):
         return override_relation(self._organization)
 
+    @property
+    def related_organization(self):
+        r = self.related_entities.first()
+        if r and r.entity_type=='organization':
+            org = Organization.objects.filter(ocd_id=r.organization_ocd_id).first()
+            return org
+        else:
+            return None
+
     @property 
     def label(self):
         c = self.classification
