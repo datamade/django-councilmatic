@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <div class="col-sm-8">
+        <div class="col-sm-8 no-pad-mobile">
             <br/>
 
             {% if legislation.abstract %}
@@ -125,7 +125,7 @@
                             {% for action in actions %}
                                 <tr>
                                     <td class='nowrap text-muted small'>
-                                        <span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'M d, Y'}}</span>
+                                        <span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'n/d/y'}}</span>
                                     </td>
                                     <td class="small">
                                         <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
@@ -272,8 +272,8 @@
             "aaSorting": [ [0,'desc'] ],
             "aoColumns": [
                 { "sType": "datetime" },
-                null,
-                null
+                { "bSortable": false },
+                { "bSortable": false }
             ]
         });
 
