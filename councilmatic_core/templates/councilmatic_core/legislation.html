@@ -7,7 +7,7 @@
         <div class="row-fluid">
             <div class="col-sm-12">
                 <h1 class="bill-page-title">
-                    <br/>
+                    <br class="non-mobile-only" />
                     {{ legislation.friendly_name }}
                     <small>
                         {{ legislation.inferred_status | inferred_status_label | safe }}
@@ -15,11 +15,11 @@
                 </h1>
                 {% if legislation.topics %}
                     <p>
-                        <i class="fa fa-fw fa-tag"></i>
+                        <i class="fa fa-tag"></i>
                         {% for tag in legislation.topics %}
                             <span class="badge badge-muted badge-big pseudo-topic-tag">
                                 <a href='/search/?q=&selected_facets=topics_exact:{{ tag }}'>{{ tag }}</a>
-                            </span>&nbsp;
+                            </span>
                         {% endfor %}
                         <br/>
                     </p>
@@ -49,8 +49,10 @@
                     <i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website
                 </a>
             </p>
+            <div class="divider"></div>
 
             {% if legislation.sponsorships.all %}
+                <h3 class="no-pad-bottom"><i class='fa fa-fw fa-users'></i> Sponsors</h3>
 
                 <div class="table-responsive">
                     <table class='table table-responsive' id='council-members'>
@@ -107,11 +109,11 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="divider"></div>
             {% endif %}
 
             {% if actions %}
-                <hr />
-                <h4><i class='fa fa-fw fa-list-ul'></i> History</h4>
+                <h3 class="no-pad-bottom"><i class='fa fa-fw fa-list-ul'></i> History</h3>
                 <div class="table-responsive">
                     <table class='table table-responsive' id='committee-actions'>
                         <thead>
@@ -142,38 +144,40 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="divider"></div>
+            {% endif %}
 
-                {% if legislation.unique_related_upcoming_events %}
-                    <hr />
-                    <h4><i class='fa fa-fw fa-calendar-o'></i> Upcoming {{ CITY_VOCAB.EVENTS }}</h4>
+            {% if legislation.unique_related_upcoming_events %}
+                <h3><i class='fa fa-fw fa-calendar-o'></i> Upcoming {{ CITY_VOCAB.EVENTS }}</h3>
 
-                    {% for event in legislation.unique_related_upcoming_events %}
-                        <p>
-                            {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
-                        </p>
-                    {% endfor %}
-                {% endif %}
+                {% for event in legislation.unique_related_upcoming_events %}
+                    <p>
+                        {{event.start_time | date:'M d, Y' }} - {{event.link_html | safe}}
+                    </p>
+                {% endfor %}
 
+                <div class="divider"></div>
             {% endif %}
 
             {% if legislation.addresses %}
-                <hr />
-                <h4><i class='fa fa-map-marker'></i> Locations mentioned</h4>
-                    <ul class="list-unstyled">
-                      {% for address in legislation.addresses %}
-                        <li><a target='_blank' href="http://maps.google.com/maps?q={{ address|urlencode }}+{{ CITY_NAME }}">
-                          {{ address }} {{ CITY_NAME }}</a></li>
-                      {% endfor %}
-                    </ul>
-                    <img class='img-thumbnail img-rounded' src="https://maps.googleapis.com/maps/api/staticmap?size=400x200&zoom=14&maptype=roadmap{% for address in legislation.addresses %}&markers={{ address }}+{{ CITY_NAME }}{% endfor %}">
+                <h3>
+                    <i class='fa fa-map-marker'></i> Locations mentioned
+                </h3>
+                <ul class="list-unstyled">
+                  {% for address in legislation.addresses %}
+                    <li><a target='_blank' href="http://maps.google.com/maps?q={{ address|urlencode }}+{{ CITY_NAME }}">
+                      {{ address }} {{ CITY_NAME }}</a></li>
+                  {% endfor %}
+                </ul>
+                <img class='img-thumbnail img-rounded' src="https://maps.googleapis.com/maps/api/staticmap?size=400x200&zoom=14&maptype=roadmap{% for address in legislation.addresses %}&markers={{ address }}+{{ CITY_NAME }}{% endfor %}">
+                <div class="divider"></div>
             {% endif %}
 
             {% if legislation.attachments %}
-                <hr />
-                <h4>
+                <h3>
                     <i class='fa fa-fw fa-paperclip'></i>
                     Attachments ({{ legislation.attachments | length }})
-                </h4>
+                </h3>
                 <ul>
                     {% for doc in legislation.attachments %}
                         <li>
@@ -181,25 +185,26 @@
                         </li>
                     {% endfor %}
                 </ul>
+                <div class="divider"></div>
             {% endif %}
 
             {% if legislation.full_text != "" %}
-                <hr />
-                <h4>
+                <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
                     Legislation text
-                </h4>
+                </h3>
                 <div class='panel panel-default'>
                     <div class='panel-body'>
                         {{ legislation.full_text|safe }}
                     </div>
                 </div>
+
+                <div class="divider"></div>
             {% elif legislation.full_text_doc_url %}
-                <hr />
-                <h4>
+                <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
                     Legislation text
-                </h4>
+                </h3>
                 <p>
                     <a id="pdf-download-link" target='_blank' href='{{legislation.full_text_doc_url}}'><i class='fa fa-fw fa-download'></i> Download PDF</a>
                 </p>
@@ -212,6 +217,7 @@
                     height="600px">
                 </iframe>
 
+                <div class="divider"></div>
             {% endif %}
         </div>
 
@@ -269,7 +275,6 @@
             "searching": false,
             "bLengthChange": false,
             "paging": false,
-            "aaSorting": [ [0,'desc'] ],
             "aoColumns": [
                 { "sType": "datetime" },
                 { "bSortable": false },
