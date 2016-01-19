@@ -301,7 +301,7 @@
         });
 
         if (window.screen.width > 768){
-            $("#pdf-embed").attr("src", "/pdfviewer/?file={{legislation.full_text_doc_url}}");
+            $("#pdf-embed").attr("src", "/pdfviewer/?file={{legislation.full_text_doc_url|urlencode}}");
         }
         else{
             $('#pdf-embed').hide()
