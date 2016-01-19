@@ -69,7 +69,7 @@
 
             {% if committee.recent_events %}
                 <hr />
-                <h4><i class='fa fa-fw fa-calendar-o'></i> Recent Committee Events</h4>
+                <h4><i class='fa fa-fw fa-calendar-o'></i> Committee Events</h4>
                 {% for event in committee.recent_events %}
                     <p class='event-listing'>
                         {{event.start_time | date:'n/d/Y' }} - {{event.link_html | safe}}
