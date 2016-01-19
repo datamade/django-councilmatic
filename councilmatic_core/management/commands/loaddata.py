@@ -743,7 +743,7 @@ class Command(BaseCommand):
             # look for existing event
             try:
                 event_obj = Event.objects.get(ocd_id=event_ocd_id)
-                print('Updating Event %s %s' % (page_json['name'], page_json['event_ocd_id']))
+                print('Updating Event %s %s' % (page_json['name'], event_ocd_id))
                 # check if it has been updated on api
                 # TO-DO: fix date comparison to handle timezone naive times from api
                 if event_obj.ocd_updated_at.isoformat() != page_json['updated_at']:
@@ -771,7 +771,7 @@ class Command(BaseCommand):
 
             # except if it doesn't exist, we need to make it
             except Event.DoesNotExist:
-                print('Adding Event %s %s' % (page_json['name'], page_json['event_ocd_id']))
+                print('Adding Event %s %s' % (page_json['name'], event_ocd_id))
                 try:
                     event_fields['slug'] = legistar_id
                     event_obj, created = Event.objects.get_or_create(**event_fields)
