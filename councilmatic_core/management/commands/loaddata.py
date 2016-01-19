@@ -38,6 +38,7 @@ DEBUG = settings.DEBUG
 
 class Command(BaseCommand):
     help = 'loads in data from the open civic data API'
+    update_since = None
 
     def add_arguments(self, parser):
         parser.add_argument('--endpoint', help="a specific endpoint to load data from")
@@ -46,7 +47,10 @@ class Command(BaseCommand):
             action='store_true',
             default=False,
             help='deletes all data, and then loads all legislative sessions (by default, this task does not delete data & only loads new/updated data from current legislative session)')
-
+        
+        parser.add_argument('--update_since',
+            help='Only update objects in the database that have changed since this date')
+        
     def handle(self, *args, **options):
         
         db_conn = settings.DATABASES['default']
@@ -57,6 +61,9 @@ class Command(BaseCommand):
             'host': db_conn['HOST'],
             'port': db_conn['PORT'],
         }
+
+        if options['update_since']:
+            self.update_since = date_parser.parse(options['update_since'])
 
         if options['endpoint'] == 'organizations':
             self.grab_organizations(delete=options['delete'])
@@ -137,9 +144,7 @@ class Command(BaseCommand):
                         slug=slugify(page_json['name']),
                         _parent=parent,
                     )
-                print('Updating organization %s' % page_json['name'])
             except IntegrityError:
-                print('Adding organization %s' % page_json['name'])
                 ocd_id_part = organization_ocd_id.rsplit('-',1)[1]
                 org_obj, created = Organization.objects.get_or_create(
                         ocd_id=organization_ocd_id,
@@ -158,9 +163,7 @@ class Command(BaseCommand):
                         source_url=source_url,
                         slug=slugify(page_json['name']),
                     )
-                print('Updating %s' % page_json['name'])
             except IntegrityError:
-                print('Adding %s' % page_json['name'])
                 ocd_id_part = organization_ocd_id.rsplit('-',1)[1]
                 org_obj, created = Organization.objects.get_or_create(
                         ocd_id=organization_ocd_id,
@@ -179,7 +182,6 @@ class Command(BaseCommand):
             
             try:
                 obj = Post.objects.get(ocd_id=post_json['id'])
-                print('Updating post %s %s' % (post_json['label'], post_json['role']))
 
                 obj.label = post_json['label']
                 obj.role = post_json['role']
@@ -189,7 +191,6 @@ class Command(BaseCommand):
                 obj.save()
 
             except Post.DoesNotExist:
-                print('Adding post %s %s' % (post_json['label'], post_json['role']))
                 obj, created = Post.objects.get_or_create(
                         ocd_id = post_json['id'],
                         label = post_json['label'],
@@ -265,10 +266,13 @@ class Command(BaseCommand):
         }
 
         #grab all legislative sessions
-        max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
+        if self.update_since == None:
+            max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
         
-        if max_updated == None:
-            max_updated = datetime.datetime(1900,1,1)
+            if max_updated == None:
+                max_updated = datetime.datetime(1900,1,1)
+        else:
+            max_updated = self.update_since
 
         query_params['sort'] = 'updated_at'
         query_params['updated_at__gte'] = max_updated.isoformat()
@@ -382,7 +386,6 @@ class Command(BaseCommand):
         # look for existing bill
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
-            print('Updating bill %s' % (page_json['identifier']))
             # check if it has been updated on api
             if obj.ocd_updated_at.isoformat() != page_json['updated_at']:
 
@@ -409,7 +412,6 @@ class Command(BaseCommand):
 
         # except if it doesn't exist, we need to make it
         except Bill.DoesNotExist:
-            print('Adding bill %s' % (page_json['identifier']))
 
             try:
                 bill_fields['slug'] = slugify(page_json['identifier'])
@@ -428,7 +430,7 @@ class Command(BaseCommand):
             if updated:
                 # delete existing bill actions & sponsorships
                 obj.actions.all().delete()
-                obj.sponsorships.all().delete()
+                deleted = obj.sponsorships.all().delete()
 
             # update actions for a bill
             action_order = 0
@@ -743,7 +745,6 @@ class Command(BaseCommand):
             # look for existing event
             try:
                 event_obj = Event.objects.get(ocd_id=event_ocd_id)
-                print('Updating Event %s %s' % (page_json['name'], event_ocd_id))
                 # check if it has been updated on api
                 # TO-DO: fix date comparison to handle timezone naive times from api
                 if event_obj.ocd_updated_at.isoformat() != page_json['updated_at']:
@@ -771,7 +772,6 @@ class Command(BaseCommand):
 
             # except if it doesn't exist, we need to make it
             except Event.DoesNotExist:
-                print('Adding Event %s %s' % (page_json['name'], event_ocd_id))
                 try:
                     event_fields['slug'] = legistar_id
                     event_obj, created = Event.objects.get_or_create(**event_fields)
