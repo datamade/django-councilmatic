@@ -360,7 +360,10 @@ class Organization(models.Model):
 
     @classmethod
     def committees(cls):
-        return cls.objects.filter(classification='committee').order_by('name').all()
+        """
+        grabs all organizations (1) classified as a committee & (2) with at least one member
+        """
+        return cls.objects.filter(classification='committee').order_by('name').filter(memberships__isnull=False).distinct()
 
     @property
     def recent_activity(self):
