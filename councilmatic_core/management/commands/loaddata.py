@@ -109,6 +109,7 @@ class Command(BaseCommand):
 
             for result in page_json['results']:
 
+
                 self.grab_organization_posts(result['id'])
 
         # update relevant posts with shapes
@@ -136,7 +137,9 @@ class Command(BaseCommand):
                         slug=slugify(page_json['name']),
                         _parent=parent,
                     )
+                print('Updating organization %s' % page_json['name'])
             except IntegrityError:
+                print('Adding organization %s' % page_json['name'])
                 ocd_id_part = organization_ocd_id.rsplit('-',1)[1]
                 org_obj, created = Organization.objects.get_or_create(
                         ocd_id=organization_ocd_id,
@@ -155,7 +158,9 @@ class Command(BaseCommand):
                         source_url=source_url,
                         slug=slugify(page_json['name']),
                     )
+                print('Updating %s' % page_json['name'])
             except IntegrityError:
+                print('Adding %s' % page_json['name'])
                 ocd_id_part = organization_ocd_id.rsplit('-',1)[1]
                 org_obj, created = Organization.objects.get_or_create(
                         ocd_id=organization_ocd_id,
@@ -171,9 +176,10 @@ class Command(BaseCommand):
             print('\u263A', end=' ', flush=True)
 
         for post_json in page_json['posts']:
-
+            
             try:
                 obj = Post.objects.get(ocd_id=post_json['id'])
+                print('Updating post %s %s' % (post_json['label'], post_json['role']))
 
                 obj.label = post_json['label']
                 obj.role = post_json['role']
@@ -183,6 +189,7 @@ class Command(BaseCommand):
                 obj.save()
 
             except Post.DoesNotExist:
+                print('Adding post %s %s' % (post_json['label'], post_json['role']))
                 obj, created = Post.objects.get_or_create(
                         ocd_id = post_json['id'],
                         label = post_json['label'],
@@ -375,7 +382,7 @@ class Command(BaseCommand):
         # look for existing bill
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
-            
+            print('Updating bill %s' % (page_json['identifier']))
             # check if it has been updated on api
             if obj.ocd_updated_at.isoformat() != page_json['updated_at']:
 
@@ -402,6 +409,7 @@ class Command(BaseCommand):
 
         # except if it doesn't exist, we need to make it
         except Bill.DoesNotExist:
+            print('Adding bill %s' % (page_json['identifier']))
 
             try:
                 bill_fields['slug'] = slugify(page_json['identifier'])
@@ -705,7 +713,7 @@ class Command(BaseCommand):
 
             try:
                 legistar_id = re.findall('ID=(.*)&GUID', page_json['sources'][0]['url'])[0]
-            except:
+            except IndexError:
                 print("\n\n"+"-"*60)
                 print("WARNING: MISSING SOURCE %s" %event_ocd_id)
                 print("event has no source")
@@ -735,7 +743,7 @@ class Command(BaseCommand):
             # look for existing event
             try:
                 event_obj = Event.objects.get(ocd_id=event_ocd_id)
-
+                print('Updating Event %s %s' % (page_json['name'], page_json['event_ocd_id']))
                 # check if it has been updated on api
                 # TO-DO: fix date comparison to handle timezone naive times from api
                 if event_obj.ocd_updated_at.isoformat() != page_json['updated_at']:
@@ -762,7 +770,8 @@ class Command(BaseCommand):
 
 
             # except if it doesn't exist, we need to make it
-            except:
+            except Event.DoesNotExist:
+                print('Adding Event %s %s' % (page_json['name'], page_json['event_ocd_id']))
                 try:
                     event_fields['slug'] = legistar_id
                     event_obj, created = Event.objects.get_or_create(**event_fields)
