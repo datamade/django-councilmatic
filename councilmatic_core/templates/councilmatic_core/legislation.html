@@ -208,7 +208,7 @@
                 <p>
                     <a id="pdf-download-link" target='_blank' href='{{legislation.full_text_doc_url}}'><i class='fa fa-fw fa-download'></i> Download PDF</a>
                 </p>
-                <iframe 
+                <iframe
                     id="pdf-embed"
                     class="pdf-viewer"
                     frameborder="0"
@@ -301,7 +301,7 @@
         });
 
         if (window.screen.width > 768){
-            $("#pdf-embed").attr("src", "/pdfviewer/?file={{legislation.full_text_doc_url|urlencode}}");
+            $("#pdf-embed").attr("src", "/pdfviewer/?file={{legislation.full_text_doc_url}}");
         }
         else{
             $('#pdf-embed').hide()
