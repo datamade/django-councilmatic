@@ -100,7 +100,7 @@
 
                 </div>
             </div>
-            
+
             <!-- Topic -->
             {% if facets.fields.topics %}
             <div class="panel panel-default panel-filter">
@@ -151,7 +151,7 @@
                 </div>
             </div>
             {% endif %}
-            
+
             <!-- Controlling Body -->
             <div class="panel panel-default panel-filter">
                 <div class="panel-heading" data-toggle="collapse" data-target="#filter-controlling-body">
@@ -311,8 +311,8 @@
                 <div class="col-xs-11">
 
                     {% if query %}
-                        <p>
-                            {% highlight result.text with query css_class "bg-info" %}
+                        <p class="search-result">
+                            {{ result.highlighted.text.0|safe  }}
                         </p>
                     {% else %}
                         <p>
@@ -367,7 +367,7 @@
 
         {% empty %}
             <p>
-                This site has data from the current legislative session. 
+                This site has data from the current legislative session.
                 If you're searching for something older, you can browse the
                 <a href="{{ LEGISTAR_URL }}" target="_blank">
                     {{ CITY_COUNCIL_NAME }} Legistar site
