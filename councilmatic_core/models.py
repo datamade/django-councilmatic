@@ -56,6 +56,7 @@ class Person(models.Model):
     website_url = models.CharField(max_length=255, blank=True)
     email = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -148,7 +149,8 @@ class Bill(models.Model):
     ocr_full_text = models.TextField(blank=True)
     abstract = models.TextField(blank=True)
     last_action_date = models.DateTimeField(default=None, null=True)
-    
+    updated_at = models.DateTimeField(auto_now=True)
+
     _legislative_session = models.ForeignKey('LegislativeSession', 
                                              related_name='bills', 
                                              null=True,
@@ -350,6 +352,7 @@ class Organization(models.Model):
     _parent = models.ForeignKey('self', related_name='children', null=True, db_column='parent_id')
     source_url = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     @property
     def parent(self):
@@ -418,6 +421,7 @@ class Action(models.Model):
                               db_column='bill_id')
 
     order = models.IntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
     
     @property
     def bill(self):
@@ -468,6 +472,7 @@ class ActionRelatedEntity(models.Model):
     entity_name = models.CharField(max_length=255)
     organization_ocd_id = models.CharField(max_length=100, blank=True)
     person_ocd_id = models.CharField(max_length=100, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     @property
     def action(self):
@@ -480,6 +485,7 @@ class Post(models.Model):
     _organization = models.ForeignKey('Organization', related_name='posts', db_column='organization_id', null=True)
     division_ocd_id = models.CharField(max_length=255)
     shape = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def organization(self):
@@ -504,6 +510,7 @@ class Membership(models.Model):
     role = models.CharField(max_length=255, blank=True)
     start_date = models.DateField(default=None, null=True)
     end_date = models.DateField(default=None, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     @property
     def organization(self):
@@ -522,6 +529,7 @@ class Sponsorship(models.Model):
     _person = models.ForeignKey('Person', related_name='sponsorships', db_column='person_id', null=True)
     classification = models.CharField(max_length=255)
     is_primary = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
     
     @property
     def bill(self):
@@ -550,6 +558,7 @@ class Event(models.Model):
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def event_page_url(self):
@@ -599,6 +608,7 @@ class EventParticipant(models.Model):
     note = models.TextField()
     entity_name = models.CharField(max_length=255)
     entity_type = models.CharField(max_length=100)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __init__(self, *args, **kwargs):
         super(EventParticipant, self).__init__(*args, **kwargs)
@@ -608,6 +618,7 @@ class EventAgendaItem(models.Model):
     event = models.ForeignKey('Event', related_name='agenda_items')
     order = models.IntegerField()
     description = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __init__(self, *args, **kwargs):
         super(EventAgendaItem, self).__init__(*args, **kwargs)
@@ -617,6 +628,7 @@ class AgendaItemBill(models.Model):
     agenda_item = models.ForeignKey('EventAgendaItem', related_name='related_bills')
     bill = models.ForeignKey('Bill', related_name='related_agenda_items')
     note = models.CharField(max_length=255)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __init__(self, *args, **kwargs):
         super(AgendaItemBill, self).__init__(*args, **kwargs)
@@ -627,11 +639,13 @@ class Document(models.Model):
     note = models.TextField()
     url = models.TextField(blank=True)
     full_text = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class BillDocument(models.Model):
     bill = models.ForeignKey('Bill', related_name='documents')
     document = models.ForeignKey('Document', related_name='bills')
     document_type = models.CharField(max_length=255, choices=bill_document_choices)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(BillDocument, self).__init__(*args, **kwargs)
@@ -641,6 +655,7 @@ class BillDocument(models.Model):
 class EventDocument(models.Model):
     event = models.ForeignKey('Event', related_name='documents')
     document = models.ForeignKey('Document', related_name='events')
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __init__(self, *args, **kwargs):
         super(EventDocument, self).__init__(*args, **kwargs)
@@ -651,4 +666,5 @@ class LegislativeSession(models.Model):
     identifier = models.CharField(max_length=255)
     jurisdiction_ocd_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
+    updated_at = models.DateTimeField(auto_now=True)
 

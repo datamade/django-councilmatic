@@ -58,3 +58,6 @@ class BillIndex(indexes.SearchIndex):
 
     def prepare_ocr_full_text(self, obj):
         return clean_html(obj.ocr_full_text)
+    
+    def get_updated_field(self):
+        return 'updated_at'
