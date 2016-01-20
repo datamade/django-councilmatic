@@ -139,6 +139,7 @@ class CouncilMembersView(ListView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(CouncilMembersView, self).get_context_data(**kwargs)
+        context['seo'] = self.get_seo_blob()
         
         context['map_geojson'] = None
 
@@ -173,6 +174,12 @@ class CouncilMembersView(ListView):
             context['map_geojson'] = json.dumps(map_geojson)
         
         return context
+
+    def get_seo_blob(self):
+        seo = {}
+        seo.update(settings.SITE_META)
+        return seo
+
 
 class BillDetailView(DetailView):
     model = Bill
