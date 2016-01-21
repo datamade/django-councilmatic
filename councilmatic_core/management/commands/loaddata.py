@@ -443,10 +443,11 @@ class Command(BaseCommand):
             obj.last_action_date = obj.get_last_action_date()
             obj.save()
 
-            # update documents for with a bill
+            # update documents for with a bill (attachments & versions)
+            # attachments are related files
             for document_json in page_json['documents']:
                 self.load_bill_attachment(document_json, obj)
-
+            # versions are the bill itself
             for document_json in page_json['versions']:
                 self.load_bill_version(document_json, obj)
 
