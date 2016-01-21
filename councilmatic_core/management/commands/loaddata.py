@@ -386,29 +386,27 @@ class Command(BaseCommand):
         # look for existing bill
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
-            # check if it has been updated on api
-            if obj.ocd_updated_at.isoformat() != page_json['updated_at']:
 
-                obj.ocd_created_at=page_json['created_at']
-                obj.ocd_updated_at=page_json['updated_at']
-                obj.description=page_json['title']
-                obj.identifier=page_json['identifier']
-                obj.classification=page_json['classification'][0]
-                obj.source_url=source_url
-                obj.source_note=page_json['sources'][0]['note']
-                obj._from_organization=from_org
-                obj.full_text=full_text
-                obj.ocr_full_text=ocr_full_text
-                obj.abstract=abstract
-                obj._legislative_session=leg_session_obj
-                obj.bill_type=bill_type
-                obj.subject=subject
+            obj.ocd_created_at=page_json['created_at']
+            obj.ocd_updated_at=page_json['updated_at']
+            obj.description=page_json['title']
+            obj.identifier=page_json['identifier']
+            obj.classification=page_json['classification'][0]
+            obj.source_url=source_url
+            obj.source_note=page_json['sources'][0]['note']
+            obj._from_organization=from_org
+            obj.full_text=full_text
+            obj.ocr_full_text=ocr_full_text
+            obj.abstract=abstract
+            obj._legislative_session=leg_session_obj
+            obj.bill_type=bill_type
+            obj.subject=subject
 
-                obj.save()
-                updated = True
+            obj.save()
+            updated = True
 
-                if DEBUG:
-                    print('\u270E', end=' ', flush=True)
+            if DEBUG:
+                print('\u270E', end=' ', flush=True)
 
         # except if it doesn't exist, we need to make it
         except Bill.DoesNotExist:
