@@ -428,9 +428,10 @@ class Command(BaseCommand):
         if created or updated:
 
             if updated:
-                # delete existing bill actions & sponsorships
+                # delete existing bill actions, sponsorships, billdocuments
                 obj.actions.all().delete()
                 deleted = obj.sponsorships.all().delete()
+                obj.documents.all().delete()
 
             # update actions for a bill
             action_order = 0
