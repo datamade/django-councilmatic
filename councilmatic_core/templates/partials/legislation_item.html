@@ -1,7 +1,7 @@
 {% load extras %}
 
 <p>
-    <a class="small" href="/legislation/{{ legislation.slug }}">{{ legislation.friendly_name }}</a>
+    <a class="small" href="/legislation/{{ legislation.slug }}/">{{ legislation.friendly_name }}</a>
     {{ legislation.inferred_status | inferred_status_label | safe }}
 </p>
 
@@ -15,7 +15,7 @@
     </div>
     <div class='col-xs-1 no-pad-mobile'>
         <div>
-            <a class='btn-bill-detail' href='/legislation/{{ legislation.slug }}'>
+            <a class='btn-bill-detail' href='/legislation/{{ legislation.slug }}/'>
                 <i class="fa fa-fw fa-chevron-right"></i>
             </a>
         </div>

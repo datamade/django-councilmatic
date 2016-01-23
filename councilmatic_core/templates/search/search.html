@@ -31,7 +31,7 @@
 
             {% if selected_facets %}
                 <p>
-                    <a href="/search" class="btn btn-sm btn-default">
+                    <a href="/search/" class="btn btn-sm btn-default">
                     <i class='fa fa-times'></i>
                     Clear filters
                     </a>
@@ -302,7 +302,7 @@
             <!-- Legislation result -->
 
             <p>
-                <a class="small" href="/legislation/{{ result.object.slug }}">{{ result.object.friendly_name }}</a>
+                <a class="small" href="/legislation/{{ result.object.slug }}/">{{ result.object.friendly_name }}</a>
                 {{ result.object.inferred_status | inferred_status_label | safe }}
             </p>
 

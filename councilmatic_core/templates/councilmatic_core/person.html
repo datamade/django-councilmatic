@@ -93,7 +93,7 @@
 
             <ul class="nav nav-pills">
                 <li role="presentation" {% if request.GET.view == 'bills' or request.GET.view == None %}class='active' {% endif %}>
-                    <a href="/person/{{person.slug}}?view=bills">
+                    <a href="/person/{{person.slug}}/?view=bills">
                         <span class="small-pill">
                             <i class='fa fa-fw fa-files-o'></i>
                             <span class="desktop-only">Sponsored </span>
@@ -101,7 +101,7 @@
                         </span>
                     </a>
                 </li>
-                <li role="presentation" {% if request.GET.view == 'committees' %}class='active' {% endif %}>    <a href="/person/{{person.slug}}?view=committees">
+                <li role="presentation" {% if request.GET.view == 'committees' %}class='active' {% endif %}>    <a href="/person/{{person.slug}}/?view=committees">
                         <span class="small-pill">
                             <i class='fa fa-fw fa-group'></i>
                             Committees

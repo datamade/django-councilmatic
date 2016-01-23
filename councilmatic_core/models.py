@@ -105,7 +105,7 @@ class Person(models.Model):
     def link_html(self):
         # if person is a city council member
         if self.ocd_id and self.slug:
-            return '<a href="/person/'+self.slug+'" title="More on '+self.name+'">'+self.name+'</a>'
+            return '<a href="/person/'+self.slug+'/" title="More on '+self.name+'">'+self.name+'</a>'
         # otherwise, don't make a link
         else:
             return self.name
@@ -397,10 +397,10 @@ class Organization(models.Model):
     def link_html(self):
         # make link to committee if committee
         if self.classification == 'committee':
-            return '<a href="/committee/'+self.slug+'">'+self.name+'</a>'
+            return '<a href="/committee/'+self.slug+'/">'+self.name+'</a>'
         # link to the council members page if its the council
         if self.classification == 'legislature':
-            return '<a href="/council-members">'+self.name+'</a>'
+            return '<a href="/council-members/">'+self.name+'</a>'
         # just return text if executive
         else:
             return self.name
@@ -566,7 +566,7 @@ class Event(models.Model):
 
     @property
     def link_html(self):
-        return '<a href="'+self.event_page_url+'" title="View Event Details">'+self.name+'</a>' 
+        return '<a href="'+self.event_page_url+'/" title="View Event Details">'+self.name+'</a>' 
 
     @property
     def clean_agenda_items(self):

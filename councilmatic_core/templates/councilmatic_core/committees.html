@@ -28,7 +28,7 @@
                         {% for committee in committees %}
                             <tr>
                                 <td align="left">
-                                    <a href="/committee/{{committee.slug}}">{{ committee.name | committee_topic_only }}</a>
+                                    <a href="/committee/{{committee.slug}}/">{{ committee.name | committee_topic_only }}</a>
                                 </td>
                                 <td align="left">
                                     {% for chair in committee.chairs.all %}
@@ -58,7 +58,7 @@
                             {% if committee.memberships.all|length > 0 %}
                             <tr>
                                 <td align="left">
-                                    <a href="/committee/{{committee.slug}}">{{ committee.name | committee_topic_only}}</a>
+                                    <a href="/committee/{{committee.slug}}/">{{ committee.name | committee_topic_only}}</a>
                                 </td>
                                 <td align="left">
                                     {% for chair in committee.chairs.all %}
@@ -91,7 +91,7 @@
                             {% if committee.memberships.all|length > 0 %}
                             <tr>
                                 <td>
-                                    <a href="/committee/{{committee.slug}}">{{ committee.name }}</a>
+                                    <a href="/committee/{{committee.slug}}/">{{ committee.name }}</a>
                                 </td>
                                 <td>
                                     {% for chair in committee.chairs.all %}
