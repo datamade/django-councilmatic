@@ -165,7 +165,7 @@
                 </h3>
                 <ul class="list-unstyled">
                   {% for address in legislation.addresses %}
-                    <li><a target='_blank' href="http://maps.google.com/maps?q={{ address|urlencode }}+{{ CITY_NAME }}">
+                    <li><a target='_blank' href="https://maps.google.com/maps?q={{ address|urlencode }}+{{ CITY_NAME }}">
                       {{ address }} {{ CITY_NAME }}</a></li>
                   {% endfor %}
                 </ul>

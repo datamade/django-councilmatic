@@ -1,6 +1,6 @@
 {% load staticfiles %}
 
-<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false&libraries=places&v=3.17"></script>
+<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&libraries=places&v=3.17"></script>
 <script src="{% static 'js/leaflet.js' %}" /></script>
 <script type="text/javascript" src="{% static 'js/leaflet-google.js' %}" ></script>
 <script type="text/javascript" src="{% static 'js/jquery.address.js' %}"></script>
@@ -106,7 +106,7 @@
         if (address != "") {
           if (address.toLowerCase().indexOf(locationScope) == -1)
             address = address + " " + locationScope;
-          
+
           geocoder.geocode( { 'address': address}, function(results, status) {
             if (status == google.maps.GeocoderStatus.OK) {
               currentPinpoint = [results[0].geometry.location.lat(), results[0].geometry.location.lng()];
@@ -133,9 +133,9 @@
               else {
                 alert("'" + address + "' is not within {{CITY_NAME}}");
               }
-              
 
-            } 
+
+            }
             else {
               alert("We could not find your address: " + status);
             }
@@ -147,9 +147,9 @@
     }
 
     function clearSearch(){
-        if (search_result) 
+        if (search_result)
           map.removeLayer(search_result);
-        if (centerMark) 
+        if (centerMark)
           map.removeLayer(centerMark);
 
         council_member_table.search('').draw();
