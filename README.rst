@@ -12,7 +12,7 @@ django-councilmatic includes:
 The `Councilmatic family <http://www.councilmatic.org/>`_ includes:
 
 - Philly Councilmatic (the original & first Councilmatic, by Mjumbe Poe. since it preceded django-councilmatic, it does not use django-councilmatic)
-- Chicago Councilmatic (the live website doesn't use django-councilmatic, but we are actively re-building it)
+- Chicago Councilmatic (launched & built on django-councilmatic)
 - New York City Councilmatic (launched & built on django-councilmatic)
 
 Councilmatic in your city
