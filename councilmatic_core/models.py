@@ -63,13 +63,22 @@ class Person(models.Model):
 
     @property
     def latest_council_membership(self):
-        return self.memberships.filter(_organization__ocd_id=settings.OCD_CITY_COUNCIL_ID).order_by('-start_date', '-end_date').first() if self.memberships.filter(_organization__ocd_id=settings.OCD_CITY_COUNCIL_ID) else None
+        city_council_id = settings.OCD_CITY_COUNCIL_ID
+        filter_kwarg = {'_organization__ocd_id': city_council_id}
+        
+        city_council_memberships = self.memberships.filter(**filter_kwarg)
+        
+        if city_council_memberships.count():
+            return city_council_memberships.order_by('-start_date', '-end_date').first()
+        
+        return None
 
     @property
     def current_council_seat(self):
         m = self.latest_council_membership
-        if m and self == m.post.current_member.person:
-            return m.post.label
+        if m.post:
+            if m and self == m.post.current_member.person:
+                return m.post.label
         return ''
 
     @property

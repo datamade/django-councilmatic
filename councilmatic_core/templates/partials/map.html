@@ -21,7 +21,16 @@
         zoom: {{MAP_CONFIG.zoom}}
     });
 
-    var layer = new L.Google('ROADMAP', {animate: false});
+    var google_map_styles = [
+        {
+            stylers: [
+                { saturation: -100 },
+                { lightness: 40 }
+            ]
+        }
+    ];
+
+    var layer = new L.Google('ROADMAP', {mapOptions: {styles: google_map_styles}});
     map.addLayer(layer);
 
     var infoBox = L.control({'position': 'topright'});
