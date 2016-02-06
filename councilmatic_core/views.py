@@ -134,8 +134,7 @@ class CouncilMembersView(ListView):
     context_object_name = 'posts'
     
     def get_queryset(self):
-        return Organization.objects.get(ocd_id=settings.OCD_CITY_COUNCIL_ID).posts.all()
-        # return Post.objects.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID)
+        return Post.objects.all()
 
     def get_context_data(self, *args, **kwargs):
         context = super(CouncilMembersView, self).get_context_data(**kwargs)
@@ -301,7 +300,10 @@ class EventsView(ListView):
         context = super(EventsView, self).get_context_data(**kwargs)
         
         aggregates = Event.objects.aggregate(Min('start_time'), Max('start_time'))
-        min_year, max_year = aggregates['start_time__min'].year, aggregates['start_time__max'].year
+        if None in aggregates.values():
+            min_year = max_year = datetime.now().year
+        else:
+            min_year, max_year = aggregates['start_time__min'].year, aggregates['start_time__max'].year
         context['year_range'] = list(reversed(range(min_year, max_year + 1)))
         
         context['month_options'] = []
@@ -323,7 +325,11 @@ class EventsView(ListView):
         # that has events populated
         if not upcoming_dates and not current_year and not current_month:
 
-            most_recent_past_starttime = Event.objects.order_by('-start_time').first().start_time
+            events = Event.objects.order_by('-start_time')
+            if events:
+                most_recent_past_starttime = events.first().start_time
+            else:
+                most_recent_past_starttime = datetime.now()
             current_year = most_recent_past_starttime.year
             current_month = most_recent_past_starttime.month
 
