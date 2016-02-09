@@ -329,6 +329,7 @@ class EventsView(ListView):
             if events:
                 most_recent_past_starttime = events.first().start_time
             else:
+                # if no events in database
                 most_recent_past_starttime = datetime.now()
             current_year = most_recent_past_starttime.year
             current_month = most_recent_past_starttime.month
