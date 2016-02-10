@@ -76,8 +76,8 @@ class Person(models.Model):
     @property
     def current_council_seat(self):
         m = self.latest_council_membership
-        if m.post:
-            if m and self == m.post.current_member.person:
+        if m and m.post:
+            if self == m.post.current_member.person:
                 return m.post.label
         return ''
 
