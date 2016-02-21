@@ -205,7 +205,7 @@ class CommitteesView(ListView):
     context_object_name = 'committees'
 
     def get_queryset(self):
-        return Organization.committees().filter(name__contains='Committee')
+        return Organization.committees.all()
 
 class CommitteeDetailView(DetailView):
     model = Organization
@@ -216,7 +216,7 @@ class CommitteeDetailView(DetailView):
         context = super(CommitteeDetailView, self).get_context_data(**kwargs)
         
         committee = context['committee']
-        context['memberships'] = committee.memberships.filter(role='Committee Member')
+        context['memberships'] = committee.memberships.all()
         
         if getattr(settings, 'COMMITTEE_DESCRIPTIONS', None):
             description = settings.COMMITTEE_DESCRIPTIONS.get(committee.slug)
