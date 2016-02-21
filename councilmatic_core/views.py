@@ -205,7 +205,7 @@ class CommitteesView(ListView):
     context_object_name = 'committees'
 
     def get_queryset(self):
-        return Organization.committees().filter(name__startswith='Committee')
+        return Organization.committees().filter(name__contains='Committee')
 
 class CommitteeDetailView(DetailView):
     model = Organization
