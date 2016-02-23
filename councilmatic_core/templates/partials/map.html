@@ -113,6 +113,7 @@
         var address = $("#search_address").val();
 
         if (address != "") {
+          $("#reset").show()
           if (address.toLowerCase().indexOf(locationScope) == -1)
             address = address + " " + locationScope;
 
@@ -204,7 +205,6 @@
 
         if ($("#search_address").val() != "") {
             doSearch();
-            $("#reset").show()
         }
         else {
             districts.addTo(map);
