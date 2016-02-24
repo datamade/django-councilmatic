@@ -208,7 +208,19 @@
                 zoomControl: false
             });
 
-            var layer = new L.Google('ROADMAP', {animate: false});
+            var google_map_styles = [
+                {
+                    stylers: [
+                        { saturation: -100 },
+                        { lightness: 40 }
+                    ]
+                }
+            ];
+
+            var layer = new L.Google('ROADMAP', {
+                animate: false,
+                mapOptions: {styles: google_map_styles}
+            });
             map.addLayer(layer);
 
             var geojson = L.geoJson({{ map_geojson|safe }}, {
