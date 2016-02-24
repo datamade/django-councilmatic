@@ -6,8 +6,7 @@
     <title>{% block title %}{% endblock %} - {{SITE_META.site_name}}</title>
 
     {% include 'partials/seo.html' %}
-
-    <link href="{% static IMAGES.favicon %}" rel="shortcut icon">
+    {% include 'partials/icons.html' %}
 
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700,300italic' rel='stylesheet' type='text/css'>
