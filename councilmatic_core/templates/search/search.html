@@ -351,11 +351,11 @@
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
-                {% else %}
+                {% elif result.object.pseudo_topics %}
                     <i class="fa fa-fw fa-tag"></i>
                     {% for tag in result.object.pseudo_topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag | committee_topic_only }}'>{{ tag | committee_topic_only }}</a
+                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag | committee_topic_only }}'>{{ tag | committee_topic_only }}</a>
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
