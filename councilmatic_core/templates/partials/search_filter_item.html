@@ -1,12 +1,18 @@
 {% load extras %}
 
 <li class="small">
-    <a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
-        {% if name in selected_list %}
+	{% if name in selected_list %}
+		<a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
             <strong>{{ name | title | short_title }}</strong>
-        {% else %}
-            {{ name | title | short_title }}
-        {% endif %}
-    </a>
+    	</a>
+    	<a href ="#" class="remove-filter-value" data="{{facet_name}}_exact:{{name}}">
+    		<i class="fa fa-times"></i>
+    	</a>
+	{% else %}
+		<a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
+			{{ name | title | short_title }}
+	    </a>
+	{% endif %}
+
     <span class="badge badge-muted pull-right">{{ count }}</span>
 </li>

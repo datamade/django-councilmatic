@@ -230,6 +230,14 @@
 
             });
 
+            $(".remove-filter-value").click(function() {
+
+                var filter_val = 'selected_facets='+encodeURIComponent($(this).attr('data'))
+                var new_filters = "{{ q_filters }}".replace(filter_val, '')
+                window.location = '/search/?' + new_filters;
+
+            });
+
 
         });
     </script>
