@@ -458,15 +458,15 @@ class Action(models.Model):
         if c == 'executive-signature': return 'success'
         if c == 'amendment-passage': return 'success'
 
-        if c == 'amendment-introduction': return 'info'
-        if c == 'introduction': return 'info'
-        if c == 'committee-referral': return 'info'
-        if c == 'filing': return 'info'
-        if c == 'executive-received': return 'info'
+        if c == 'amendment-introduction': return 'default'
+        if c == 'introduction': return 'default'
+        if c == 'committee-referral': return 'default'
+        if c == 'filing': return 'default'
+        if c == 'executive-received': return 'default'
 
         if c == 'deferred': return 'primary'
 
-        else: return 'info'
+        else: return 'default'
 
     @classmethod
     def actions_on_date(cls, date_match):
