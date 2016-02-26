@@ -17,39 +17,23 @@
             <!-- for topics, show routine & nonroutine first -->
             {% for name, count in facets.fields.topics %}
                 {% if count and name == 'Routine' or name == 'Non-Routine'%}
-                    <li class="small">
-                        <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
-                            {% if name in selected_facets.topics %}
-                                <strong>{{ name | title | short_title }}</strong>
-                            {% else %}
-                                {{ name | title | short_title }}
-                            {% endif %}
-                        </a>
 
-                        <span class="badge badge-muted pull-right">{{ count }}</span>
-                    </li>
+                    {% include 'partials/search_filter_item.html' %}
+
                 {% endif %}
             {% endfor %}
             <hr/>
             {% for name, count in facets.fields.topics %}
                 {% if count and name != 'Routine' and name != 'Non-Routine'%}
-                    <li class="small">
-                        <a href="#" class="filter-value" id="topics_exact:{{name}}" title="{{ name|title }}">
-                            {% if name in selected_facets.topics %}
-                                <strong>{{ name | title | short_title }}</strong>
-                            {% else %}
-                                {{ name | title | short_title }}
-                            {% endif %}
-                        </a>
 
-                        <span class="badge badge-muted pull-right">{{ count }}</span>
-                    </li>
+                    {% include 'partials/search_filter_item.html' %}
+
                 {% endif %}
             {% endfor %}
 
         {% elif facet_name == 'sponsorships' %}
             
-            <!-- for sponsorships, show current vs old reps separately if there are multiple leg sessions -->
+            <!-- for sponsorships, show current vs old reps separately if there are multiple leg sessions. also, don't show counts & instead show title -->
             {% if facets.fields.legislative_session|length > 1 %}
 
                 {% for name, count in facets.fields.sponsorships %}
@@ -105,16 +89,9 @@
 
             {% for name, count in item_list %}
                 {% if count %}
-                    <li class="small">
-                        <a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
-                            {% if name in selected_list %}
-                                <strong>{{ name | committee_topic_only | title | short_title }}</strong>
-                            {% else %}
-                                {{ name | committee_topic_only | title | short_title }}
-                            {% endif %}
-                        </a>
-                        <span class="badge badge-muted pull-right">{{ count }}</span>
-                    </li>
+
+                    {% include 'partials/search_filter_item.html' %}
+
                 {% endif %}
             {% endfor %}
 
@@ -122,16 +99,9 @@
 
             {% for name, count in item_list %}
                 {% if count %}
-                    <li class="small">
-                        <a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
-                            {% if name in selected_list %}
-                                <strong>{{ name | title | short_title }}</strong>
-                            {% else %}
-                                {{ name | title | short_title }}
-                            {% endif %}
-                        </a>
-                        <span class="badge badge-muted pull-right">{{ count }}</span>
-                    </li>
+
+                    {% include 'partials/search_filter_item.html' %}
+
                 {% endif %}
             {% endfor %}
 

@@ -1,0 +1,12 @@
+{% load extras %}
+
+<li class="small">
+    <a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
+        {% if name in selected_list %}
+            <strong>{{ name | title | short_title }}</strong>
+        {% else %}
+            {{ name | title | short_title }}
+        {% endif %}
+    </a>
+    <span class="badge badge-muted pull-right">{{ count }}</span>
+</li>
