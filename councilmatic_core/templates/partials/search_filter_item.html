@@ -2,14 +2,14 @@
 
 <li class="small">
 	{% if name in selected_list %}
-		<a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
+		<a href="#" class="filter-value" data="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
             <strong>{{ name | title | short_title }}</strong>
     	</a>
     	<a href ="#" class="remove-filter-value" data="{{facet_name}}_exact:{{name}}">
     		<i class="fa fa-times"></i>
     	</a>
 	{% else %}
-		<a href="#" class="filter-value" id="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
+		<a href="#" class="filter-value" data="{{facet_name}}_exact:{{name}}" title="{{ name|title }}">
 			{{ name | title | short_title }}
 	    </a>
 	{% endif %}
