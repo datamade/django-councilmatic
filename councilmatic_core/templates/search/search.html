@@ -223,11 +223,12 @@
                 }
             });
 
-            var existing_q = "{{ q_filters }}".replace(/&amp;/g, '&');
+            var existing_q = decodeURIComponent("{{ q_filters }}").replace(/&amp;/g, '&').replace(/\+/g, ' ');
 
             $(".filter-value").click(function() {
 
                 var addtl_filter = this.id
+
                 if(existing_q){
                     window.location = '/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter);
                 }
@@ -239,11 +240,11 @@
 
             $(".remove-filter-value").click(function() {
 
-                var to_remove = 'selected_facets='+encodeURIComponent($(this).attr('data'))
+                var to_remove = encodeURIComponent('selected_facets='+$(this).attr('data'))
 
                 var existing_components = existing_q.split("&")
                 var new_components = $.grep(existing_components, function(value) {
-                  return value != to_remove;
+                    return encodeURIComponent(value) != to_remove;
                 });
 
                 window.location = '/search/?' + new_components.join('&');
