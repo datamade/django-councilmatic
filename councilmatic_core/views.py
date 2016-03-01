@@ -31,7 +31,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
         extra['facets'] = self.results.facet_counts()
 
         q_filters = ''
-        url_params = [(p,val) for (p,val) in self.request.GET.items() if p!='page' and p!='selected_facets' ]
+        url_params = [(p,val) for (p,val) in self.request.GET.items() if p!='page' and p!='selected_facets' and p!='amp' ]
         selected_facet_vals = self.request.GET.getlist('selected_facets')
         for facet_val in selected_facet_vals:
             url_params.append(('selected_facets', facet_val))

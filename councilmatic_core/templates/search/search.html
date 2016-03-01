@@ -223,16 +223,24 @@
                 }
             });
 
+            var existing_q = "{{ q_filters }}".replace(/&amp;/g, '&');
+
             $(".filter-value").click(function() {
 
                 var addtl_filter = this.id
-                window.location = '/search/?{{ q_filters }}&selected_facets=' + addtl_filter;
+                if(existing_q){
+                    window.location = '/search/?'+existing_q+'&selected_facets='+addtl_filter;
+                }
+                else{
+                    window.location = '/search/?selected_facets=' + addtl_filter;
+                };
 
             });
 
             $(".remove-filter-value").click(function() {
 
                 var filter_val = 'selected_facets='+encodeURIComponent($(this).attr('data'))
+
                 var new_filters = "{{ q_filters }}".replace(filter_val, '')
                 window.location = '/search/?' + new_filters;
 
