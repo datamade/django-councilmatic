@@ -7,7 +7,7 @@ class BillIndex(indexes.SearchIndex):
     text = indexes.CharField(document=True, use_template=True, template_name="search/indexes/councilmatic_core/bill_text.txt")
     slug = indexes.CharField(model_attr='slug', indexed=False)
     ocd_id = indexes.CharField(model_attr='ocd_id', indexed=False)
-    bill_type = indexes.CharField(model_attr='bill_type', faceted=True)
+    bill_type = indexes.CharField(faceted=True)
     identifier = indexes.CharField(model_attr='identifier')
     description = indexes.CharField(model_attr='description', boost=1.25)
     source_url = indexes.CharField(model_attr='source_url', indexed=False)
@@ -30,6 +30,9 @@ class BillIndex(indexes.SearchIndex):
 
     def prepare_friendly_name(self, obj):
         return obj.friendly_name
+
+    def prepare_bill_type(self, obj):
+        return obj.bill_type.lower()
 
     def prepare_sponsorships(self, obj):
         return [sponsorship.person for sponsorship in obj.sponsorships.all()]

@@ -96,11 +96,13 @@
 
         {% elif facet_name == 'controlling_body' %}
 
-            {% for name, count in item_list %}
+            {% for full_name, count in item_list %}
                 {% if count %}
+                    {% with name=full_name|committee_topic_only %}
 
-                    {% include 'partials/search_filter_item.html' %}
+                        {% include 'partials/search_filter_item.html' %}
 
+                    {% endwith %}
                 {% endif %}
             {% endfor %}
 
