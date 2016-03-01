@@ -229,20 +229,24 @@
 
                 var addtl_filter = this.id
                 if(existing_q){
-                    window.location = '/search/?'+existing_q+'&selected_facets='+addtl_filter;
+                    window.location = '/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter);
                 }
                 else{
-                    window.location = '/search/?selected_facets=' + addtl_filter;
+                    window.location = '/search/?selected_facets=' + encodeURIComponent(addtl_filter);
                 };
 
             });
 
             $(".remove-filter-value").click(function() {
 
-                var filter_val = 'selected_facets='+encodeURIComponent($(this).attr('data'))
+                var to_remove = 'selected_facets='+encodeURIComponent($(this).attr('data'))
 
-                var new_filters = "{{ q_filters }}".replace(filter_val, '')
-                window.location = '/search/?' + new_filters;
+                var existing_components = existing_q.split("&")
+                var new_components = $.grep(existing_components, function(value) {
+                  return value != to_remove;
+                });
+
+                window.location = '/search/?' + new_components.join('&');
 
             });
 
