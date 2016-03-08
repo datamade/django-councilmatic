@@ -31,7 +31,11 @@ for configuration in ['OCD_JURISDICTION_ID',
         raise ImproperlyConfigured('You must define {0} in settings.py'.format(configuration))
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
-base_url = 'http://ocd.datamade.us'
+
+if hasattr(settings, 'OCDAPI_BASE_URL'):
+    base_url = settings.OCDAPI_BASE_URL
+else:
+    base_url = 'http://ocd.datamade.us'
 
 DEBUG = settings.DEBUG
 
