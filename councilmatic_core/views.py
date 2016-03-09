@@ -42,11 +42,13 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
 
         selected_facets = {}
         for val in self.request.GET.getlist("selected_facets"):
-            [k,v] = val.split('_exact:',1)
-            try:
-                selected_facets[k].append(v)
-            except KeyError:
-                selected_facets[k] = [v]
+            if val:
+                [k,v] = val.split('_exact:',1)
+                try:
+                    selected_facets[k].append(v)
+                except KeyError:
+                    selected_facets[k] = [v]
+
         extra['selected_facets'] = selected_facets
 
         extra['current_council_members'] = {p.current_member.person.name : p.label for p in Post.objects.all()}
