@@ -134,6 +134,9 @@ class Command(BaseCommand):
         r = requests.get(url)
         page_json = json.loads(r.text)
 
+        if page_json.get('error'):
+            raise DataError(page_json['error'])
+
         source_url = ''
         if page_json['sources']:
             source_url = page_json['sources'][0]['url']
