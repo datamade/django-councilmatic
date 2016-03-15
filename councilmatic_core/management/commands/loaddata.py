@@ -313,10 +313,19 @@ class Command(BaseCommand):
                 self.grab_bill(bill_detail.json(), leg_session_obj)
 
     def grab_legislative_sessions(self):
+        session_ids = []
 
-        # TO-DO: update this when ocd data is fixed
+        if hasattr(settings, 'LEGISLATIVE_SESSIONS') and settings.LEGISLATIVE_SESSIONS:
+            session_ids = settings.LEGISLATIVE_SESSIONS
+        else:
+            url = base_url+'/'+settings.OCD_JURISDICTION_ID
+            r = requests.get(url)
+            page_json = json.loads(r.text)
+            session_ids = [session['identifier'] for session in page_json['legislative_sessions']]
 
-        for leg_session in settings.LEGISLATIVE_SESSIONS:
+        # Sort so most recent session last
+        session_ids.sort()
+        for leg_session in session_ids:
             obj, created = LegislativeSession.objects.get_or_create(
                     identifier=leg_session,
                     jurisdiction_ocd_id=settings.OCD_JURISDICTION_ID,
