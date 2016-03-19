@@ -612,7 +612,7 @@ class Command(BaseCommand):
             if page_json['image']:
                 r = requests.get(page_json['image'], verify=False)
                 if r.status_code == 200:
-                    with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
+                    with open((settings.HEADSHOT_PATH + slugify(page_json['name']) + ".jpg"), 'wb') as f:
                         for chunk in r.iter_content(1000):
                             f.write(chunk)
                             f.flush()

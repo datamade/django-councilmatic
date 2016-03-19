@@ -97,7 +97,7 @@ class Person(models.Model):
         if self.slug in MANUAL_HEADSHOTS:
             return '/static/images/' + MANUAL_HEADSHOTS[self.slug]['image']
         elif self.headshot:
-            return '/static/images/' + self.ocd_id + ".jpg"
+            return '/static/images/' + self.slug + ".jpg"
         else:
             return '/static/images/headshot_placeholder.png'
 
