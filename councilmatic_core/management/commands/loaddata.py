@@ -22,7 +22,7 @@ import psycopg2
 
 for configuration in ['OCD_JURISDICTION_ID', 
                       'OCD_CITY_COUNCIL_ID', 
-                      'HEADSHOT_PATH',
+                      'HEADSHOT_RELPATH',
                       'LEGISLATIVE_SESSIONS'
                       ]:
 
