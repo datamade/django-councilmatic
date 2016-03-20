@@ -37,6 +37,11 @@ if hasattr(settings, 'OCDAPI_BASE_URL'):
 else:
     base_url = 'http://ocd.datamade.us'
 
+if hasattr(settings, 'BOUNDARY_API_BASE_URL'):
+    bndry_base_url = settings.BOUNDARY_API_BASE_URL
+else:
+    bndry_base_url = base_url
+
 DEBUG = settings.DEBUG
 
 
@@ -214,17 +219,24 @@ class Command(BaseCommand):
         print("\n\npopulating boundaries: %s" %settings.BOUNDARY_SET)
 
         # grab boundary listing
-        bndry_set_url = base_url+'/boundaries/'+settings.BOUNDARY_SET
+        bndry_set_url = bndry_base_url+'/boundaries/'+settings.BOUNDARY_SET
         r = requests.get(bndry_set_url+'/?limit=0')
         page_json = json.loads(r.text)
 
         # loop through boundary listing
         for bndry_json in page_json['objects']:
             # grab boundary shape
-            shape_url = base_url+bndry_json['url']+'shape'
+            shape_url = bndry_base_url+bndry_json['url']+'shape'
             r = requests.get(shape_url)
             # update the right post(s) with the shape
-            Post.objects.filter(division_ocd_id=bndry_json['external_id']).update(shape=r.text)
+            if 'ocd-division' in bndry_json['external_id']:
+                division_ocd_id = bndry_json['external_id']
+                Post.objects.filter(division_ocd_id=division_ocd_id).update(shape=r.text)
+            else:
+                # Represent API doesn't use OCD id as external_id,
+                # so we must work around that
+                division_ocd_id_fragment = ':' + bndry_json['external_id']
+                Post.objects.filter(division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
 
     def grab_people(self, delete=False):
         # find people associated with existing organizations & bills
