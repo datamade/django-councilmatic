@@ -126,14 +126,14 @@ class Person(models.Model):
     @property
     def chair_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(_organization__name__startswith='Committee')
+            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
             return None
 
     @property
     def member_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(_organization__name__startswith='Committee')
+            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
             return None
 
