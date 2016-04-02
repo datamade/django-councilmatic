@@ -191,7 +191,7 @@ class BillDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(BillDetailView, self).get_context_data(**kwargs)
         
-        context['actions'] = self.get_object().actions.all().order_by('-order')
+        context['actions'] = self.get_object().actions.all().order_by('-date', '-order')
         bill = context['legislation']
 
         seo = {}
