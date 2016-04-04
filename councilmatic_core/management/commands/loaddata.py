@@ -22,7 +22,7 @@ import psycopg2
 
 for configuration in ['OCD_JURISDICTION_ID', 
                       'OCD_CITY_COUNCIL_ID', 
-                      'HEADSHOT_PATH',
+                      'HEADSHOT_RELPATH',
                       'LEGISLATIVE_SESSIONS'
                       ]:
 
@@ -624,7 +624,8 @@ class Command(BaseCommand):
             if page_json['image']:
                 r = requests.get(page_json['image'], verify=False)
                 if r.status_code == 200:
-                    with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
+                    img_path = os.path.join(settings.BASE_DIR, settings.APP_NAME, 'static', settings.HEADSHOT_RELPATH)
+                    with open(os.path.join(img_path, slugify(page_json['name']) + ".jpg"), 'wb') as f:
                         for chunk in r.iter_content(1000):
                             f.write(chunk)
                             f.flush()
