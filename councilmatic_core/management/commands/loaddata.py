@@ -135,7 +135,7 @@ class Command(BaseCommand):
 
     def grab_organization_posts(self, organization_ocd_id, parent=None):
 
-        url = base_url+'/'+organization_ocd_id
+        url = base_url+'/'+organization_ocd_id+'/'
         r = requests.get(url)
         page_json = json.loads(r.text)
 
@@ -252,7 +252,7 @@ class Command(BaseCommand):
         # grab people associated with all existing organizations
         orgs = Organization.objects.exclude(name='Democratic').exclude(name='Republican').all()
         for organization in orgs:
-            url = base_url+'/'+organization.ocd_id
+            url = base_url+'/'+organization.ocd_id+'/'
             r = requests.get(url)
             page_json = json.loads(r.text)
 
@@ -311,7 +311,7 @@ class Command(BaseCommand):
 
             for result in result_page.json()['results']:
                 
-                bill_url = '{base}/{bill_id}'.format(base=base_url, bill_id=result['id'])
+                bill_url = '{base}/{bill_id}/'.format(base=base_url, bill_id=result['id'])
                 bill_detail = requests.get(bill_url)
                 
                 leg_session_id = bill_detail.json()['legislative_session']['identifier']
@@ -330,7 +330,7 @@ class Command(BaseCommand):
         if hasattr(settings, 'LEGISLATIVE_SESSIONS') and settings.LEGISLATIVE_SESSIONS:
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
-            url = base_url+'/'+settings.OCD_JURISDICTION_ID
+            url = base_url+'/'+settings.OCD_JURISDICTION_ID+'/'
             r = requests.get(url)
             page_json = json.loads(r.text)
             session_ids = [session['identifier'] for session in page_json['legislative_sessions']]
@@ -612,7 +612,7 @@ class Command(BaseCommand):
     def grab_person_memberships(self, person_id):
         # this grabs a person and all their memberships
 
-        url = base_url+'/'+person_id
+        url = base_url+'/'+person_id+'/'
         r = requests.get(url)
         page_json = json.loads(r.text)
 
@@ -734,7 +734,7 @@ class Command(BaseCommand):
 
     def grab_event(self, event_ocd_id):
 
-        event_url = base_url+'/'+event_ocd_id
+        event_url = base_url+'/'+event_ocd_id+'/'
         r = requests.get(event_url)
 
 
