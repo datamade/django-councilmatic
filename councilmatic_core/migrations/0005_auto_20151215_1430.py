@@ -14,7 +14,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='billdocument',
             name='document_type',
-            field=models.CharField(max_length=255, choices=[('A', 'Attachment'), ('V', 'Version')], default='A'),
+            field=models.CharField(max_length=255, choices=[(
+                'A', 'Attachment'), ('V', 'Version')], default='A'),
             preserve_default=False,
         ),
         migrations.AddField(

@@ -16,7 +16,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='bill',
             name='updated_at',
-            field=models.DateTimeField(default=datetime.datetime(2016, 1, 20, 18, 38, 27, 47441, tzinfo=utc), auto_now=True),
+            field=models.DateTimeField(default=datetime.datetime(
+                2016, 1, 20, 18, 38, 27, 47441, tzinfo=utc), auto_now=True),
             preserve_default=False,
         ),
     ]
