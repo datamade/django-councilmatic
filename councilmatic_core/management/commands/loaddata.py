@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.utils.dateparse import parse_datetime, parse_date
@@ -15,7 +15,6 @@ from dateutil import parser as date_parser
 import requests
 import json
 import pytz
-import os.path
 import re
 import datetime
 import psycopg2
@@ -295,11 +294,11 @@ class Command(BaseCommand):
         }
 
         # grab all legislative sessions
-        if self.update_since == None:
+        if self.update_since is None:
             max_updated = Bill.objects.all().aggregate(
                 Max('ocd_updated_at'))['ocd_updated_at__max']
 
-            if max_updated == None:
+            if max_updated is None:
                 max_updated = datetime.datetime(1900, 1, 1)
         else:
             max_updated = self.update_since
@@ -329,7 +328,7 @@ class Command(BaseCommand):
                 leg_session_id = bill_detail.json()['legislative_session'][
                     'identifier']
 
-                if leg_session_obj == None:
+                if leg_session_obj is None:
                     leg_session_obj = LegislativeSession.objects.get(
                         identifier=leg_session_id)
 
@@ -472,7 +471,7 @@ class Command(BaseCommand):
             if updated:
                 # delete existing bill actions, sponsorships, billdocuments
                 obj.actions.all().delete()
-                deleted = obj.sponsorships.all().delete()
+                obj.sponsorships.all().delete()
                 obj.documents.all().delete()
 
             # update actions for a bill

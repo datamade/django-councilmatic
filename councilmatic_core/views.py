@@ -1,14 +1,10 @@
 from django.shortcuts import render, redirect
-from django.http import Http404
 from django.conf import settings
 from django.views.generic import TemplateView, ListView, DetailView
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Max, Min
 from django.core.cache import cache
 from django.utils.text import slugify
-from .models import Person, Bill, Organization, Action, Event, Post
+from .models import Person, Bill, Organization, Event, Post
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
 from datetime import date, timedelta, datetime

@@ -251,10 +251,10 @@ class Bill(models.Model):
     @property
     def pseudo_topics(self):
         """
-        returns a list of artificial topics for a bill, from the committees 
+        returns a list of artificial topics for a bill, from the committees
         that have been involved in the bill's history (the actions)
 
-        this serves as a backup when there isn't data on the real topics, 
+        this serves as a backup when there isn't data on the real topics,
         so that bill listings can still have some useful tags populated
         """
         if self.actions.all():
