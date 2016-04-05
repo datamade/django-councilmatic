@@ -123,11 +123,13 @@ class IndexView(TemplateView):
         upcoming_meetings = list(
             self.event_model.upcoming_committee_meetings())
 
-        return {
+        context.update({
             'recently_passed': recently_passed,
             'next_council_meeting': self.event_model.next_city_council_meeting(),
             'upcoming_committee_meetings': upcoming_meetings,
-        }
+        })
+
+        return context
 
 
 class AboutView(TemplateView):
