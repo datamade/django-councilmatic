@@ -1,6 +1,10 @@
 django-councilmatic
 ===========
 
+.. image:: https://travis-ci.org/datamade/django-councilmatic.svg?branch=master
+    :target: https://travis-ci.org/datamade/django-councilmatic
+    :alt: Build status
+
 This is a Django app with core functions for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the open civic data standard, and ultimately makes Councilmatic easier to re-deploy in new cities.
 
 django-councilmatic includes:
@@ -40,8 +44,18 @@ Note on Patches/Pull Requests
 
 -  Fork the project.
 -  Make your feature addition or bug fix.
+-  Run `flake8` stylechecks. (See Testiing section below.)
 -  Commit, do not mess with rakefile, version, or history.
 -  Send a pull request. Bonus points for topic branches.
+
+Testing
+-------
+
+Style checks must pass on Travis CI before pull requests are merged. You can
+run them locally like so: ::
+
+    pip install -r requirements-test.txt
+    flake8 .
 
 Copyright
 ---------
