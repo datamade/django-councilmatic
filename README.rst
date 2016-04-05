@@ -44,8 +44,18 @@ Note on Patches/Pull Requests
 
 -  Fork the project.
 -  Make your feature addition or bug fix.
+-  Run `flake8` stylechecks. (See Testiing section below.)
 -  Commit, do not mess with rakefile, version, or history.
 -  Send a pull request. Bonus points for topic branches.
+
+Testing
+-------
+
+Style checks must pass on Travis CI before pull requests are merged. You can
+run them locally like so: ::
+
+    pip install -r requirements-test.txt
+    flake8 .
 
 Copyright
 ---------

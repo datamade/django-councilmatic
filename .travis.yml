@@ -2,6 +2,6 @@ language: python
 
 python: '3.4'
 
-install: pip install flake8
+install: pip install -r requirements-test.txt
 
 script: flake8 .
