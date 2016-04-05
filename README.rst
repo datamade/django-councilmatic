@@ -1,10 +1,6 @@
 django-councilmatic
 ===========
 
-.. image:: https://travis-ci.org/datamade/django-councilmatic.svg?branch=master
-    :target: https://travis-ci.org/datamade/django-councilmatic
-    :alt: Build status
-
 This is a Django app with core functions for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the open civic data standard, and ultimately makes Councilmatic easier to re-deploy in new cities.
 
 django-councilmatic includes:
@@ -32,30 +28,20 @@ Team
 -  Derek Eder - front end
 -  Eric van Zanten - search and dev ops
 
-Errors / Bugs
+
+
+Contributions
 -------------
 
-If something is not behaving intuitively, it is a bug, and should be
-reported. Report it here:
-https://github.com/datamade/django-councilmatic/issues
+We are continuing to improve django-councilmatic, & we welcome contributions in the form of `github issues <https://github.com/datamade/django-councilmatic/issues>`_ (bug reports, feature requests, general questions) & code contributions.
 
-Note on Patches/Pull Requests
------------------------------
+How to contribute code:
 
--  Fork the project.
--  Make your feature addition or bug fix.
--  Run `flake8` stylechecks. (See Testiing section below.)
--  Commit, do not mess with rakefile, version, or history.
--  Send a pull request. Bonus points for topic branches.
+- Fork the project
+- Make your feature addition or bug fix
+- Bonus points for running tests to check python style (:code:`pip install flake8` & then :code:`flake8 .`)
+- Send a pull request! Don't worry if it isn't perfect - think of a PR as a start of a conversation, rather than a finished product
 
-Testing
--------
-
-Style checks must pass on Travis CI before pull requests are merged. You can
-run them locally like so: ::
-
-    pip install -r requirements-test.txt
-    flake8 .
 
 Copyright
 ---------
