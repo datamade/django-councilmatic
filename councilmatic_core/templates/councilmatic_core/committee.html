@@ -70,14 +70,11 @@
             {% if committee.recent_events %}
                 <hr />
                 <h4><i class='fa fa-fw fa-calendar-o'></i> Committee Events</h4>
-                <ul>
                 {% for event in committee.recent_events %}
-                    <li class='event-listing'>
-                        <a href="{{ event.event_page_url }}/" title="View Event Details: {{ event.name }}">{{ event.start_time | date:'n/d/Y' }}</a>
-                        <small>{{ event.start_time | date:'g:i a' }}</small>
-                    </li>
+                    <p class='event-listing'>
+                        {{event.start_time | date:'n/d/Y' }} - {{event.link_html | safe}}
+                    </p>
                 {% endfor %}
-                </ul>
                 <a href="" id="more-events"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
                 <a href="" id="fewer-events"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
             {% endif %}
