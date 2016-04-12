@@ -50,7 +50,8 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
         extra['selected_facets'] = selected_facets
 
         extra['current_council_members'] = {
-            p.current_member.person.name: p.label for p in Post.objects.all()}
+            p.current_member.person.name: p.label for p in Post.objects.all() if p.current_member
+        }
 
         return extra
 

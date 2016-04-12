@@ -531,7 +531,7 @@ class Post(models.Model):
 
     @property
     def current_member(self):
-        if self.memberships:
+        if self.memberships.all():
             most_recent_member = self.memberships.order_by(
                 '-start_date', '-end_date').first()
             if most_recent_member.end_date:
