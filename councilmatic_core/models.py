@@ -396,8 +396,8 @@ class Organization(models.Model):
     @property
     def recent_events(self):
         # need to look up event participants by name
-        events = Event.objects.filter(participants__entity_type='organization').filter(
-            participants__entity_name=self.name).order_by('-start_time').all()
+        events = Event.objects.filter(participants__entity_type='organization', participants__entity_name=self.name)
+        events = events.order_by('-start_time').all()
         return events
 
     @property
