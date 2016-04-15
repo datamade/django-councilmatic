@@ -10,7 +10,6 @@ import re
 import json
 
 class CommitteeDetailFeed(Feed):
-    print ("CommitteeDetailFeed()!!!")
     description_template = 'feeds/committee_detail_description.html'
 
     #TODO mcc: determine if get_context_data() is necessary for feed
