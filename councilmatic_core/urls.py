@@ -1,5 +1,6 @@
 from django.conf.urls import url
 from . import views
+from . import feeds
 
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
@@ -7,6 +8,8 @@ urlpatterns = [
     url(r'^committees/$', views.CommitteesView.as_view(), name='committees'),
     url(r'^council-members/$', views.CouncilMembersView.as_view(),
         name='council_members'),
+    url(r'^committee/(?P<slug>.*)/rss/$',
+        feeds.CommitteeDetailFeed(), name='committee_detail_feed'),
     url(r'^committee/(?P<slug>.*)/$',
         views.CommitteeDetailView.as_view(), name='committee_detail'),
     url(r'^legislation/(?P<slug>.*)/$',
