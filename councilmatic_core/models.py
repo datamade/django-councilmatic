@@ -646,8 +646,7 @@ class Event(models.Model):
     @classmethod
     def upcoming_committee_meetings(cls):
         return cls.objects.filter(start_time__gt=datetime.now())\
-                  .exclude(name='City Council Stated Meeting')\
-                  .exclude(name='City Council Stated Meeting ')\
+                  .exclude(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
                   .order_by('start_time').all()[:3]
 
 
