@@ -89,7 +89,9 @@
 
         <div class="col-sm-8">
             {% if query %}
-                <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'</h3>
+                <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
+			<a href="/search/rss/?q={{request.GET.q}}&selected_facets={{request.GET.selected_facets}}" title="RSS feed"><i class="fa fa-rss-square" aria-hidden="true"></i></a>			
+		</h3>
             {% endif %}
 
         {% for result in page.object_list %}
