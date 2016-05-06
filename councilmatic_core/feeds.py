@@ -130,7 +130,7 @@ class CommitteeDetailEventsFeed(Feed):
         return o
     
     def title(self, obj):
-        return obj.name
+        return obj.name + ": Recent Events"
 
     def link(self, obj):
         # return the Councilmatic URL for the committee
@@ -168,7 +168,7 @@ class CommitteeDetailActionFeed(Feed):
         return o
     
     def title(self, obj):
-        return obj.name
+        return obj.name + ": Recent Actions"
 
     def link(self, obj):
         # return the Councilmatic URL for the committee
