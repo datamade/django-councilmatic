@@ -189,3 +189,40 @@ class CommitteeDetailActionFeed(Feed):
         actions_list =  list(actions)
         return actions_list
 
+#XXX
+class BillDetailActionFeed(Feed):
+    """
+    Return the last 20 actions for a given bill.
+    """    
+    
+    # instead of defining item_title() or item_description(), use templates
+    title_template = 'feeds/bill_actions_item_title.html'
+    description_template = 'feeds/bill_actions_item_description.html'
+    feed_type = Rss201rev2Feed
+    NUM_RECENT_BILL_ACTIONS = 20
+
+    def get_object(self, request, slug):
+        o = Bill.objects.get(slug=slug)
+        return o
+    
+    def title(self, obj):
+        return obj.friendly_name + ": Recent Actions"
+
+    def link(self, obj):
+        # return the Councilmatic URL for the committee
+        return reverse('bill_detail', args=(obj.slug,))
+
+    def item_link(self, action):
+        # Bill actions don't have their own pages, so just link to the Bill page (?)
+        return reverse('bill_detail', args=(action.bill.slug,))
+        
+    def item_pubdate(self, action):
+        return action.date
+    
+    def description(self, obj):
+        return "Actions for bill %s" % obj.friendly_name
+
+    def items(self, obj):
+        actions = obj.ordered_actions[:self.NUM_RECENT_BILL_ACTIONS]
+        actions_list =  list(actions)
+        return actions_list

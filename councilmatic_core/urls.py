@@ -17,6 +17,8 @@ urlpatterns = [
         feeds.CommitteeDetailActionFeed(), name='committee_detail_action_feed'),
     url(r'^committee/(?P<slug>[^/]*)/$',
         views.CommitteeDetailView.as_view(), name='committee_detail'),
+    url(r'^legislation/(?P<slug>[^/]*)/rss/$',
+        feeds.BillDetailActionFeed(), name='bill_detail_action_feed'),
     url(r'^legislation/(?P<slug>[^/]*)/$',
         views.BillDetailView.as_view(), name='bill_detail'),
     url(r'^person/(?P<slug>[^/]*)/rss/$', feeds.PersonDetailFeed(), name='person_feed'),
