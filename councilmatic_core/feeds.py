@@ -189,7 +189,6 @@ class CommitteeDetailActionFeed(Feed):
         actions_list =  list(actions)
         return actions_list
 
-#XXX
 class BillDetailActionFeed(Feed):
     """
     Return the last 20 actions for a given bill.
