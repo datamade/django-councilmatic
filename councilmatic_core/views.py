@@ -211,6 +211,19 @@ class BillDetailView(DetailView):
         return context
 
 
+class BillWidgetView(DetailView):
+    model = Bill
+    template_name = 'councilmatic_core/widgets/legislation.html'
+    context_object_name = 'legislation'
+
+    def get_context_data(self, **kwargs):
+        context = super(BillWidgetView, self).get_context_data(**kwargs)
+
+        context['most_recent_action'] = self.get_object().actions.all().order_by('-order').first()
+
+        return context
+
+
 class CommitteesView(ListView):
     template_name = 'councilmatic_core/committees.html'
     context_object_name = 'committees'

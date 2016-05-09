@@ -1,0 +1,37 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}{% endblock %} - {{SITE_META.site_name}}</title>
+
+    {% include 'partials/seo.html' %}
+    {% include 'partials/icons.html' %}
+
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700,300italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.journal.min.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/dataTables.bootstrap.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/custom.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/city_custom.css' %}" />
+
+    {% block extra_css %}{% endblock %}
+
+</head>
+<body class="no-pad-top">
+
+    {% block content %}
+    {% endblock %}
+
+    <script src="{% static 'js/jquery-1.10.1.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        var analyticsTrackingCode = '{{ANALYTICS_TRACKING_CODE}}';
+    </script>
+    <script src="{% static 'js/analytics_lib.js' %}"></script>
+
+</body>
+</html>

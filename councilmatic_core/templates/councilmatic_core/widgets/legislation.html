@@ -1,0 +1,136 @@
+{% extends "base_widget.html" %}
+{% load extras %}
+{% load staticfiles %}
+{% block title %}{{ legislation.friendly_name }}{% endblock %}
+{% block content %}
+
+    <div class="row-fluid">
+        <div class="col-sm-12">
+            <h1 class="bill-page-title">
+                {{ legislation.friendly_name }}
+                <small>
+                    {{ legislation.inferred_status | inferred_status_label | safe }}
+                </small>
+            </h1>
+            {% if legislation.topics %}
+                <p>
+                    <i class="fa fa-tag"></i>
+                    {% for tag in legislation.topics %}
+                        <span class="badge badge-muted badge-big pseudo-topic-tag">
+                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag }}'>{{ tag }}</a>
+                        </span>
+                    {% endfor %}
+                    <br/>
+                </p>
+            {% endif %}
+
+            <p>
+                {{ legislation.description }}
+            </p>
+        </div>
+    </div>
+
+    {% if legislation.sponsorships.all %}
+    <div class="row-fluid">
+        <div class="col-xs-5">
+            <p>
+                <strong>
+                    <i class='fa fa-fw fa-users'></i>
+                    Sponsors
+                </strong><br/>
+                {{legislation.sponsorships.all|length}}
+            </p>
+        </div>
+        <div class="col-xs-7">
+            <p>
+                <strong>
+                    <i class='fa fa-fw fa-user'></i>
+                    Primary sponsor
+                </strong><br/>
+                {% for s in legislation.sponsorships.all %}
+                    {% if s.is_primary %}
+                        {{ s.person.link_html | safe }}</i>
+                    {% endif %}
+                {% endfor %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row-fluid">
+        <div class="col-sm-12">
+
+            {% if most_recent_action %}
+                <p>
+
+                    <span class='small text-muted'>
+                        Latest activity: 
+                        {{most_recent_action.date|date:'n/d/y'}}
+                    </span>
+                    <br/>
+
+                    {{most_recent_action.description | remove_action_subj}}
+
+                    {% if most_recent_action.related_organization %}
+                        to
+                        {{ most_recent_action.related_organization.link_html|safe }}
+                    {% endif %}
+
+                    by 
+                    {{ most_recent_action.organization.link_html|safe }}
+
+                </p>
+            {% endif %}
+
+
+
+        </div>
+    </div>
+
+
+    <div class="col-sm-8 no-pad-mobile">
+
+
+
+        {% if actions %}
+            <h3 class="no-pad-bottom"><i class='fa fa-fw fa-list-ul'></i> History</h3>
+            <div class="table-responsive">
+                <table class='table table-responsive' id='committee-actions'>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Action</th>
+                            <th>Legislative body</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for action in actions %}
+                            <tr>
+                                <td class='nowrap text-muted small'>
+                                    <span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'n/d/y'}}</span>
+                                </td>
+                                <td class="small">
+                                    <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
+                                    {% if action.related_organization %}
+                                        to
+                                        {{action.related_organization.link_html|safe}}
+                                    {% endif %}
+                                </td>
+                                <td class="small">
+                                    {{action.organization.link_html|safe}}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="divider"></div>
+        {% endif %}
+
+
+
+
+    </div>
+
+
+{% endblock %}
