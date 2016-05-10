@@ -214,6 +214,13 @@ class Bill(models.Model):
         return self.current_action.organization if self.current_action else None
 
     @property
+    def ordered_actions(self):
+        """
+        returns all actions ordered by date in descending order
+        """
+        return self.actions.all().order_by('-order') if self.actions.all() else None
+    
+    @property
     def current_action(self):
         """
         grabs the most recent action on a bill

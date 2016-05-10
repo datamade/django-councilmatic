@@ -23,7 +23,9 @@
             <hr />
 
             
-            <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity</h4>
+            <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
+			    <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+	    </h4>
             {% if committee.recent_activity %}
             <div class="table-responsive">
                 <table class='table' id='committee-actions'>
@@ -69,7 +71,12 @@
 
             {% if committee.recent_events %}
                 <hr />
-                <h4><i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}</h4>
+
+                <h4>
+                    <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
+                    <a href="events/rss/" title="RSS feed for Committe Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                </h4>
+
                 {% for event in committee.recent_events %}
                     <p class='event-listing'>
                         {{event.start_time | date:'n/d/Y' }} - {{event.link_html | safe}}
