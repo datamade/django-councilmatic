@@ -320,6 +320,28 @@ class PersonDetailView(DetailView):
 
         return context
 
+class PersonWidgetView(DetailView):
+    model = Person
+    template_name = 'councilmatic_core/widgets/person.html'
+    context_object_name = 'person'
+
+    def get_context_data(self, **kwargs):
+        context = super(PersonWidgetView, self).get_context_data(**kwargs)
+
+        person = self.get_object()
+        title = ''
+        if person.current_council_seat:
+            title = '%s %s' % (person.current_council_seat,
+                               settings.CITY_VOCAB['COUNCIL_MEMBER'])
+        elif person.latest_council_seat:
+            title = 'Former %s, %s' % (
+                settings.CITY_VOCAB['COUNCIL_MEMBER'], person.latest_council_seat)
+        elif getattr(settings, 'EXTRA_TITLES', None) and person.slug in settings.EXTRA_TITLES:
+            title = settings.EXTRA_TITLES[person.slug]
+        context['title'] = title
+
+        return context
+
 
 class EventsView(ListView):
     template_name = 'councilmatic_core/events.html'
