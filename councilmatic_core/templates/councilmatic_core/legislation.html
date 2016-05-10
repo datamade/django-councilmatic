@@ -10,7 +10,8 @@
                     <br class="non-mobile-only" />
                     {{ legislation.friendly_name }}
                     <small>
-                        {{ legislation.inferred_status | inferred_status_label | safe }}
+                            {{ legislation.inferred_status | inferred_status_label | safe }}
+			    <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>			    
                     </small>
                 </h1>
                 {% if legislation.topics %}
