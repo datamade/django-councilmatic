@@ -261,6 +261,17 @@
         <h3>Legislation not found</h3>
     {% endif %}
 
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "CreativeWork",
+      "author": "{{ CITY_COUNCIL_NAME }}",
+      "name": "{{ legislation.friendly_name }}",
+      "alternateName": "{{ legislation.identifier }}",
+      "description": "{{ legislation.description }}"
+    }
+    </script>
+
 
 {% endblock %}
 
