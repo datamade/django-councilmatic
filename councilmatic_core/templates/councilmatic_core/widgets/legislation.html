@@ -60,7 +60,8 @@
     <div class="row-fluid">
         <div class="col-xs-12">
 
-            {% if most_recent_action %}
+            {% if actions %}
+                {% with actions|first as most_recent_action %}
                 <p>
 
                     <span class='small text-muted'>
@@ -80,56 +81,11 @@
                     {{ most_recent_action.organization.link_html|safe }}
 
                 </p>
+                {% endwith %}
             {% endif %}
 
 
-
         </div>
-    </div>
-
-
-    <div class="col-sm-8 no-pad-mobile">
-
-
-
-        {% if actions %}
-            <h3 class="no-pad-bottom"><i class='fa fa-fw fa-list-ul'></i> History</h3>
-            <div class="table-responsive">
-                <table class='table table-responsive' id='committee-actions'>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Action</th>
-                            <th>Legislative body</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for action in actions %}
-                            <tr>
-                                <td class='nowrap text-muted small'>
-                                    <span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'n/d/y'}}</span>
-                                </td>
-                                <td class="small">
-                                    <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
-                                    {% if action.related_organization %}
-                                        to
-                                        {{action.related_organization.link_html|safe}}
-                                    {% endif %}
-                                </td>
-                                <td class="small">
-                                    {{action.organization.link_html|safe}}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="divider"></div>
-        {% endif %}
-
-
-
-
     </div>
 
 

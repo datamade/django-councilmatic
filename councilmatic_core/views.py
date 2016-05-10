@@ -211,17 +211,8 @@ class BillDetailView(DetailView):
         return context
 
 
-class BillWidgetView(DetailView):
-    model = Bill
+class BillWidgetView(BillDetailView):
     template_name = 'councilmatic_core/widgets/legislation.html'
-    context_object_name = 'legislation'
-
-    def get_context_data(self, **kwargs):
-        context = super(BillWidgetView, self).get_context_data(**kwargs)
-
-        context['most_recent_action'] = self.get_object().actions.all().order_by('-order').first()
-
-        return context
 
 
 class CommitteesView(ListView):
@@ -259,6 +250,9 @@ class CommitteeDetailView(DetailView):
         context['seo'] = seo
 
         return context
+
+class CommitteeWidgetView(CommitteeDetailView):
+    template_name = 'councilmatic_core/widgets/committee.html'
 
 
 class PersonDetailView(DetailView):
@@ -320,27 +314,8 @@ class PersonDetailView(DetailView):
 
         return context
 
-class PersonWidgetView(DetailView):
-    model = Person
+class PersonWidgetView(PersonDetailView):
     template_name = 'councilmatic_core/widgets/person.html'
-    context_object_name = 'person'
-
-    def get_context_data(self, **kwargs):
-        context = super(PersonWidgetView, self).get_context_data(**kwargs)
-
-        person = self.get_object()
-        title = ''
-        if person.current_council_seat:
-            title = '%s %s' % (person.current_council_seat,
-                               settings.CITY_VOCAB['COUNCIL_MEMBER'])
-        elif person.latest_council_seat:
-            title = 'Former %s, %s' % (
-                settings.CITY_VOCAB['COUNCIL_MEMBER'], person.latest_council_seat)
-        elif getattr(settings, 'EXTRA_TITLES', None) and person.slug in settings.EXTRA_TITLES:
-            title = settings.EXTRA_TITLES[person.slug]
-        context['title'] = title
-
-        return context
 
 
 class EventsView(ListView):
