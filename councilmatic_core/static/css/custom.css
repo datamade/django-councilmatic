@@ -68,6 +68,21 @@ h1, h2, h3, h4 {
     border-bottom: 8px solid #3D8A8E;
 }
 
+#widget-nav {
+    height: 36px;
+    min-height: 36px;
+    background-color: #F7F7F7;
+}
+#widget-nav .navbar-brand {
+    height: 36px;
+    width: 100%;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+#widget-nav #logo {
+    height: 30px;
+    top: -6px;
+}
 
 
 /* footer */
@@ -453,6 +468,11 @@ select {
     }
     .small-pill{
         font-size: 14px;
+    }
+
+    #widget-nav .container-fluid-nav {
+        padding-left: 0px;
+        padding-right: 0px;
     }
 
 
