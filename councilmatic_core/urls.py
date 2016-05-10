@@ -17,6 +17,8 @@ urlpatterns = [
         views.EventDetailView.as_view(), name='event_detail'),
     url(r'^flush-cache/(.*)/$', views.flush, name='flush'),
     url(r'^pdfviewer/$', views.pdfviewer, name='pdfviewer'),
+    url(r'^widget/committee/(?P<slug>.*)/$',
+        views.CommitteeWidgetView.as_view(), name='committee_widget'),
     url(r'^widget/legislation/(?P<slug>.*)/$',
         views.BillWidgetView.as_view(), name='bill_widget'),
     url(r'^widget/person/(?P<slug>.*)/$',

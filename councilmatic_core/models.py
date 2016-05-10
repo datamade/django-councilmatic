@@ -401,6 +401,19 @@ class Organization(models.Model):
         return events
 
     @property
+    def upcoming_events(self):
+        """
+        grabs events in the future
+        """
+        # need to look up event participants by name
+        events = Event.objects\
+                    .filter(participants__entity_type='organization', participants__entity_name=self.name)\
+                    .filter(start_time__gt=datetime.now())\
+                    .order_by('start_time')\
+                    .all()
+        return events
+
+    @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
