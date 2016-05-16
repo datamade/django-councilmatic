@@ -130,7 +130,15 @@ class IndexView(TemplateView):
             'upcoming_committee_meetings': upcoming_meetings,
         })
 
+        context.update(self.extra_context())
+
         return context
+
+    def extra_context(self):
+        """
+        Override this in custom subclass to add more context variables if needed.
+        """
+        return {}
 
 
 class AboutView(TemplateView):
