@@ -20,7 +20,6 @@ import datetime
 import psycopg2
 
 for configuration in ['OCD_JURISDICTION_ID',
-                      'OCD_CITY_COUNCIL_ID',
                       'HEADSHOT_PATH',
                       'LEGISLATIVE_SESSIONS'
                       ]:
@@ -28,6 +27,10 @@ for configuration in ['OCD_JURISDICTION_ID',
     if not hasattr(settings, configuration):
         raise ImproperlyConfigured(
             'You must define {0} in settings.py'.format(configuration))
+
+if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
+    raise ImproperlyConfigured(
+        'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
@@ -111,7 +114,10 @@ class Command(BaseCommand):
             print("deleted all organizations and posts")
 
         # first grab city council root
-        self.grab_organization_posts(settings.OCD_CITY_COUNCIL_ID)
+        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+            self.grab_organization_posts({'id': settings.OCD_CITY_COUNCIL_ID})
+        else:
+            self.grab_organization_posts({'name': settings.OCD_CITY_COUNCIL_NAME})
 
         # this grabs a paginated listing of all organizations within a
         # jurisdiction
@@ -127,13 +133,17 @@ class Command(BaseCommand):
 
             for result in page_json['results']:
 
-                self.grab_organization_posts(result['id'])
+                self.grab_organization_posts({'id': result['id']})
 
         # update relevant posts with shapes
         if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
             self.populate_council_district_shapes()
 
-    def grab_organization_posts(self, organization_ocd_id, parent=None):
+    def grab_organization_posts(self, org_dict, parent=None):
+        url = base_url + '/organizations/'
+        r = requests.get(url, params=org_dict)
+        page_json = json.loads(r.text)
+        organization_ocd_id = page_json['results'][0]['id']
 
         url = base_url + '/' + organization_ocd_id + '/'
         r = requests.get(url)
@@ -212,7 +222,7 @@ class Command(BaseCommand):
                 )
 
         for child in page_json['children']:
-            self.grab_organization_posts(child['id'], org_obj)
+            self.grab_organization_posts({'id': child['id']}, org_obj)
 
     def populate_council_district_shapes(self):
 
@@ -289,9 +299,10 @@ class Command(BaseCommand):
         # get legislative sessions
         self.grab_legislative_sessions()
 
-        query_params = {
-            'from_organization': settings.OCD_CITY_COUNCIL_ID
-        }
+        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+            query_params = {'from_organization__id': settings.OCD_CITY_COUNCIL_ID}
+        else:
+            query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
 
         # grab all legislative sessions
         if self.update_since is None:
@@ -707,8 +718,7 @@ class Command(BaseCommand):
             # b/c parties are not added when organizations are loaded (in
             # grab_organizations)
             if not organization and membership_json['organization']['name'] in ['Republican', 'Democratic']:
-                self.grab_organization_posts(
-                    membership_json['organization']['id'])
+                self.grab_organization_posts({'id': membership_json['organization']['id']})
                 organization = Organization.objects.filter(
                     ocd_id=membership_json['organization']['id']).first()
 
