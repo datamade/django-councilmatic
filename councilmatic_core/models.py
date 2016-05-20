@@ -6,9 +6,9 @@ from django.conf import settings
 import inspect
 import importlib
 
-if not hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
     raise ImproperlyConfigured(
-        'You must define a OCD_COUNCIL_ID in settings.py')
+        'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
 
 if not hasattr(settings, 'CITY_COUNCIL_NAME'):
     raise ImproperlyConfigured(
@@ -66,8 +66,10 @@ class Person(models.Model):
 
     @property
     def latest_council_membership(self):
-        city_council_id = settings.OCD_CITY_COUNCIL_ID
-        filter_kwarg = {'_organization__ocd_id': city_council_id}
+        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+            filter_kwarg = {'_organization__ocd_id': settings.OCD_CITY_COUNCIL_ID}
+        else:
+            filter_kwarg = {'_organization__name': settings.OCD_CITY_COUNCIL_NAME}
 
         city_council_memberships = self.memberships.filter(**filter_kwarg)
 

@@ -150,9 +150,12 @@ class CouncilMembersView(ListView):
     context_object_name = 'posts'
 
     def get_queryset(self):
-        return Organization.objects.get(ocd_id=settings.OCD_CITY_COUNCIL_ID).posts.all()
-        # return
-        # Post.objects.filter(organization__ocd_id=settings.OCD_CITY_COUNCIL_ID)
+        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+            get_kwarg = {'ocd_id': settings.OCD_CITY_COUNCIL_ID}
+        else:
+            get_kwarg = {'name': settings.OCD_CITY_COUNCIL_NAME}
+
+        return Organization.objects.get(**get_kwarg).posts.all()
 
     def get_context_data(self, *args, **kwargs):
         context = super(CouncilMembersView, self).get_context_data(**kwargs)
