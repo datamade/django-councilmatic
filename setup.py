@@ -18,10 +18,11 @@ setup(
     url='http://councilmatic.org/',
     author='DataMade, LLC',
     author_email='info@datamade.us',
+    dependency_links = ['http://github.com/django-haystack/django-haystack/tarball/master#egg=django-haystack-2.5'],
     install_requires=['requests==2.7.0',
                       'pytz==2015.4',
                       'django==1.9.7',
-                      'django-haystack==2.4.0',
+                      'django-haystack>=2.5',
                       'pysolr==3.3.2',
                       'python-dateutil==2.4.2'],
     classifiers=[
