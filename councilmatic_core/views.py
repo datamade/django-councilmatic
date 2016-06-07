@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.views.generic import TemplateView, ListView, DetailView
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.db.models import Max, Min
 from django.core.cache import cache
 from django.utils.text import slugify
+from django.utils.decorators import method_decorator
 from .models import Person, Bill, Organization, Event, Post
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
@@ -222,6 +224,7 @@ class BillDetailView(DetailView):
         return context
 
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class BillWidgetView(BillDetailView):
     template_name = 'councilmatic_core/widgets/legislation.html'
 
@@ -262,6 +265,7 @@ class CommitteeDetailView(DetailView):
 
         return context
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class CommitteeWidgetView(CommitteeDetailView):
     template_name = 'councilmatic_core/widgets/committee.html'
 
@@ -325,6 +329,7 @@ class PersonDetailView(DetailView):
 
         return context
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class PersonWidgetView(PersonDetailView):
     template_name = 'councilmatic_core/widgets/person.html'
 
