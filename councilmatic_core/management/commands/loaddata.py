@@ -646,7 +646,7 @@ class Command(BaseCommand):
 
     def grab_person_memberships(self, person_id):
         # this grabs a person and all their memberships
-
+        
         url = base_url + '/' + person_id + '/'
         r = requests.get(url)
         page_json = json.loads(r.text)
@@ -730,16 +730,31 @@ class Command(BaseCommand):
                 start_date = parse_date(membership_json['start_date'])
             except:
                 start_date = None
+            
+            try:
 
-            obj, created = Membership.objects.get_or_create(
-                _organization=organization,
-                _person=person,
-                _post=post,
-                label=membership_json['label'],
-                role=membership_json['role'],
-                start_date=start_date,
-                end_date=end_date
-            )
+                obj = Membership.objects.get(
+                            _organization=organization,
+                            _person=person,
+                            _post=post)
+                created = False
+                
+                obj.label = membership_json['label']
+                obj.role = membership_json['role']
+                obj.start_date = start_date
+                obj.end_date = end_date
+                obj.save()
+            
+            except Membership.DoesNotExist:
+                obj = Membership.objects.create(
+                            _organization=organization,
+                            _person=person,
+                            _post=post,
+                            label=membership_json['label'],
+                            role=membership_json['role'],
+                            start_date=start_date,
+                            end_date=end_date)
+                created = True
 
             # if created and DEBUG:
             #     print('      adding membership: %s' % obj.role)

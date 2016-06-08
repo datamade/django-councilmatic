@@ -555,7 +555,7 @@ class Post(models.Model):
     def current_member(self):
         if self.memberships.all():
             most_recent_member = self.memberships.order_by(
-                '-start_date', '-end_date').first()
+                '-end_date', '-start_date').first()
             if most_recent_member.end_date:
                 return None
             else:
