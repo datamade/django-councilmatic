@@ -7,7 +7,7 @@
     <div class="row-fluid">
         <div class="col-xs-12">
             <h1 class="bill-page-title">
-                {{ legislation.friendly_name }}
+                <a href="/legislation/{{legislation.slug}}/" target="_blank" title="View on {{ CITY_NAME_SHORT }} Councilmatic">{{ legislation.friendly_name }}</a>
                 <small>
                     {{ legislation.inferred_status | inferred_status_label | safe }}
                 </small>
