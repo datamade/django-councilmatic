@@ -833,6 +833,27 @@ class Command(BaseCommand):
                             start_date=start_date,
                             end_date=end_date)
                 created = True
+            except Membership.MultipleObjectsReturned:
+                memberships = Membership.objects.filter(
+                                _organization=organization,
+                                _post=post,
+                                _person=person)
+
+                for membership in memberships[1:]:
+                    membership.delete()
+                
+                obj = Membership.objects.get(
+                            _organization=organization,
+                            _person=person,
+                            _post=post)
+                created = False
+                
+                obj.label = membership_json['label']
+                obj.role = membership_json['role']
+                obj.start_date = start_date
+                obj.end_date = end_date
+                obj.save()
+
 
             # if created and DEBUG:
             #     print('      adding membership: %s' % obj.role)
