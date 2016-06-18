@@ -17,6 +17,7 @@ import rq
 from redis import Redis
 
 import django_rq
+
 import json
 
 # XXX put this in some more appropriate/official place such as notifications/__init__.py
