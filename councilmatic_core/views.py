@@ -49,6 +49,8 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
 
         extra['selected_facets'] = selected_facets
 
+        #print ("CouncilmaticFacetedSearchView(): selected_facets=", selected_facets)
+        
         extra['current_council_members'] = {
             p.current_member.person.name: p.label for p in Post.objects.all() if p.current_member
         }
@@ -86,6 +88,7 @@ def city_context(request):
         'MAP_CONFIG',
         'ANALYTICS_TRACKING_CODE',
         'ABOUT_BLURBS',
+        'USING_NOTIFICATIONS'
     ]
 
     city_context = {s: getattr(settings, s, None) for s in relevant_settings}
@@ -260,6 +263,19 @@ class CommitteeDetailView(DetailView):
                                     settings.SITE_META['site_name'])
         context['seo'] = seo
 
+        context['user_subscribed_actions'] = False
+        context['user_subscribed_events'] = False
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            context['user'] = user
+            # check if person of interest is subscribed to by user
+            for cas in user.committeeactionsubscriptions.all():
+                if committee == cas.committee:
+                    context['user_subscribed_actions'] = True
+            for ces in user.committeeeventsubscriptions.all():
+                if committee == ces.committee:
+                    context['user_subscribed_events'] = True
+        
         return context
 
 class CommitteeWidgetView(CommitteeDetailView):
@@ -322,6 +338,16 @@ class PersonDetailView(DetailView):
             map_geojson['features'].append(feature)
 
             context['map_geojson'] = json.dumps(map_geojson)
+
+        context['user_subscribed'] = False            
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            context['user'] = user
+            # check if person of interest is subscribed to by user
+            for ps in user.personsubscriptions.all():
+                if person == ps.person:
+                    context['user_subscribed'] = True
+                    break
 
         return context
 

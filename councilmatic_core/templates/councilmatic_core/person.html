@@ -21,6 +21,13 @@
 			{{ title }}
 			<a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                 </small>
+		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+		{% if user_subscribed %}
+		<small><a href="unsubscribe/">[REMOVE ALERT]</a></small>
+		{% else %}
+		<small><a href="subscribe/">[CREATE ALERT]</a></small>
+		{% endif %}
+		{% endif %}
             </h1>
         </div>
     </div>

@@ -97,10 +97,23 @@
 				<a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
 			{% endif %}
 			{% endwith %}		
-			<i class="fa fa-rss-square" aria-hidden="true"></i></a>			
+			<i class="fa fa-rss-square" aria-hidden="true"></i></a>
+				
+			{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+			{% if user_subscribed %}
+			<small><a href="/search/unsubscribe/?q={{request.GET.q}}">[REMOVE ALERT]</a></small>
+			{% else %}
+			<small><a href="/search/subscribe/?q={{request.GET.q}}">[CREATE ALERT]</a></small>
+			{% endif %}
+			{% endif %}
+
+				
 		</h3>
+				
+		
             {% endif %}
 
+		
         {% for result in page.object_list %}
 
             <!-- Legislation result -->

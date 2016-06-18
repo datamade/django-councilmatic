@@ -19,6 +19,8 @@ import re
 import datetime
 import psycopg2
 
+import urllib
+
 for configuration in ['OCD_JURISDICTION_ID',
                       'HEADSHOT_PATH',
                       'LEGISLATIVE_SESSIONS'
@@ -93,6 +95,8 @@ class Command(BaseCommand):
             self.grab_events(delete=options['delete'])
             print("\ndone!", datetime.datetime.now())
 
+        
+            
         else:
             print("\n** loading all data types! **\n")
 
@@ -100,6 +104,8 @@ class Command(BaseCommand):
             self.grab_people(delete=options['delete'])
             self.grab_bills(delete=options['delete'])
             self.grab_events(delete=options['delete'])
+
+            # XXX mcc: fire notification here instead of per bill (as below)
 
             print("\ndone!", datetime.datetime.now())
 
@@ -321,6 +327,8 @@ class Command(BaseCommand):
 
         search_url = '{}/bills/'.format(base_url)
         search_results = requests.get(search_url, params=query_params)
+        #print ("SEARCH: ", search_url+ '?' + urllib.parse.urlencode(query_params))
+        #print('search_url=', search_url, 'params=', query_params)
         page_json = search_results.json()
 
         leg_session_obj = None
@@ -373,7 +381,12 @@ class Command(BaseCommand):
                 print('adding legislative session: %s' % obj.name)
 
     def grab_bill(self, page_json, leg_session_obj):
-
+        #import pprint
+        #pp = pprint.PrettyPrinter(indent=4)
+        #print("grab_bill(): [page_json], [leg_session_obj]")
+        #pp.pprint(page_json)
+        #pp.pprint(leg_session_obj)
+        
         from_org = Organization.objects.get(
             ocd_id=page_json['from_organization']['id'])
 
@@ -440,23 +453,30 @@ class Command(BaseCommand):
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
 
-            obj.ocd_created_at = page_json['created_at']
-            obj.ocd_updated_at = page_json['updated_at']
-            obj.description = page_json['title']
-            obj.identifier = page_json['identifier']
-            obj.classification = page_json['classification'][0]
-            obj.source_url = source_url
-            obj.source_note = page_json['sources'][0]['note']
-            obj._from_organization = from_org
-            obj.full_text = full_text
-            obj.ocr_full_text = ocr_full_text
-            obj.abstract = abstract
-            obj._legislative_session = leg_session_obj
-            obj.bill_type = bill_type
-            obj.subject = subject
-
-            obj.save()
-            updated = True
+            # XXX mcc: if the updated_at is the same then don't update
+            updated_at = date_parser.parse(page_json['updated_at'])
+            if (obj.ocd_updated_at <= updated_at):
+                updated = False
+            else:
+                obj.ocd_created_at = page_json['created_at']
+                #print ("obj.ocd_updated_at = ", obj.ocd_updated_at.isoformat(),
+                #       "page_json[\'updated_at\']=", page_json['updated_at'])
+                obj.ocd_updated_at = page_json['updated_at']
+                obj.description = page_json['title']
+                obj.identifier = page_json['identifier']
+                obj.classification = page_json['classification'][0]
+                obj.source_url = source_url
+                obj.source_note = page_json['sources'][0]['note']
+                obj._from_organization = from_org
+                obj.full_text = full_text
+                obj.ocr_full_text = ocr_full_text
+                obj.abstract = abstract
+                obj._legislative_session = leg_session_obj
+                obj.bill_type = bill_type
+                obj.subject = subject
+                
+                obj.save()
+                updated = True
 
             if DEBUG:
                 print('\u270E', end=' ', flush=True)
@@ -475,8 +495,10 @@ class Command(BaseCommand):
                 obj, created = Bill.objects.get_or_create(**bill_fields)
 
             if created and DEBUG:
-                print('\u263A', end=' ', flush=True)
+                print('\u263A', end=' ', flush=True)            
 
+        #print ("created=",created)
+        #print ("updated=",updated)
         if created or updated:
 
             if updated:
@@ -507,6 +529,12 @@ class Command(BaseCommand):
             for sponsor_json in page_json['sponsorships']:
                 self.load_bill_sponsorship(sponsor_json, obj)
 
+            # XXX Send notification to redis
+            # XXX should I pass this key as 'ocd_id' or 'bill_id'? should I include any other info, e.g. bill description?
+            print ("calling requests.post() with ocd_id=%s and slug=%s and ocd_created_at=%s and ocd_updated_at=%s" % (obj.ocd_id, obj.slug, obj.ocd_created_at, obj.ocd_updated_at))
+            requests.post("http://" + settings.BASE_HOSTNAME + '/notification_bill', {'ocd_id':obj.ocd_id,
+                                                                                      'slug':obj.slug})
+        
     def load_bill_sponsorship(self, sponsor_json, bill):
 
         # if the sponsor is a city council member, it has alread been loaded in

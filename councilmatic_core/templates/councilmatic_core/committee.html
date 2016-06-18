@@ -24,7 +24,16 @@
 
             
             <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
-			    <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+		    <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+		{% if user_subscribed_actions %}	
+		<small><a href="{% url 'committee_actions_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>
+		{% else %}
+		<small><a href="{% url 'committee_actions_subscribe' committee.slug %}">[CREATE ALERT]</a></small>
+	    
+		{% endif %}
+		{% endif %}
+		    
 	    </h4>
             {% if committee.recent_activity %}
             <div class="table-responsive">
@@ -74,7 +83,16 @@
 
                 <h4>
                     <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
-                    <a href="events/rss/" title="RSS feed for Committe Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                    <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+		{% if user_subscribed_events %}
+		    <small><a href="{% url 'committee_events_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>
+		{% else %}
+		<small><a href="{% url 'committee_events_subscribe' committee.slug %}">[CREATE ALERT]</a></small>
+		{% endif %}
+		{% endif %}
+		    
+		    
                 </h4>
 
                 {% for event in committee.recent_events %}

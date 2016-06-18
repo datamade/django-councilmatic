@@ -29,6 +29,14 @@
                 </a>
             </div>
             <ul id="nav-items">
+		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+		<li>
+			<i>{{request.user.email}}</i>
+		</li>
+			<li>
+				<a href="/account/subscriptions">Manage Alerts</a>
+			</li>
+		{% endif %}
                 <li>
                     <a href="/about/">About</a>
                 </li>
@@ -44,6 +52,16 @@
                 <li>
                     <a href="/search/">Legislation</a>
                 </li>
+		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+		<li>
+			<a href="/logout/">Logout</a>
+		</li>
+		{% endif %}
+		{% if USING_NOTIFICATIONS and not request.user.is_authenticated %}
+		<li>
+			<a href="/login/">Login</a>
+		</li>
+		{% endif %}
             </ul>
 
         </div>

@@ -27,12 +27,19 @@ class CouncilmaticFacetedSearchFeed(Feed):
 
     def url_with_querystring(self, path, **kwargs):
         return path + '?' + urllib.parse.urlencode(kwargs)
-    
+
+    # XXX need to extract since_datetime parameter
     def get_object(self, request):
         self.queryDict = request.GET
         self.query = request.GET['q']
+
+        #self.since_datetime = request.GET['since_datetime']
+        #print ("since_datetime=", self.since_datetime)
+        
         all_results = SearchQuerySet().all()
+        #results = all_results.filter(content=self.query, last_action_date=datetime(2015, 10, 28, 4, 0))
         results = all_results.filter(content=self.query)
+        print ("feeds.py:get_object(): got ", len(results), "results")
         if 'selected_facets' in request.GET:
             facets = request.GET.getlist('selected_facets')
             for facet in facets:

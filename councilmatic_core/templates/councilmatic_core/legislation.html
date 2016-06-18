@@ -13,6 +13,14 @@
                             {{ legislation.inferred_status | inferred_status_label | safe }}
 			    <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>			    
                     </small>
+		    {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+		    <!-- XXX mcc check to see if user already is subscribed to this -->
+		    {% if request.user.billactionsubscription_subscriptions.first %}
+		    <small><a href="unsubscribe/">[REMOVE ALERT]</a></small>
+		    {% else %}
+		    <small><a href="subscribe/">[CREATE ALERT]</a></small>
+		    {% endif %}
+		    {% endif %}
                 </h1>
                 {% if legislation.topics %}
                     <p>
