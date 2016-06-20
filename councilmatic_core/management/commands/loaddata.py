@@ -65,6 +65,11 @@ class Command(BaseCommand):
         parser.add_argument('--update_since',
                             help='Only update objects in the database that have changed since this date')
 
+        parser.add_argument('--bills-events-only',
+                            action='store_true',
+                            default=False,
+                            help='Only update bills and events')
+
     def handle(self, *args, **options):
 
         db_conn = settings.DATABASES['default']
@@ -99,11 +104,32 @@ class Command(BaseCommand):
             
         else:
             print("\n** loading all data types! **\n")
+            updated_orgs_ids = []
+            updated_people_ids = []
+            updated_bills_ids = []
+            updated_events_ids = []
+            
+            if not options['bills_events_only']:
+            
+                updated_orgs_ids = self.grab_organizations(delete=options['delete'])
+                updated_people_ids = self.grab_people(delete=options['delete'])
+                updated_bills_ids = self.grab_bills(delete=options['delete'])
+                updated_events_ids = self.grab_events(delete=options['delete'])
+            else:
+                updated_bills_ids = self.grab_bills(delete=options['delete'])
+                updated_events_ids = self.grab_events(delete=options['delete'])
 
-            self.grab_organizations(delete=options['delete'])
-            self.grab_people(delete=options['delete'])
-            self.grab_bills(delete=options['delete'])
-            self.grab_events(delete=options['delete'])
+            print ("calling requests.post()")
+            requests.post("http://" +
+                          settings.BASE_HOSTNAME +
+                          '/notification_loaddata',
+                          {'updated_orgs_ids':json.dumps(updated_orgs_ids),
+                           'updated_people_ids':json.dumps(updated_people_ids),
+                           'updated_bills_ids':json.dumps(updated_bills_ids),
+                           'updated_events_ids':json.dumps(updated_events_ids)})
+                          
+
+                
 
             # XXX mcc: fire notification here instead of per bill (as below)
 
@@ -133,8 +159,8 @@ class Command(BaseCommand):
         page_json = json.loads(r.text)
 
         for i in range(page_json['meta']['max_page']):
-
-            r = requests.get(orgs_url + '&page=' + str(i + 1))
+            curr_orgs_url = orgs_url + '&page=' + str(i + 1)
+            r = requests.get(curr_orgs_url)
             page_json = json.loads(r.text)
 
             for result in page_json['results']:
@@ -144,6 +170,8 @@ class Command(BaseCommand):
         # update relevant posts with shapes
         if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
             self.populate_council_district_shapes()
+        print("\n\nDONE LOADING ORGANIZATIONS", datetime.datetime.now())
+        return [] # XXX mcc
 
     def grab_organization_posts(self, org_dict, parent=None):
         url = base_url + '/organizations/'
@@ -152,6 +180,7 @@ class Command(BaseCommand):
         organization_ocd_id = page_json['results'][0]['id']
 
         url = base_url + '/' + organization_ocd_id + '/'
+        print (url)
         r = requests.get(url)
         page_json = json.loads(r.text)
 
@@ -172,6 +201,7 @@ class Command(BaseCommand):
                     slug=slugify(page_json['name']),
                     _parent=parent,
                 )
+                print (org_obj)
             except IntegrityError:
                 ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
                 org_obj, created = Organization.objects.get_or_create(
@@ -191,6 +221,7 @@ class Command(BaseCommand):
                     source_url=source_url,
                     slug=slugify(page_json['name']),
                 )
+                print(org_obj)
             except IntegrityError:
                 ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
                 org_obj, created = Organization.objects.get_or_create(
@@ -236,6 +267,7 @@ class Command(BaseCommand):
 
         # grab boundary listing
         bndry_set_url = bndry_base_url + '/boundaries/' + settings.BOUNDARY_SET
+        print (bndry_set_url)
         r = requests.get(bndry_set_url + '/?limit=0')
         page_json = json.loads(r.text)
 
@@ -243,6 +275,7 @@ class Command(BaseCommand):
         for bndry_json in page_json['objects']:
             # grab boundary shape
             shape_url = bndry_base_url + bndry_json['url'] + 'shape'
+            print(shape_url)
             r = requests.get(shape_url)
             # update the right post(s) with the shape
             if 'ocd-division' in bndry_json['external_id']:
@@ -273,13 +306,19 @@ class Command(BaseCommand):
             name='Democratic').exclude(name='Republican').all()
         for organization in orgs:
             url = base_url + '/' + organization.ocd_id + '/'
+            print (url)
             r = requests.get(url)
             page_json = json.loads(r.text)
 
             for membership_json in page_json['memberships']:
                 self.grab_person_memberships(membership_json['person']['id'])
-
+        print("\n\nDONE LOADING PEOPLE", datetime.datetime.now())
+        return [] # XXX mcc
+        
     def grab_bills(self, delete=False):
+        ret_bill_list = []
+        #import pdb; pdb.set_trace()
+
         # this grabs all bills & associated actions, documents from city council
         # organizations need to be populated before bills & actions are
         # populated
@@ -327,8 +366,8 @@ class Command(BaseCommand):
 
         search_url = '{}/bills/'.format(base_url)
         search_results = requests.get(search_url, params=query_params)
-        #print ("SEARCH: ", search_url+ '?' + urllib.parse.urlencode(query_params))
-        #print('search_url=', search_url, 'params=', query_params)
+        print ("SEARCH: ", search_url+ '?' + urllib.parse.urlencode(query_params))
+        print('search_url=', search_url, 'params=', query_params)
         page_json = search_results.json()
 
         leg_session_obj = None
@@ -342,6 +381,7 @@ class Command(BaseCommand):
 
                 bill_url = '{base}/{bill_id}/'.format(
                     base=base_url, bill_id=result['id'])
+                print (bill_url)
                 bill_detail = requests.get(bill_url)
 
                 leg_session_id = bill_detail.json()['legislative_session'][
@@ -355,7 +395,11 @@ class Command(BaseCommand):
                     leg_session_obj = LegislativeSession.objects.get(
                         identifier=leg_session_id)
 
-                self.grab_bill(bill_detail.json(), leg_session_obj)
+                bill = self.grab_bill(bill_detail.json(), leg_session_obj)
+                if (bill):
+                    ret_bill_list.append(bill)
+        print("\n\nDONE LOADING BILLS", datetime.datetime.now())
+        return ret_bill_list
 
     def grab_legislative_sessions(self):
         session_ids = []
@@ -364,6 +408,7 @@ class Command(BaseCommand):
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
             url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
+            print(url)
             r = requests.get(url)
             page_json = json.loads(r.text)
             session_ids = [session['identifier']
@@ -386,6 +431,8 @@ class Command(BaseCommand):
         #print("grab_bill(): [page_json], [leg_session_obj]")
         #pp.pprint(page_json)
         #pp.pprint(leg_session_obj)
+
+        #import pdb; pdb.set_trace()
         
         from_org = Organization.objects.get(
             ocd_id=page_json['from_organization']['id'])
@@ -452,10 +499,12 @@ class Command(BaseCommand):
         # look for existing bill
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
+            print ("grab_bill: got bill ", obj.id)
 
             # XXX mcc: if the updated_at is the same then don't update
             updated_at = date_parser.parse(page_json['updated_at'])
             if (obj.ocd_updated_at <= updated_at):
+                print ("obj.ocd_updated_at='%s' <= '%s'" % (str(obj.ocd_updated_at), str(updated_at)))
                 updated = False
             else:
                 obj.ocd_created_at = page_json['created_at']
@@ -529,11 +578,8 @@ class Command(BaseCommand):
             for sponsor_json in page_json['sponsorships']:
                 self.load_bill_sponsorship(sponsor_json, obj)
 
-            # XXX Send notification to redis
-            # XXX should I pass this key as 'ocd_id' or 'bill_id'? should I include any other info, e.g. bill description?
-            print ("calling requests.post() with ocd_id=%s and slug=%s and ocd_created_at=%s and ocd_updated_at=%s" % (obj.ocd_id, obj.slug, obj.ocd_created_at, obj.ocd_updated_at))
-            requests.post("http://" + settings.BASE_HOSTNAME + '/notification_bill', {'ocd_id':obj.ocd_id,
-                                                                                      'slug':obj.slug})
+            print ("grab_bill(): returning ", obj.id)
+            return obj.id
         
     def load_bill_sponsorship(self, sponsor_json, bill):
 
@@ -676,11 +722,13 @@ class Command(BaseCommand):
         # this grabs a person and all their memberships
 
         url = base_url + '/' + person_id + '/'
+        print (url)
         r = requests.get(url)
         page_json = json.loads(r.text)
 
         # TO DO: handle updating people & memberships
         person = Person.objects.filter(ocd_id=person_id).first()
+        print(person)
         if not person:
 
             # save image to disk
@@ -714,6 +762,7 @@ class Command(BaseCommand):
                     email=email,
                     slug=slugify(page_json['name']),
                 )
+                print(person)
             except IntegrityError:
                 ocd_id_part = page_json['id'].rsplit('-', 1)[1]
                 person = Person.objects.create(
@@ -745,6 +794,7 @@ class Command(BaseCommand):
             # adding republican or democratic party when encountered
             # b/c parties are not added when organizations are loaded (in
             # grab_organizations)
+            print(organization)
             if not organization and membership_json['organization']['name'] in ['Republican', 'Democratic']:
                 self.grab_organization_posts({'id': membership_json['organization']['id']})
                 organization = Organization.objects.filter(
@@ -768,6 +818,7 @@ class Command(BaseCommand):
                 start_date=start_date,
                 end_date=end_date
             )
+            print (obj)
 
             # if created and DEBUG:
             #     print('      adding membership: %s' % obj.role)
@@ -775,6 +826,7 @@ class Command(BaseCommand):
     def grab_events(self, delete=False):
 
         print("\n\nLOADING EVENTS", datetime.datetime.now())
+        import pdb; pdb.set_trace()
         if delete:
             with psycopg2.connect(**self.db_conn_kwargs) as conn:
                 with conn.cursor() as curs:
@@ -790,22 +842,47 @@ class Command(BaseCommand):
             print(
                 "deleted all events, participants, documents, agenda items, agenda item bill references")
 
-        # this grabs a paginated listing of all events within a jurisdiction
-        events_url = base_url + '/events/?jurisdiction_id=' + settings.OCD_JURISDICTION_ID
-        r = requests.get(events_url)
-        page_json = json.loads(r.text)
+        if self.update_since is None:
+            max_updated = Event.objects.all().aggregate(
+                Max('ocd_updated_at'))['ocd_updated_at__max']
 
+            if max_updated is None:
+                max_updated = datetime.datetime(1900, 1, 1)
+        else:
+            max_updated = self.update_since
+
+        query_params = {}
+        query_params['sort'] = 'updated_at'
+        query_params['updated_at__gte'] = max_updated.isoformat()
+        query_params['jurisdiction_id'] = settings.OCD_JURISDICTION_ID
+        
+        # this grabs a paginated listing of all events within a jurisdiction
+        events_url = '{}/events/'.format(base_url)
+        events_results = requests.get(events_url, params=query_params)
+        print ('EVENTS: ' + events_url + '?' + urllib.parse.urlencode(query_params))
+        page_json = json.loads(events_results.text)
+        
         for i in range(page_json['meta']['max_page']):
 
-            r = requests.get(events_url + '&page=' + str(i + 1))
-            page_json = json.loads(r.text)
+            paginated_url = events_url + '&page=' + str(i + 1)
+            query_params['page'] = str(i + 1)
+            
+            #print("paginated_url=",paginated_url)
+            #r = requests.get(paginated_url)
+
+            result_page = requests.get(events_url, params=query_params)
+            
+            page_json = json.loads(result_page.text)
 
             for result in page_json['results']:
                 self.grab_event(result['id'])
+        print("\n\nDONE LOADING EVENTS", datetime.datetime.now())
+        return [] # XXX mcc
 
     def grab_event(self, event_ocd_id):
 
         event_url = base_url + '/' + event_ocd_id + '/'
+        print(event_url)
         r = requests.get(event_url)
 
         if r.status_code == 200:

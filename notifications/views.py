@@ -17,6 +17,7 @@ import rq
 from redis import Redis
 
 import django_rq
+import json
 
 # XXX put this in some more appropriate/official place such as notifications/__init__.py
 # XXX Also: could in theory have different queues for difft types of notifications!
@@ -156,30 +157,44 @@ def committee_actions_unsubscribe(request, slug):
     return HttpResponse('unsubscribe()d')
 
 
-def handle_notification_bill(bill):
-    # This code gets executed by the worker. We should look at the new bill and see if
-    # it corresponds to existing sets of subscriptions
-    print("/notifications/views.py:,bill=",bill)
-    bill.subscriptions.filter(last_datetime_updated__lt=bill.ocd_updated_at)
-    
-# these are posted to by management/loaddata.py
-@csrf_exempt
-def notification_bill(request):
-    if request.method != 'POST':
-        print("ERROR: notifications/views.py:notification_bill() called without POST")
+# XXX: use this function to handle notifications from the queue that includes
+# a list of recently updated orgs,people,bills,events
+def worker_handle_notification_loaddata(updated_orgs_ids, updated_people_ids, updated_bills_ids, updated_events_ids):
+    # check each user's subscriptions and send off emails
+    print ("WORKER_HANDLE_NOTIFICATION_LOADDATA()")
+    print (updated_orgs_ids)
+    print (updated_people_ids)
+    print (updated_bills_ids)
+    print (updated_events_ids)
+    pass
 
-    bill_id = request.POST.get('ocd_id')
-    bill_slug = request.POST.get('slug')
-        
-    print("notifications/views.py:new bill detected by loaddata.py", bill_id, bill_slug)
-    # get the bill
-    bill = Bill.objects.get(ocd_id=bill_id)
+# this is posted to by management/loaddata.py
+@csrf_exempt
+def notification_loaddata(request):
+    if request.method != 'POST':
+        print("ERROR: notifications/views.py:notification_loaddata() called without POST")
+
+    updated_orgs_ids = json.loads(request.POST.get('updated_orgs_ids'))
+    updated_people_ids = json.loads(request.POST.get('updated_people_ids'))
+    updated_bills_ids = json.loads(request.POST.get('updated_bills_ids'))
+    updated_events_ids = json.loads(request.POST.get('updated_events_ids'))
+
+    print('updated_orgs_ids=', updated_orgs_ids)
+    print('updated_people_ids=', updated_people_ids)
+    print('updated_bills_ids=', updated_bills_ids)
+    print('updated_events_ids=', updated_events_ids)
+    
+    print("notifications/views.py:new stuff detected by loaddata.py: %d orgs, %d people, %d bills, %d events" % (len(updated_orgs_ids), len(updated_people_ids), len(updated_bills_ids), len(updated_events_ids)))
     
     # now let Redis know
-    # XXX will this work ? does it need to be serialized?
     # XXX According to http://python-rq.org/docs/ , uses pickle
-    #notifications_queue.enqueue(handle_notification, bill)
     notifications_queue = django_rq.get_queue('notifications')
-    notifications_queue.enqueue(handle_notification_bill, bill)
+    notifications_queue.enqueue(worker_handle_notification_loaddata,
+                                updated_orgs_ids = updated_orgs_ids,
+                                updated_people_ids = updated_people_ids,
+                                updated_bills_ids = updated_bills_ids,
+                                updated_events_ids = updated_events_ids)
 
     return HttpResponse('ok')
+
+
