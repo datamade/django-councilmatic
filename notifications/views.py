@@ -17,6 +17,7 @@ import rq
 from redis import Redis
 
 import django_rq
+import json
 
 import json
 

@@ -130,9 +130,6 @@ class Command(BaseCommand):
                           
 
                 
-
-            # XXX mcc: fire notification here instead of per bill (as below)
-
             # XXX mcc: fire notification here instead of per bill (as below)
 
             print("\ndone!", datetime.datetime.now())
@@ -369,9 +366,6 @@ class Command(BaseCommand):
         search_url = '{}/bills/'.format(base_url)
         search_results = requests.get(search_url, params=query_params)
 
-        #print ("SEARCH: ", search_url+ '?' + urllib.parse.urlencode(query_params))
-        #print('search_url=', search_url, 'params=', query_params)
-
         page_json = search_results.json()
 
         leg_session_obj = None
@@ -435,6 +429,8 @@ class Command(BaseCommand):
         #print("grab_bill(): [page_json], [leg_session_obj]")
         #pp.pprint(page_json)
         #pp.pprint(leg_session_obj)
+
+        #import pdb; pdb.set_trace()
         
         from_org = Organization.objects.get(
             ocd_id=page_json['from_organization']['id'])
@@ -856,6 +852,16 @@ class Command(BaseCommand):
                 obj.end_date = end_date
                 obj.save()
 
+            obj, created = Membership.objects.get_or_create(
+                _organization=organization,
+                _person=person,
+                _post=post,
+                label=membership_json['label'],
+                role=membership_json['role'],
+                start_date=start_date,
+                end_date=end_date
+            )
+            print (obj)
 
             # if created and DEBUG:
             #     print('      adding membership: %s' % obj.role)
