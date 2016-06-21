@@ -19,13 +19,14 @@ from redis import Redis
 import django_rq
 import json
 
-import json
+from django.core.mail import send_mail
 
 # XXX put this in some more appropriate/official place such as notifications/__init__.py
 # XXX Also: could in theory have different queues for difft types of notifications!
 #notifications_queue= Queue('notifications',connection=Redis())
 # redis_conn = django_rq.get_connection('notifications')
 notifications_queue= django_rq.get_queue('notifications')  
+notification_emails_queue= django_rq.get_queue('notification_emails')  
 
 def notifications_login(request):
     if request.method == 'POST':
@@ -159,7 +160,20 @@ def committee_actions_unsubscribe(request, slug):
     return HttpResponse('unsubscribe()d')
 
 
-# XXX: use this function to handle notifications from the queue that includes
+
+def worker_handle_notification_email(email_recipient_name, email_address, email_subject, email_body):
+    print("worker_handle_notification_email(): email_address=", email_address, "email_body=", email_body)
+
+    #send_mail(
+    #    email_subject,
+    #    email_body,
+    #    email_address,
+    #    [email_address],
+    #    fail_silently=False,
+    #)
+    
+
+# This function handles notifications from the queue that includes
 # a list of recently updated orgs,people,bills,events
 def worker_handle_notification_loaddata(updated_orgs_ids, updated_people_ids, updated_bills_ids, updated_events_ids):
     # check each user's subscriptions and send off emails
@@ -168,7 +182,14 @@ def worker_handle_notification_loaddata(updated_orgs_ids, updated_people_ids, up
     print (updated_people_ids)
     print (updated_bills_ids)
     print (updated_events_ids)
-    pass
+
+    notification_emails_queue = django_rq.get_queue('notification_emails')
+    notification_emails_queue.enqueue(worker_handle_notification_email,
+                                      email_recipient_name=json.dumps("Foo Bar"),
+                                      email_address=json.dumps("foo@perquackey.com"),
+                                      email_subject=json.dumps("Councilmatic notification"),
+                                      email_body=json.dumps("here is an email body"))
+
 
 # this is posted to by management/loaddata.py
 @csrf_exempt
@@ -186,10 +207,10 @@ def notification_loaddata(request):
     print('updated_bills_ids=', updated_bills_ids)
     print('updated_events_ids=', updated_events_ids)
     
-    print("notifications/views.py:new stuff detected by loaddata.py: %d orgs, %d people, %d bills, %d events" % (len(updated_orgs_ids), len(updated_people_ids), len(updated_bills_ids), len(updated_events_ids)))
+    print("notifications/views.py:new OCD data detected by loaddata.py: %d orgs, %d people, %d bills, %d events" % (len(updated_orgs_ids), len(updated_people_ids), len(updated_bills_ids), len(updated_events_ids)))
     
     # now let Redis know
-    # XXX According to http://python-rq.org/docs/ , uses pickle
+    # According to http://python-rq.org/docs/ , uses pickle
     notifications_queue = django_rq.get_queue('notifications')
     notifications_queue.enqueue(worker_handle_notification_loaddata,
                                 updated_orgs_ids = updated_orgs_ids,

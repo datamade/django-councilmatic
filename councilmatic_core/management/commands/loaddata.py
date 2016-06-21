@@ -869,7 +869,7 @@ class Command(BaseCommand):
     def grab_events(self, delete=False):
 
         print("\n\nLOADING EVENTS", datetime.datetime.now())
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         if delete:
             with psycopg2.connect(**self.db_conn_kwargs) as conn:
                 with conn.cursor() as curs:
@@ -971,6 +971,7 @@ class Command(BaseCommand):
 
                     event_obj.ocd_created_at = page_json['created_at']
                     event_obj.ocd_updated_at = page_json['updated_at']
+                    print ('event_obj.ocd_created_at=', event_obj.ocd_created_at, type(event_obj.ocd_created_at))
                     event_obj.name = page_json['name']
                     event_obj.description = page_json['description']
                     event_obj.classification = page_json['classification']
