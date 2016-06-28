@@ -86,19 +86,19 @@ class Command(BaseCommand):
 
         if options['endpoint'] == 'organizations':
             self.grab_organizations(delete=options['delete'])
-            print("\ndone!", datetime.datetime.now())
+            print("\ndone!", datetime.datetime.now().replace(tzinfo=app_timezone))
 
         elif options['endpoint'] == 'bills':
             self.grab_bills(delete=options['delete'])
-            print("\ndone!", datetime.datetime.now())
+            print("\ndone!", datetime.datetime.now().replace(tzinfo=app_timezone))
 
         elif options['endpoint'] == 'people':
             self.grab_people(delete=options['delete'])
-            print("\ndone!", datetime.datetime.now())
+            print("\ndone!", datetime.datetime.now().replace(tzinfo=app_timezone))
 
         elif options['endpoint'] == 'events':
             self.grab_events(delete=options['delete'])
-            print("\ndone!", datetime.datetime.now())
+            print("\ndone!", datetime.datetime.now().replace(tzinfo=app_timezone))
 
         
             
@@ -132,10 +132,10 @@ class Command(BaseCommand):
                 
             # XXX mcc: fire notification here instead of per bill (as below)
 
-            print("\ndone!", datetime.datetime.now())
+            print("\ndone!", datetime.datetime.now().replace(tzinfo=app_timezone))
 
     def grab_organizations(self, delete=False):
-        print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
+        print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now().replace(tzinfo=app_timezone))
         if delete:
             with psycopg2.connect(**self.db_conn_kwargs) as conn:
                 with conn.cursor() as curs:
@@ -169,7 +169,7 @@ class Command(BaseCommand):
         # update relevant posts with shapes
         if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
             self.populate_council_district_shapes()
-        print("\n\nDONE LOADING ORGANIZATIONS", datetime.datetime.now())
+        print("\n\nDONE LOADING ORGANIZATIONS", datetime.datetime.now().replace(tzinfo=app_timezone))
         return [] # XXX mcc
 
     def grab_organization_posts(self, org_dict, parent=None):
@@ -291,7 +291,7 @@ class Command(BaseCommand):
     def grab_people(self, delete=False):
         # find people associated with existing organizations & bills
 
-        print("\n\nLOADING PEOPLE", datetime.datetime.now())
+        print("\n\nLOADING PEOPLE", datetime.datetime.now().replace(tzinfo=app_timezone))
         if delete:
             with psycopg2.connect(**self.db_conn_kwargs) as conn:
                 with conn.cursor() as curs:
@@ -311,7 +311,7 @@ class Command(BaseCommand):
 
             for membership_json in page_json['memberships']:
                 self.grab_person_memberships(membership_json['person']['id'])
-        print("\n\nDONE LOADING PEOPLE", datetime.datetime.now())
+        print("\n\nDONE LOADING PEOPLE", datetime.datetime.now().replace(tzinfo=app_timezone))
         return [] # XXX mcc
         
     def grab_bills(self, delete=False):
@@ -322,7 +322,7 @@ class Command(BaseCommand):
         # organizations need to be populated before bills & actions are
         # populated
 
-        print("\n\nLOADING BILLS", datetime.datetime.now())
+        print("\n\nLOADING BILLS", datetime.datetime.now().replace(tzinfo=app_timezone))
         if delete:
             with psycopg2.connect(**self.db_conn_kwargs) as conn:
                 with conn.cursor() as curs:
@@ -396,7 +396,7 @@ class Command(BaseCommand):
                 bill = self.grab_bill(bill_detail.json(), leg_session_obj)
                 if (bill):
                     ret_bill_list.append(bill)
-        print("\n\nDONE LOADING BILLS", datetime.datetime.now())
+        print("\n\nDONE LOADING BILLS", datetime.datetime.now().replace(tzinfo=app_timezone))
         return ret_bill_list
 
     def grab_legislative_sessions(self):
@@ -868,7 +868,7 @@ class Command(BaseCommand):
 
     def grab_events(self, delete=False):
 
-        print("\n\nLOADING EVENTS", datetime.datetime.now())
+        print("\n\nLOADING EVENTS", datetime.datetime.now().replace(tzinfo=app_timezone))
         #import pdb; pdb.set_trace()
         if delete:
             with psycopg2.connect(**self.db_conn_kwargs) as conn:
@@ -919,7 +919,7 @@ class Command(BaseCommand):
 
             for result in page_json['results']:
                 self.grab_event(result['id'])
-        print("\n\nDONE LOADING EVENTS", datetime.datetime.now())
+        print("\n\nDONE LOADING EVENTS", datetime.datetime.now().replace(tzinfo=app_timezone))
         return [] # XXX mcc
 
     def grab_event(self, event_ocd_id):

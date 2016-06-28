@@ -110,8 +110,8 @@ class IndexView(TemplateView):
         recently_passed = []
         # go back in time at 10-day intervals til you find 3 passed bills
         for i in range(0, -100, -10):
-            begin = date.today() + timedelta(days=i)
-            end = date.today() + timedelta(days=i - 10)
+            begin = datetime.now(app_timezone) + timedelta(days=i)
+            end = datetime.now(app_timezone) + timedelta(days=i - 10)
 
             leg_in_range = self.bill_model.objects\
                 .exclude(last_action_date=None)\
@@ -380,15 +380,15 @@ class EventsView(ListView):
 
         context['month_options'] = []
         for index in range(1, 13):
-            month_name = datetime(date.today().year, index, 1).strftime('%B')
+            month_name = datetime(datetime.now(app_timezone).date().year, index, 1).strftime('%B')
             context['month_options'].append([month_name, index])
 
         context['show_upcoming'] = True
-        context['this_month'] = date.today().month
-        context['this_year'] = date.today().year
+        context['this_month'] = datetime.now(app_timezone).date().month
+        context['this_year'] = datetime.now(app_timezone).date().year
         events_key = 'upcoming_events'
 
-        upcoming_dates = Event.objects.filter(start_time__gt=date.today())
+        upcoming_dates = Event.objects.filter(start_time__gt=datetime.now(app_timezone).date())
 
         current_year = self.request.GET.get('year')
         current_month = self.request.GET.get('month')

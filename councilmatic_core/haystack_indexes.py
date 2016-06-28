@@ -2,6 +2,10 @@ from councilmatic_core.models import Bill
 from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
 
+# XXX: is it OK to link to Django settings in haystack_indexes.py ?
+from django.conf import settings
+import pytz
+app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 class BillIndex(indexes.SearchIndex):
 
@@ -51,7 +55,7 @@ class BillIndex(indexes.SearchIndex):
     def prepare_last_action_date(self, obj):
         from datetime import datetime, timedelta
         if not obj.last_action_date:
-            return datetime.now() - timedelta(days=36500)
+            return datetime.now().replace(tzinfo=app_timezone) - timedelta(days=36500)
         return obj.last_action_date
 
     def prepare_inferred_status(self, obj):
