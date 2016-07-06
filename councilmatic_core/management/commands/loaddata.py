@@ -940,11 +940,26 @@ class Command(BaseCommand):
             #     print('         adding related bill: %s' %related_bill.identifier)
 
     def load_eventdocument(self, document_json, event):
+        
+        try:
+            doc_obj, created = Document.objects.get_or_create(
+                note=document_json['note'],
+                url=document_json['links'][0]['url']
+            )
+        except Document.MultipleObjectsReturned:
+            documents = Document.objects.filter(
+                note=document_json['note'],
+                url=document_json['links'][0]['url']
+            )
 
-        doc_obj, created = Document.objects.get_or_create(
-            note=document_json['note'],
-            url=document_json['links'][0]['url'],
-        )
+            for document in documents[1:]:
+                document.delete()
+            
+            doc_obj = Document.objects.get(
+                note=document_json['note'],
+                url=document_json['links'][0]['url']
+            )
+            created = False
 
         obj, created = EventDocument.objects.get_or_create(
             event=event,
