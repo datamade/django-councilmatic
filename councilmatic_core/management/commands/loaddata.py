@@ -156,44 +156,23 @@ class Command(BaseCommand):
         if page_json['sources']:
             source_url = page_json['sources'][0]['url']
 
-        if parent:
-            try:
-                org_obj, created = Organization.objects.get_or_create(
-                    ocd_id=organization_ocd_id,
-                    name=page_json['name'],
-                    classification=page_json['classification'],
-                    source_url=source_url,
-                    slug=slugify(page_json['name']),
-                    _parent=parent,
-                )
-            except IntegrityError:
-                ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
-                org_obj, created = Organization.objects.get_or_create(
-                    ocd_id=organization_ocd_id,
-                    name=page_json['name'],
-                    classification=page_json['classification'],
-                    source_url=source_url,
-                    slug=slugify(page_json['name']) + ocd_id_part,
-                    _parent=parent,
-                )
-        else:
-            try:
-                org_obj, created = Organization.objects.get_or_create(
-                    ocd_id=organization_ocd_id,
-                    name=page_json['name'],
-                    classification=page_json['classification'],
-                    source_url=source_url,
-                    slug=slugify(page_json['name']),
-                )
-            except IntegrityError:
-                ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
-                org_obj, created = Organization.objects.get_or_create(
-                    ocd_id=organization_ocd_id,
-                    name=page_json['name'],
-                    classification=page_json['classification'],
-                    source_url=source_url,
-                    slug=slugify(page_json['name']) + ocd_id_part,
-                )
+        org_obj, created = Organization.objects.get_or_create(
+            ocd_id=organization_ocd_id,
+            name=page_json['name']
+        )
+        
+        org_obj.classification = page_json['classification']
+        org_obj.source_url = source_url
+        org_obj._parent = parent
+        org_obj.slug = slugify(page_json['name'])
+
+        try:
+            org_obj.save()
+        except IntegrityError:
+            # Slug must be unique
+            ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
+            org_obj.slug = slugify(page_json['name']) + ocd_id_part
+            org_obj.save()
 
         # if created and DEBUG:
         #     print('   adding organization: %s' % org_obj.name )
