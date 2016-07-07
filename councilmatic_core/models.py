@@ -133,14 +133,14 @@ class Person(models.Model):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
-            return None
+            return []
 
     @property
     def member_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
-            return None
+            return []
 
 
 class Bill(models.Model):
@@ -220,7 +220,7 @@ class Bill(models.Model):
         """
         returns all actions ordered by date in descending order
         """
-        return self.actions.all().order_by('-order') if self.actions.all() else None
+        return self.actions.all().order_by('-order')
     
     @property
     def current_action(self):
@@ -279,7 +279,7 @@ class Bill(models.Model):
 
             return list(orgs)
         else:
-            return None
+            return []
 
     @property
     def topics(self):
@@ -288,7 +288,7 @@ class Bill(models.Model):
 
         override this in custom subclass for richer topic logic
         """
-        return None
+        return []
 
     @property
     def addresses(self):
@@ -400,7 +400,7 @@ class Organization(models.Model):
     def recent_activity(self):
         # setting arbitrary max of 300 b/c otherwise page will take forever to
         # load
-        return self.actions.order_by('-date', '-_bill__identifier', '-order')[:300] if self.actions.all() else None
+        return self.actions.order_by('-date', '-_bill__identifier', '-order')[:300]
 
     @property
     def recent_events(self):
@@ -427,14 +427,14 @@ class Organization(models.Model):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
-            return None
+            return []
 
     @property
     def non_chair_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
-            return None
+            return []
 
     @property
     def link_html(self):
