@@ -433,6 +433,6 @@ def flush(request, flush_key):
 
     return redirect('index')
 
-
+@xframe_options_exempt
 def pdfviewer(request):
     return render(request, 'councilmatic_core/pdfviewer.html')
