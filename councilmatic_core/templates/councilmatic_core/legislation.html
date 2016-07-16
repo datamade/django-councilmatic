@@ -263,12 +263,13 @@
 
     <script type="application/ld+json">
     {
-      "@context": "http://schema.org",
-      "@type": "CreativeWork",
-      "author": "{{ CITY_COUNCIL_NAME }}",
-      "name": "{{ legislation.friendly_name }}",
-      "alternateName": "{{ legislation.identifier }}",
-      "description": "{{ legislation.description }}"
+    "@context": "http://schema.org",
+    "@type": "CreativeWork",
+    "sourceOrganization": "{{ CITY_COUNCIL_NAME }}",
+    "name": "{{ legislation.friendly_name }}",
+    "alternateName": ["{{ legislation.identifier }}", "{{ legislation.identifier.split|join:'' }}"],
+    {% if actions %}"datePublished": "{{actions.0.date|date:'Y-m-d'}}", {% endif %}
+    "description": "{{ legislation.description }}"
     }
     </script>
 
