@@ -448,6 +448,24 @@ class Organization(models.Model):
         else:
             return self.name
 
+    @property
+    def controlled_bills(self):
+        cb = Bill.objects.raw("SELECT * FROM councilmatic_core_bill "
+                              "WHERE id "
+                              "IN (SELECT bill_id "
+                              "    FROM (SELECT DISTINCT ON (bill_id) *"
+                              "          FROM councilmatic_core_action "
+                              "          ORDER BY bill_id, -\"order\") AS last_action "
+                              "    INNER JOIN councilmatic_core_actionrelatedentity AS related"
+                              "    ON last_action.id = related.action_id "
+                              "    WHERE last_action.classification IN ('committee-referral', "
+                              "                                         'committee-failure') "
+                              "    AND organization_ocd_id = %s)"
+                              "ORDER BY last_action_date",
+                              (self.ocd_id,))
+        return cb
+
+
 
 class Action(models.Model):
     date = models.DateTimeField(default=None)

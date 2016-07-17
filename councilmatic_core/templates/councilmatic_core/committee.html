@@ -84,7 +84,46 @@
                 {% endfor %}
                 <a href="" id="more-events"><i class="fa fa-fw fa-chevron-down"></i>Show more</a>
                 <a href="" id="fewer-events"><i class="fa fa-fw fa-chevron-up"></i>Show fewer</a>
-            {% endif %}
+	    {% endif %}
+
+		<hr />
+
+		<h4>
+		    <i class='fa fa-fw fa-list-ul'></i> Legislation in Committee
+                </h4>
+
+            <div class="table-responsive">
+                <table class='table' id='committee-actions'>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Legislation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bill in committee.controlled_bills %}
+                            <tr>
+                                <td class='nowrap'>
+                                    <p class="text-muted small no-pad-bottom">
+                                        {{bill.last_action_date|date:'n/d/Y'}}
+                                    </p>
+                                </td>
+                                <td>
+                                    <p class="small no-pad-bottom">
+                                        <a href="/legislation/{{bill.slug}}/">{{bill.friendly_name}}</a>
+                                    </p>
+                                    <p class="small no-pad-bottom">
+                                        {{bill.description | short_blurb}}
+                                    </p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+		    </tbody>
+		</table>
+	    </div>
+
+
+		
 
             <hr />
             <h4><i class='fa fa-fw fa-group'></i> Committee Members ({{ committee.memberships.all|length }})</h4>
