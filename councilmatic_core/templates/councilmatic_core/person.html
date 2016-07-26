@@ -31,7 +31,7 @@
             <p class="small">
                 {% if person.email %}
                     <i class='fa fa-fw fa-envelope-o'></i>
-                    <a href="{{person.email}}">{{person.email | strip_mailto}}</a>
+                    <a href="mailto:{{person.email}}">{{person.email | strip_mailto}}</a>
                 {% endif %}
             </p>
             <p class="small">
@@ -71,7 +71,7 @@
                     <p class="small">
                         {% if person.email %}
                             <i class='fa fa-fw fa-envelope-o'></i>
-                            <a href="{{person.email}}">{{person.email | strip_mailto}}</a>
+                            <a href="mailto:{{person.email}}">{{person.email | strip_mailto}}</a>
                         {% endif %}
                     </p>
                     <p class="small">
