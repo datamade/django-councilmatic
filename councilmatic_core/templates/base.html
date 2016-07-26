@@ -33,9 +33,9 @@
 		<li>
 			<i>{{request.user.email}}</i>
 		</li>
-			<li>
-				<a href="/account/subscriptions">Manage Alerts</a>
-			</li>
+		<li>
+			<a href="/account/subscriptions">Manage Alerts</a>
+		</li>
 		{% endif %}
                 <li>
                     <a href="/about/">About</a>
@@ -59,7 +59,7 @@
 		{% endif %}
 		{% if USING_NOTIFICATIONS and not request.user.is_authenticated %}
 		<li>
-			<a href="/login/">Login</a>
+			<a href="/login/">Login/Sign Up</a>
 		</li>
 		{% endif %}
             </ul>

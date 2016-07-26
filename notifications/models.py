@@ -5,30 +5,26 @@ from councilmatic_core.models import Bill, Organization, Person
 
 from django.contrib.postgres.fields import JSONField
 
-# Create your models here.
+
+# XXX: Consider having some global notifications configuration model/data such as a flag for NOT sending notifications (e.g. if you need to drop and reload the whole OCD dataset)
 
 class Subscription(models.Model):
     # Each Subscription will have:
     # - A user ID
-    # - A type (?) of subscription:
-    #    1) recent sponsorships by a committee member (need the committee member slug/id)
-    #    2) recent actions taken by a committee (need the committee slug/id)
-    #    3) recent events for a committee (need the committee slug/id)
-    #    4) recent legislation for a given faceted search (need to store that search string)
-    #    5) actions on individual bills (need the bill slug/id)
+    # - A type of subscription:
+    #    1) PersonSubscription: recent sponsorships by a person
+    #    2) CommitteeActionSubscription: recent actions taken by a committee
+    #    3) CommitteeEventSubscription: recent events for a committee
+    #    4) BillSearchSubscription: recent legislation for a given faceted search
+    #    5) BillActionSubscription: actions on individual bills
+    #    6) EventsSubscription: all events (e.g. https://nyc.councilmatic.org/events/ )
 
     user = models.ForeignKey(User, related_name='%(class)ss', db_column='user_id')    
     last_datetime_updated = models.DateTimeField(auto_now=True) #XXX
 
-    #def fire_notification(self):
-    #    pass
-    #def get_(self):
-    #    pass
-    
     # Make this an abstract base class
     class Meta:
-        abstract = True
-    
+        abstract = True    
     pass
 
 
@@ -43,9 +39,13 @@ class CommitteeEventSubscription(Subscription):
     committee = models.ForeignKey(Organization, related_name = 'subscriptions_events')
     
 class BillSearchSubscription(Subscription):
-    search_term = models.CharField(max_length=256) # string model
-    search_facets = JSONField() # XXX
+    search_term = models.CharField(max_length=256) # string model # XXX TODO: add an index using (automatic) migrations
+    search_facets = JSONField() # XXX TODO: Add "GIN" index using manual RunSQL migration (http://michael.otacoo.com/postgresql-2/postgres-9-4-feature-highlight-indexing-jsonb/)
     
 class BillActionSubscription(Subscription):
     bill = models.ForeignKey(Bill, related_name = 'subscriptions')
 
+class EventsSubscription(Subscription):
+    # This subscribes to all recent/upcoming events as per https://github.com/datamade/nyc-councilmatic/issues/175
+    # XXX: not implemented yet
+    pass

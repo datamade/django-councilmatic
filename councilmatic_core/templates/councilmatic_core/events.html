@@ -39,7 +39,7 @@
         <div class="col-sm-8 no-pad-mobile">
             {% if not show_upcoming %}
                 {% if month_events %}
-                    <h2>{{ CITY_VOCAB.EVENTS }}: {{first_date | date:"F Y"}}</h2>
+                    <h2>{{ CITY_VOCAB.EVENTS }}: {{ this_start_date | date:"F Y"}}</h2> <!-- XXX: this 'this_start_date' stuff appears not to work at e.g. https://nyc.councilmatic.org/events/ -->
                     <hr />
 
                     {% for date, event_list in month_events %}
@@ -50,9 +50,15 @@
 
                 {% endif %}
 
-            {% else %}
+	    {% else %}
+		   <small>
+			   <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+		   </small>
+		    
                 {% if upcoming_events %}
-                    <h2>Upcoming {{ CITY_VOCAB.EVENTS }}</h2>
+                    <h2><span>Upcoming {{ CITY_VOCAB.EVENTS }}</span>
+			    <br class="non-desktop-only"/>			    
+		    </h2>
                     <hr/>
                     {% for date, event_list in upcoming_events %}
                         {% include "partials/event_day.html" %}

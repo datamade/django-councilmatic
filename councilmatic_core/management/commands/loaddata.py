@@ -120,17 +120,15 @@ class Command(BaseCommand):
                 updated_events_ids = self.grab_events(delete=options['delete'])
 
             print ("calling requests.post()")
+            update_since_iso = self.update_since.isoformat()
             requests.post("http://" +
                           settings.BASE_HOSTNAME +
                           '/notification_loaddata',
-                          {'updated_orgs_ids':json.dumps(updated_orgs_ids),
+                          {'update_since':json.dumps(update_since_iso),
+                           'updated_orgs_ids':json.dumps(updated_orgs_ids),
                            'updated_people_ids':json.dumps(updated_people_ids),
                            'updated_bills_ids':json.dumps(updated_bills_ids),
-                           'updated_events_ids':json.dumps(updated_events_ids)})
-                          
-
-                
-            # XXX mcc: fire notification here instead of per bill (as below)
+                           'updated_events_ids':json.dumps(updated_events_ids),})
 
             print("\ndone!", datetime.datetime.now().replace(tzinfo=app_timezone))
 
@@ -349,6 +347,9 @@ class Command(BaseCommand):
             query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
 
         # grab all legislative sessions
+        #   - If there are no ocd_updated_at values, then we are starting from scratch.
+        #   - If the user does specify an 'update_since' value, then that is our beginning point, and we look for any bills
+        # which have an 'updated_at' value >= our 'update_since' date.
         if self.update_since is None:
             max_updated = Bill.objects.all().aggregate(
                 Max('ocd_updated_at'))['ocd_updated_at__max']
@@ -364,6 +365,11 @@ class Command(BaseCommand):
         print('grabbing bills since', query_params['updated_at__gte'])
 
         search_url = '{}/bills/'.format(base_url)
+        #print("grab_bills() search_url=",search_url, "params=",query_params)
+        #qp_str = search_url
+        #for qp in query_params.items():
+        #    qp_str += '&%s=%s' % (qp[0], qp[1])
+        #print(qp_str)
         search_results = requests.get(search_url, params=query_params)
 
         page_json = search_results.json()
@@ -376,7 +382,7 @@ class Command(BaseCommand):
             result_page = requests.get(search_url, params=query_params)
 
             for result in result_page.json()['results']:
-
+                #print("======================")
                 bill_url = '{base}/{bill_id}/'.format(
                     base=base_url, bill_id=result['id'])
                 print (bill_url)
@@ -429,8 +435,8 @@ class Command(BaseCommand):
         #print("grab_bill(): [page_json], [leg_session_obj]")
         #pp.pprint(page_json)
         #pp.pprint(leg_session_obj)
-
         #import pdb; pdb.set_trace()
+        #print ("page_json is ", page_json)
         
         from_org = Organization.objects.get(
             ocd_id=page_json['from_organization']['id'])
@@ -499,31 +505,24 @@ class Command(BaseCommand):
             obj = Bill.objects.get(ocd_id=bill_id)
             print ("grab_bill: got bill ", obj.id)
 
-            # XXX mcc: if the updated_at is the same then don't update
-            updated_at = date_parser.parse(page_json['updated_at'])
-            if (obj.ocd_updated_at <= updated_at):
-                print ("obj.ocd_updated_at='%s' <= '%s'" % (str(obj.ocd_updated_at), str(updated_at)))
-                updated = False
-            else:
-                obj.ocd_created_at = page_json['created_at']
-                #print ("obj.ocd_updated_at = ", obj.ocd_updated_at.isoformat(),
-                #       "page_json[\'updated_at\']=", page_json['updated_at'])
-                obj.ocd_updated_at = page_json['updated_at']
-                obj.description = page_json['title']
-                obj.identifier = page_json['identifier']
-                obj.classification = page_json['classification'][0]
-                obj.source_url = source_url
-                obj.source_note = page_json['sources'][0]['note']
-                obj._from_organization = from_org
-                obj.full_text = full_text
-                obj.ocr_full_text = ocr_full_text
-                obj.abstract = abstract
-                obj._legislative_session = leg_session_obj
-                obj.bill_type = bill_type
-                obj.subject = subject
+            # XXX: why do the search results from the OCD not include updated_at (which we are searching with??)
+            obj.ocd_created_at = page_json['created_at']
+            obj.ocd_updated_at = page_json['updated_at']
+            obj.description = page_json['title']
+            obj.identifier = page_json['identifier']
+            obj.classification = page_json['classification'][0]
+            obj.source_url = source_url
+            obj.source_note = page_json['sources'][0]['note']
+            obj._from_organization = from_org
+            obj.full_text = full_text
+            obj.ocr_full_text = ocr_full_text
+            obj.abstract = abstract
+            obj._legislative_session = leg_session_obj
+            obj.bill_type = bill_type
+            obj.subject = subject
                 
-                obj.save()
-                updated = True
+            obj.save()
+            updated = True
 
             if DEBUG:
                 print('\u270E', end=' ', flush=True)
@@ -867,7 +866,6 @@ class Command(BaseCommand):
             #     print('      adding membership: %s' % obj.role)
 
     def grab_events(self, delete=False):
-
         print("\n\nLOADING EVENTS", datetime.datetime.now().replace(tzinfo=app_timezone))
         #import pdb; pdb.set_trace()
         if delete:

@@ -14,11 +14,10 @@
 			    <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>			    
                     </small>
 		    {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-		    <!-- XXX mcc check to see if user already is subscribed to this -->
-		    {% if request.user.billactionsubscription_subscriptions.first %}
-		    <small><a href="unsubscribe/">[REMOVE ALERT]</a></small>
+		    {% if user_subscribed %}
+		    <small><a href="#" id="billSubscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a></small>
 		    {% else %}
-		    <small><a href="subscribe/">[CREATE ALERT]</a></small>
+		    <small><a href="#" id="billSubscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a></small>
 		    {% endif %}
 		    {% endif %}
                 </h1>
@@ -288,6 +287,37 @@
     <script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
     <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
 
+    <script>
+    $(document).ready(function() {
+	    $("#billSubscribe").click(function() {
+		    if ($(this).hasClass('createSubscription')) {
+			    posturl = "/legislation/" + "{{legislation.slug}}" + "/subscribe/";
+			    $.post(posturl, function(data) {
+			    }).error(function() {
+				    console.log("Error subscribing to  interest {{legislation.slug}}");
+			    });
+			    $(this).removeClass('createSubscription');
+			    $(this).addClass('removeSubscription');
+			    $(this).text('[REMOVE SUBSCRIPTION]');
+		    } else if ($(this).hasClass('removeSubscription')) {
+			    posturl = "/legislation/" + "{{legislation.slug}}" + "/unsubscribe/";
+			    $.post(posturl, function(data) {
+			    }).error(function() {
+				    console.log("Error unsubscribing from  interest {{legislation.slug}}");
+			    });
+			    $(this).removeClass('removeSubscription');
+			    $(this).addClass('createSubscription');
+			    $(this).text('[CREATE SUBSCRIPTION]');
+		    }
+		    else {
+			    alert("ID #billSubscribe has neither createSubscription or removeSubscription class");
+		    }
+	    }
+	)});	    
+	 
+    </script>
+	    
+    
     <script>
 
         $("#committee-actions").DataTable({

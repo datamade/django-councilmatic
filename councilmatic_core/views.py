@@ -17,8 +17,10 @@ import urllib
 import pytz
 import re
 import json
+from django.core.exceptions import ObjectDoesNotExist
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
+
 
 
 class CouncilmaticFacetedSearchView(FacetedSearchView):
@@ -49,6 +51,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
                 except KeyError:
                     selected_facets[k] = [v]
 
+        print ("CouncilmaticFacetedSearchView(): selected_facets = ", selected_facets)
         extra['selected_facets'] = selected_facets
 
         #print ("CouncilmaticFacetedSearchView(): selected_facets=", selected_facets)
@@ -57,6 +60,18 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
             p.current_member.person.name: p.label for p in Post.objects.all() if p.current_member
         }
 
+        extra['user_subscribed'] = False            
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            extra['user'] = user
+            # check if person of interest is subscribed to by user
+            try:
+                bss = user.billsearchsubscriptions.get(user=user, search_facets__exact=selected_facets)
+                print ("MATCH FOUND!!")
+                extra['user_subscribed'] = True
+            except ObjectDoesNotExist as e:
+                print ("MATCH NOT FOUND!")
+                print (e)
         return extra
 
 
@@ -224,6 +239,19 @@ class BillDetailView(DetailView):
                                     settings.SITE_META['site_name'])
         context['seo'] = seo
 
+        context['user_subscribed'] = False            
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            context['user'] = user
+            # check if person of interest is subscribed to by user
+            for bas in user.billactionsubscriptions.all():
+                print ("looking at bill action subscription ", bas.bill, "bill=",bill)
+                if bill == bas.bill:
+                    context['user_subscribed'] = True
+                    break
+
+        
+        
         return context
 
 
@@ -411,6 +439,7 @@ class EventsView(ListView):
             context['show_upcoming'] = False
             context['this_month'] = int(current_month)
             context['this_year'] = int(current_year)
+            context['this_start_date']= datetime(year=int(current_year), month=int(current_month), day=1)
 
         upcoming_dates = upcoming_dates.order_by('start_time')
 

@@ -3,6 +3,12 @@ from django.template.defaultfilters import stringfilter
 from django.utils.html import strip_entities, strip_tags
 import re
 
+from django.utils.safestring import mark_safe
+from django.core.serializers import serialize
+import json
+from django.db.models.query import QuerySet
+
+
 register = template.Library()
 
 
@@ -111,3 +117,13 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
         return s.strftime(fmt)
     else:
         return '0'
+
+# Used in subscriptions_manage.html. XXX: potential (?) site of concern for injecting JSON in search facet dicts and re-jsonifying it there
+# (From https://stackoverflow.com/questions/4698220/django-template-convert-a-python-list-into-a-javascript-object )
+# Open ticket in Django (with discussion of problematic aspects) https://code.djangoproject.com/ticket/17419
+@register.filter
+def jsonify(object):
+    if isinstance(object, QuerySet):
+        return mark_safe(serialize('json', object))
+    return mark_safe(json.dumps(object))
+jsonify.is_safe = True   

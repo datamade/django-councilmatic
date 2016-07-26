@@ -12,10 +12,18 @@
         </div>
     </div>
 
-    <div class="row-fluid">
+    <!-- XXX TODO: figure out why this "No Subscriptions" headers isn't working -->
+    <!-- 
+    {% if not person_subscriptions and not committee_event_subscriptions and not committee_event_subscriptions and not bill_action_subscriptions and not bill_search_subscriptions and not events_subscriptions %}
+     <div class="row-fluid">
+             <div class="col-sm-8 table-col">
+		     <h3>No Subscriptions Found.</h3>
+	     </div>
+     </div>
+    {% endif %}
+    -->
+     <div class="row-fluid">
         <div class="col-sm-8 table-col">
-
-
 		<h3>Person Subscriptions</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
@@ -25,24 +33,28 @@
 				<th>Name</th>
 				<th>RSS</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for subscription in person_subscriptions %}
-                            <tr>
-                             <td align="left">
-				     FOO 
-                             </td>
-			     <td>
-				     <a href="{% url 'person' subscription.person.slug %}">{{subscription.person }}</a>
-			     </td>
-			     <td>
-				     <a href="{% url 'person_feed' subscription.person.slug %}" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-			     </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+			</thead>
+			<tbody>
+				{% for subscription in person_subscriptions %}
+				<tr class="subscription"  person_id="{{subscription.person.id}}" person_slug ="{{subscription.person.slug}}">
+					<td align="left">
+						<div>
+						<input type="checkbox" class="removeButton" name="remove" style="float:left;">
+						<span style="display: none;"">&nbsp;<button class="removePersonSubscription">Remove</button></span>
+						</div>
+					</td>
+					<td>
+						<a href="{% url 'person' subscription.person.slug %}">{{subscription.person }}</a>
+					</td>
+					<td>
+						<a href="{% url 'person_feed' subscription.person.slug %}" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+					</td>
+				</tr>
+				{% endfor %}
+				</div>
+			</tbody>
+			</table>
+		</div>
 
 		<h3>Committee Action Subscriptions</h3>
 		<div class="table-responsive">
@@ -55,18 +67,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for subscription in committee_action_subscriptions %}
-                            <tr>
-                             <td align="left">
-				     FOO 
-                             </td>
-			     <td>
-				     <a href="{% url 'committee_detail' subscription.committee.slug %}">{{subscription.committee }}</a></td>
-			     <td>
-				     <a href="{% url 'committee_detail_action_feed' subscription.committee.slug %}" title="RSS feed for Actions for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-			     </td>
-			     
-				     
+                            {% for subscription in committee_action_subscriptions %}
+			    <tr class="subscription"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
+				    <td align="left">
+					    <div>
+						    <input type="checkbox" class="removeButton" name="remove" style="float:left;">
+						    <span style="display: none;"">&nbsp;<button class="removeCommitteeActionsSubscription">Remove</button></span>
+					    </div>
+				    </td>
+				    <td>
+					    <a href="{% url 'committee_detail' subscription.committee.slug %}">{{subscription.committee }}</a></td>
+				    <td>
+					    <a href="{% url 'committee_detail_action_feed' subscription.committee.slug %}" title="RSS feed for Actions for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+				    </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -85,15 +98,18 @@
                     </thead>
                     <tbody>
                         {% for subscription in committee_event_subscriptions %}
-                            <tr>
-                             <td align="left">
-				     FOO 
-                             </td>
-			     <td>
-				     <a href="{% url 'committee_detail' subscription.committee.slug %}">{{subscription.committee }}</a></td>
-			     <td>
-				     <a href="{% url 'committee_detail_events_feed' subscription.committee.slug %}" title="RSS feed for Events for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-			     </td>
+			    <tr class="subscription"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
+				    <td align="left">
+						<div>
+						<input type="checkbox" class="removeButton" name="remove" style="float:left;">
+						<span style="display: none;">&nbsp;<button class="removeCommitteeEventsSubscription">Remove</button></span>
+						</div>
+					</td>
+					<td>
+						<a href="{% url 'committee_detail' subscription.committee.slug %}">{{subscription.committee }}</a></td>
+					<td>
+						<a href="{% url 'committee_detail_events_feed' subscription.committee.slug %}" title="RSS feed for Events for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+					</td>
 			     
 				     
                             </tr>
@@ -111,17 +127,33 @@
 			<tr>
 				<th>Remove</th>
 				<th>Name</th>
+				<th>Search Facets</th>
+				<th>RSS</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for subscription in bill_search_subscriptions %}
-                            <tr>
-                             <td align="left">
-				     FOO 
-                             </td>
-			     <td>
-				     {{subscription.person }}
-			     </td>
+			    <tr class="subscription"  subscription_id="{{subscription.id}}"" search_term="{{subscription.search_term}}" search_facets='{{subscription.search_facets|jsonify}}'>
+				    <td align="left">
+					    <div>
+						    <input type="checkbox" class="removeButton" name="remove" style="float:left;">
+						    <span style="display: none;">&nbsp;<button class="removeBillSearchSubscription">Remove</button></span>
+					    </div>
+				    </td>
+				    
+				    <td>
+					    <a href="{# url 'search' subscription.search_term #}">{{subscription.search_term }}</a></td>
+				    <td>{% for key, values in subscription.search_facets.items %}
+					    <b>{{key}}</b>:
+					    {% for v in values %}
+					    {{v}}
+					    {% endfor %} <br>
+					{% endfor %}
+				    </td>
+				    
+				    <td>
+					    <a href="{# url 'councilmatic_search_feed' subscription.search_term #}" title="RSS feed for Actions for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+				    </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -136,17 +168,23 @@
 			<tr>
 				<th>Remove</th>
 				<th>Name</th>
+				<th>RSS</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for subscription in bill_action_subscriptions %}
-                            <tr>
-                             <td align="left">
-				     FOO 
-                             </td>
-			     <td>
-				     {{subscription.person }}
-			     </td>
+                            {% for subscription in bill_action_subscriptions %}
+			    <tr class="subscription"  bill_id="{{subscription.bill.id}}" bill_slug ="{{subscription.bill.slug}}">
+				    <td align="left">
+					    <div>
+						    <input type="checkbox" class="removeButton" name="remove" style="float:left;">
+						    <span style="display: none;"">&nbsp;<button class="removeBillActionsSubscription">Remove</button></span>
+					    </div>
+				    </td>
+				    <td>
+					    <a href="{% url 'bill_detail' subscription.bill.slug %}">{{subscription.bill}}</a></td>
+				    <td>
+					    <a href="{% url 'bill_detail_action_feed' subscription.bill.slug %}" title="RSS feed for Actions for {{subscription.bill.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+				    </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -165,7 +203,7 @@
                     </thead>
                     <tbody>
                         {% for subscription in committeeaction_subscriptions %}
-                            <tr>
+                            <tr subscription_id="{{subscription.id}}">
                              <td align="left">
 				     FOO 
                              </td>
@@ -180,114 +218,16 @@
 	    
 		
 		
-            <div class="table-responsive">
-                <table class='table' id='committees'>
-                    <thead>
-                        <tr>
-                            <th>Committee</th>
-                            <th>Chairperson(s)</th>
-                            <th>Members</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for committee in committees %}
-                            <tr>
-                                <td align="left">
-                                    <a href="/committee/{{committee.slug}}/">{{ committee.name | committee_topic_only }}</a>
-                                </td>
-                                <td align="left">
-                                    {% for chair in committee.chairs.all %}
-                                        {{ chair.person.link_html | safe }}<br />
-                                    {% endfor %}
-                                </td>
-                                <td>{{ committee.memberships.all | length }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if subcommittees %}
-            <h2>Subcommittees</h2>
-            <div class="table-responsive">
-                <table class='table' id='subcommittees'>
-                    <thead>
-                        <tr>
-                            <th>Subcommittee</th>
-                            <th>Chairperson(s)</th>
-                            <th>Members</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for committee in subcommittees %}
-                            {% if committee.memberships.all|length > 0 %}
-                            <tr>
-                                <td align="left">
-                                    <a href="/committee/{{committee.slug}}/">{{ committee.name | committee_topic_only}}</a>
-                                </td>
-                                <td align="left">
-                                    {% for chair in committee.chairs.all %}
-                                        {{ chair.person.link_html | safe }}<br />
-                                    {% endfor %}
-                                </td>
-                                <td>{{ committee.memberships.all | length }}</td>
-                            </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-
-
-            {% if taskforces %}
-            <h2>Task Forces</h2>
-            <div class="table-responsive">
-                <table class='table' id='taskforces'>
-                    <thead>
-                        <tr>
-                            <th>Task Force</th>
-                            <th>Chairperson(s)</th>
-                            <th>Members</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for committee in taskforces %}
-                            {% if committee.memberships.all|length > 0 %}
-                            <tr>
-                                <td>
-                                    <a href="/committee/{{committee.slug}}/">{{ committee.name }}</a>
-                                </td>
-                                <td>
-                                    {% for chair in committee.chairs.all %}
-                                        {{ chair.person.link_html | safe }}<br />
-                                    {% endfor %}
-                                </td>
-                                <td>{{ committee.memberships.all | length }}</td>
-                            </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
 
         </div>
 
 
         <div class="col-sm-4">
             <div class='well info-blurb'>
-                <h4><i class='fa fa-fw fa-info-circle'></i> What do committees do?</h4>
-                
-                {{ ABOUT_BLURBS.COMMITTEES | safe }}
+                <h4><i class='fa fa-fw fa-info-circle'></i> What are subscriptions?</h4>
 
-                {% if taskforces %}
-                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees, {{subcommittees | length }} Subcommittees and {{taskforces | length }} Task Forces.</p>
-                {% else %}
-                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees{% if subcommittees %} and {{subcommittees | length }} Subcommittees{% endif %}.</p>
-                {% endif %}
-
-                <p><a href='/about/#about-city-council'>More on how City Council works &raquo;</a></p>
+		<p>This page shows all of the various people, committees, searches, bills, and events you are subscribed to.</p>
+                <!-- XXX TODO <p><a href='/about/#about-subscriptions'>More on Councilmatic subscriptions &raquo;</a></p>-->
             </div>
         </div>
     </div>
@@ -299,6 +239,120 @@
     <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
 
     <script>
+    // remove the actual interest
+
+    function removeSubscription(container, subscriptionType) {
+	    console.log("container is "  + container);
+	    console.log(container);
+
+	    switch(subscriptionType) {
+		    /*
+		       Types of subscriptions:
+		       1) person subscription
+		       2) committee action subscriptions
+		       3) committee event subscriptions
+		       4) bill (action) subscriptions
+		       5) bill search subscriptions
+		       6) (all) events subscriptions
+		     */
+		    case "personSubscription":
+			    var person_slug = container.attr("person_slug");
+			    $.post("/person/" + person_slug + "/unsubscribe/", function(data) {
+				    console.log("Deleted interest " + person_slug);
+				    container.remove();
+			    }).error(function() {
+				    console.log("Error deleting interest " + person_slug);
+			    });
+			    break;
+		    case "committeeActionsSubscription":
+			    var committee_slug = container.attr("committee_slug");
+			    $.post("/committee/" + committee_slug + "/actions/unsubscribe/", function(data) {
+				    console.log("Deleted interest " + committee_slug);
+				    container.remove();
+			    }).error(function() {
+				    console.log("Error deleting interest " + committee_slug);
+			    });
+			    break;
+		    case "committeeEventsSubscription":
+			    var committee_slug = container.attr("committee_slug");
+			    console.log("committeeEventsSubscription: slug=" + committee_slug);
+			    
+			    $.post("/committee/" + committee_slug + "/events/unsubscribe/", function(data) {
+				    console.log("Deleted interest " + committee_slug);
+				    container.remove();
+			    }).error(function() {
+				    console.log("Error deleting interest " + committee_slug);
+			    });
+			    break;
+		    case "committeeActionsSubscription":
+			    var committee_slug = container.attr("committee_slug");
+			    $.post("/committee/" + committee_slug + "/actions/unsubscribe/", function(data) {
+				    console.log("Deleted interest " + committee_slug);
+				    container.remove();
+			    }).error(function() {
+				    console.log("Error deleting interest " + committee_slug);
+			    });
+			    break;
+		    case "billSearchSubscription":
+			    var search_id = container.attr("subscription_id");
+			    posturl = '/search_unsubscribe/' + search_id + '/';
+			    $.post(posturl).error(function() {
+				    console.log("Error unsubscribing to BillSearchSubscription ", search_id);
+			    });
+			    console.log("Deleted search");
+			    container.remove();
+			    break;
+	    }
+    }
+
+    // Add callbacks for hidden "remove" buttons
+    // 1. Person Subscriptions
+    // 2. Committee Actions Subscriptions
+    // 3. Committee Events Subscriptions
+    // 4. Bill Search Subscriptions
+    // 5. Bill Actions Subscriptions
+    // 6. Events Subscriptions
+    $("button.removePersonSubscription").click(function() {
+	    var container = $(this).parents(".subscription");
+	    removeSubscription(container, "personSubscription");
+    });
+
+    $("button.removeCommitteeActionsSubscription").click(function() {
+	    var container = $(this).parents(".subscription");
+	    removeSubscription(container, "committeeActionsSubscription");
+    });
+
+    $("button.removeCommitteeEventsSubscription").click(function() {
+	    var container = $(this).parents(".subscription");
+	    removeSubscription(container, "committeeEventsSubscription");
+    });
+
+    $("button.removeBillSearchSubscription").click(function() {
+	    var container = $(this).parents(".subscription");
+	    removeSubscription(container, "billSearchSubscription");
+    });
+
+    $("button.removeBillActionsSubscription").click(function() {
+	    var container = $(this).parents(".subscription");
+	    removeSubscription(container, "billActionsSubscription");
+    });
+
+    $("button.removeEventsSubscription").click(function() {
+	    var container = $(this).parents(".subscription");
+	    removeSubscription(container, "eventsSubscription");
+    });
+
+    $("input.removeButton").click(function() {
+	    // find the adjacent button and make it visible
+	    button = $(this).next();
+	    if ($(this).is(":checked")) {
+		    button.css("display", "block");
+	    }
+	    else {
+		    button.css("display", "none");
+	    }
+    });
+
         $("#committees").DataTable({
             "info": false,
             "searching": false,

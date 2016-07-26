@@ -17,16 +17,8 @@ urlpatterns = [
         views.CommitteeDetailView.as_view(), name='committee_detail'),
     url(r'^committee/(?P<slug>[^/]+)/events/rss/$',
         feeds.CommitteeDetailEventsFeed(), name='committee_detail_events_feed'),
-    url(r'^committee/(?P<slug>[^/]+)/events/subscribe/$',
-        notifications.views.committee_events_subscribe, name='committee_events_subscribe'),
-    url(r'^committee/(?P<slug>[^/]+)/events/unsubscribe/$',
-        notifications.views.committee_events_unsubscribe, name='committee_events_unsubscribe'),
     url(r'^committee/(?P<slug>[^/]+)/actions/rss/$',
         feeds.CommitteeDetailActionFeed(), name='committee_detail_action_feed'),
-    url(r'^committee/(?P<slug>[^/]+)/actions/subscribe/$',
-        notifications.views.committee_actions_subscribe, name='committee_actions_subscribe'),
-    url(r'^committee/(?P<slug>[^/]+)/actions/unsubscribe/$',
-        notifications.views.committee_actions_unsubscribe, name='committee_actions_unsubscribe'),
     url(r'^committee/(?P<slug>[^/]+)/widget/$',
         views.CommitteeWidgetView.as_view(), name='committee_widget'),
 
@@ -43,9 +35,11 @@ urlpatterns = [
         views.PersonWidgetView.as_view(), name='person_widget'),
 
     url(r'^events/$', views.EventsView.as_view(), name='events'),
+    url(r'^events/rss/$', feeds.EventsFeed(), name='events_feed'), 
     url(r'^event/(?P<slug>[^/]*)/$',
         views.EventDetailView.as_view(), name='event_detail'),
 
     url(r'^flush-cache/(.*)/$', views.flush, name='flush'),
     url(r'^pdfviewer/$', views.pdfviewer, name='pdfviewer'),
 ]
+

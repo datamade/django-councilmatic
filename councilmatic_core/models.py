@@ -5,6 +5,7 @@ import pytz
 from django.conf import settings
 import inspect
 import importlib
+from django.utils import timezone
 
 if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
     raise ImproperlyConfigured(
@@ -368,7 +369,7 @@ class Bill(models.Model):
     @property
     def unique_related_upcoming_events(self):
         events = [r.agenda_item.event for r in self.related_agenda_items.filter(
-            agenda_item__event__start_time__gte=datetime.now()).all()]
+            agenda_item__event__start_time__gte=timezone.now(app_timezone)).all()] # timezone fix to avoid runtime warnings re: "naive datetime"
         return list(set(events))
 
 
@@ -417,7 +418,7 @@ class Organization(models.Model):
         # need to look up event participants by name
         events = Event.objects\
                     .filter(participants__entity_type='organization', participants__entity_name=self.name)\
-                    .filter(start_time__gt=datetime.now())\
+                    .filter(start_time__gt=datetime.now(app_timezone))\
                     .order_by('start_time')\
                     .all()
         return events
@@ -653,7 +654,7 @@ class Event(models.Model):
     def next_city_council_meeting(cls):
         if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
             return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                .filter(start_time__gt=datetime.now()).order_by('start_time').first()
+                .filter(start_time__gt=datetime.now(app_timezone)).order_by('start_time').first()
         else:
             return None
 
@@ -661,13 +662,13 @@ class Event(models.Model):
     def most_recent_past_city_council_meeting(cls):
         if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
             return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                .filter(start_time__lt=datetime.now()).order_by('-start_time').first()
+                .filter(start_time__lt=datetime.now(app_timezone)).order_by('-start_time').first()
         else:
             return None
 
     @classmethod
     def upcoming_committee_meetings(cls):
-        return cls.objects.filter(start_time__gt=datetime.now())\
+        return cls.objects.filter(start_time__gt=datetime.now(app_timezone))\
                   .exclude(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
                   .order_by('start_time').all()[:3]
 

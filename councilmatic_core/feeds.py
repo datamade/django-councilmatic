@@ -5,7 +5,8 @@ from operator import attrgetter
 import urllib
 from django.contrib.syndication.views import Feed
 from django.utils.feedgenerator import Rss201rev2Feed
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
+from django.conf import settings
 
 import pytz
 import re
@@ -49,7 +50,7 @@ class CouncilmaticFacetedSearchFeed(Feed):
         return results.order_by('-last_action_date')
         
     def title(self, obj):
-        return "Search RSS" # XXX: create a nice title based on all search parameters
+        return settings.SITE_META['site_name'] + ": Search for " + self.query # XXX: create a nice title based on all search parameters
 
     def link(self, obj):
         # return the main non-RSS search URL somehow
@@ -92,7 +93,7 @@ class PersonDetailFeed(Feed):
         return o
     
     def title(self, obj):
-        return "%s: Recent Sponsored Bills" % obj.name
+        return settings.SITE_META['site_name'] + settings.CITY_VOCAB['COUNCIL_MEMBER'] + " %s: Recently Sponsored Bills" % obj.name
 
     def link(self, obj):
         # return the Councilmatic URL for the person
@@ -103,12 +104,6 @@ class PersonDetailFeed(Feed):
     def item_link(self, bill):
         # return the Councilmatic URL for the bill
         return reverse('bill_detail', args=(bill.slug,))
-
-    #def item_title(self, bill):
-    #    return bill.friendly_name
-
-    #def item_description(self, bill):
-    #    return bill.listing_description
 
     def item_pubdate(self, bill):
         return bill.last_action_date
@@ -137,7 +132,7 @@ class CommitteeDetailEventsFeed(Feed):
         return o
     
     def title(self, obj):
-        return obj.name + ": Recent Events"
+        return settings.SITE_META['site_name'] + ": " + obj.name + ": Recent Events"
 
     def link(self, obj):
         # return the Councilmatic URL for the committee
@@ -175,7 +170,7 @@ class CommitteeDetailActionFeed(Feed):
         return o
     
     def title(self, obj):
-        return obj.name + ": Recent Actions"
+        return settings.SITE_META['site_name'] + ": " + obj.name + ": Recent Actions"
 
     def link(self, obj):
         # return the Councilmatic URL for the committee
@@ -212,7 +207,7 @@ class BillDetailActionFeed(Feed):
         return o
     
     def title(self, obj):
-        return obj.friendly_name + ": Recent Actions"
+        return settings.SITE_META['site_name'] + ": " + obj.friendly_name + ": Recent Actions"
 
     def link(self, obj):
         # return the Councilmatic URL for the committee
@@ -232,3 +227,38 @@ class BillDetailActionFeed(Feed):
         actions = obj.ordered_actions[:self.NUM_RECENT_BILL_ACTIONS]
         actions_list =  list(actions)
         return actions_list
+
+
+class EventsFeed(Feed):
+    """
+    Return the last 20 announced events as per, e.g., https://nyc.councilmatic.org/events/
+    """
+    title_template = 'feeds/events_item_title.html'
+    description_template = 'feeds/events_item_description.html'
+    feed_type = Rss201rev2Feed
+    NUM_RECENT_EVENTS = 20
+
+    
+    #def get_object(self, request):
+    #    o = Event.objects.all()
+    #    return o
+
+    title = settings.CITY_COUNCIL_NAME + " " + "Recent Events"
+    link = reverse_lazy('events')
+    description = "Recently announced events."
+    
+    def item_link(self, event):
+        # return the Councilmatic URL for the event
+        return reverse('event_detail', args=(event.slug,))
+
+    def item_pubdate(self, event):
+        return event.start_time
+    
+    def description(self, obj):
+        return "Events"
+
+    def items(self, obj):
+        events =  Event.objects.all()[:self.NUM_RECENT_EVENTS]
+        levents =  list(events)
+        return levents
+
