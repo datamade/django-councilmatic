@@ -273,7 +273,7 @@ def worker_handle_notification_loaddata(update_since, updated_orgs_ids, updated_
     bill_search_updates = [] # list of new bills now showing up on a search since subscriptions' last_datetime_updated
     bill_action_updates = [] # list of actions taken on a bill since subscriptions' last_datetime_updated
     events_updates = [] # list of events since subscriptions' last_datetime_updated
-    
+
     # Get all users with some subscriptions.
     users = User.objects.all()
     for user in users:
@@ -288,18 +288,60 @@ def worker_handle_notification_loaddata(update_since, updated_orgs_ids, updated_
             b = ba_subscription.bill
             # Look for recent actions which are more recent than the last time we updated
             actions = b.actions.order_by('-date')
-            #print ("actions are: ")
             for a in actions:
-                #print (a.date)
                 if (a.date < ba_subscription.last_datetime_updated):
-                    #print ("action date", a.date, "is < than", ba_subscription.last_datetime_updated)
                     pass
                 else:
-                    #print ("FOUND: action date", a.date, "is >= than", ba_subscription.last_datetime_updated)
                     bill_action_updates.append((b, a)) # add a (Bill, Action) tuple to the list
 
-    # XXXXXX TODO: handle 1) person updates, 2) committee action updates, 3) committee event updates, 4) bill search updates, 5) all event updates
-                    
+        # XXXXXX TODO: handle 1) person updates, 2) committee action updates, 3) committee event updates, 4) bill search updates, 5) all event updates
+
+        # For person updates, we want to hear about any new sponsorships... so look for bills where the most recent date is
+        # also one with an Introduction. 
+        person_subscriptions = PersonSubscription.objects.filter(user=user)
+
+        # find all bills who have this person as a sponsor. 
+        for p_subscription in person_subscriptions:
+            p = p_subscription.person
+            bills=Bill.objects.filter(bill_id__in=updated_bills_ids, sponsorships___person__id = p.id)
+            for bill in bills:
+                actions = bill.actions.all()
+                # get the most recent date of all actions
+                most_recent_date = max([a.date for a in actions])
+                # given this, did any introductions occur on this date?
+                for a in actions:
+                    if (a.date == most_recent_date and a.classification == 'introduction'):
+                        # Found bill with introduction on most recent date, so *probably* a new bill (but could still be an updated
+                        # bill with no progress since the introduction date).
+                        # XXX: We may be able to look at ocd_created_at vs. ocd_updated_at to disambiguate the above!
+                        person_updates.append((p, bill))
+                        break
+        
+        committee_actions_subscriptions = CommitteeActionSubscription.objects.filter(user=user)
+        c = ca_subscription.committee
+        for ca_subscription in committee_actions_subscriptions:
+            bills=Bill.objects.filter(
+                Q(bill_id__in=updated_bills_ids),
+                Q(actions__organization = c) | Q(actions__related_organization = c)
+                ) 
+            # given this, did any actions with this committee occur on the most recent date?
+            for bill in bills:            
+                actions = bill.actions.all()
+                # get the most recent date of all actions
+                most_recent_date = max([a.date for a in actions])
+                for a in actions:
+                    if (a.date == most_recent_date and (a.organization == c or a.related_organization == c)):
+                        # Found action with this organization on most recent date, so *probably* a new action related to this org
+                        # (but could still be an updated bill with no progress since the last action date)
+                        # XXX: We may be able to look at ocd_created_at vs. ocd_updated_at to disambiguate the above!
+                        committee_action_updates.append((bill, a, c))
+                        break
+           
+        committee_event_subscriptions = CommitteeEventSubscription.objects.filter(user=user)
+        billsearch_subscriptions = BillSearchSubscription.objects.filter(user=user)
+        events_subscriptions = EventsSubscription.objects.filter(user=user)
+
+                
     worker_send_email(user, person_updates, committee_action_updates, committee_event_updates, bill_search_updates, bill_action_updates, events_updates)
                     
 # Sends a templated email based on the updates, similar to the 'Manage Subscriptions' page
