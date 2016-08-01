@@ -31,6 +31,7 @@
         <div class="col-sm-8 no-pad-mobile">
             <br/>
 
+	    {% block description %}
             {% if legislation.abstract %}
                 <p class="small text-muted">
                     <i>{{ legislation.description }} </i>
@@ -44,6 +45,7 @@
                     {{ legislation.description }}
                 </p>
             {% endif %}
+            {% endblock %}
 
             <p class="small">
                 <a href='{{legislation.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
