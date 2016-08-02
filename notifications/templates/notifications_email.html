@@ -14,25 +14,28 @@
     <div class="row-fluid">
         <div class="col-sm-12">
             <br class="non-mobile-only"/>
-            <h1>Subscriptions</h1>
+            <h1>Notifications</h1>
             <hr />
         </div>
     </div>
 
+    {% if bill_action_updates.first %}
+    
      <div class="row-fluid">
         <div class="col-sm-8 table-col">
-		<h3>Bill Action Subscriptions</h3>
+		<h3>Bill Action Notifications</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
 			<tr>
 				<th>Bill</th>
 				<th>Action</th>
+				<th>RSS</th>
                         </tr>
                     </thead>
                     <tbody>
                             {% for bill, action in bill_action_updates %}
-			    <tr class="update"  bill_id="{{bill.id}}" bill_slug ="{{bill.slug}}">
+			    <tr>
 				    <td align="left">
 					    <div>
 						    {{bill.slug}}
@@ -50,11 +53,79 @@
             </div>
 
         </div>
+     {% endif %}
+	
+     <div class="row-fluid">
+        <div class="col-sm-8 table-col">
+		<h3>Person Notifications</h3>
+		<div class="table-responsive">
+			<table class='table' id='subscriptions'>
+			<thead>
+			<tr>
+				<th>Person</th>
+				<th>Bill Introduced</th>
+				<th>RSS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            {% for person, bill in person_updates %}
+			    <tr>
+				    <td align="left">
+					    <div>
+						    <a href="{{SITE_URL}}{% url 'person' person.slug %}">{{person.name}}
+					    </div>
+				    </td>
+				    <td>
+					    <a href="{{SITE_URL}}{% url 'bill_detail' bill.slug %}">{{bill.slug}}</a>: {{bill.description}}
+				    </td>
+				    <td>
+					    <a href="{{SITE_URL}}{% url 'bill_detail_action_feed' bill.slug %}" title="RSS feed for Actions for {{bill.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+				    </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
+        </div>
+
+     <div class="row-fluid">
+        <div class="col-sm-8 table-col">
+		<h3>Committee Action Notifications</h3>
+		<div class="table-responsive">
+			<table class='table' id='subscriptions'>
+			<thead>
+			<tr>
+				<th>Committee</th>
+				<th>Bill/Action</th>
+				<th>RSS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            {% for committee, bill, action in committee_action_updates %}
+			    <tr>
+				    <td align="left">
+					    <div>
+						    {{commitee.name}}
+					    </div>
+				    </td>
+				    <td>
+					    <a href="{{SITE_URL}}{% url 'bill_detail' bill.slug %}">{{action.date|date:"SHORT_DATE_FORMAT"}}: {{action.description}}</a></td>
+				    <td>
+					    <a href="{{SITE_URL}}{% url 'bill_detail_action_feed' bill.slug %}" title="RSS feed for Actions for {{bill.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+				    </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+	
 
         <div class="col-sm-4">
             <div class='well info-blurb'>
-                <h4><i class='fa fa-fw fa-info-circle'></i> What are subscriptions?</h4>
+                <h4><i class='fa fa-fw fa-info-circle'></i> What are subscriptions/notifications?</h4>
 
 		<p>This page shows all of the recent notifications for the various people, committees, searches, bills, and events you are subscribed to.</p>
             </div>

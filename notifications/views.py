@@ -12,7 +12,7 @@ from django.template.loader import get_template
 from django.template import Context
 
 from councilmatic_core.models import Bill, Organization, Person
-from notifications.models import PersonSubscription, BillActionSubscription, CommitteeActionSubscription, CommitteeEventSubscription, BillSearchSubscription
+from notifications.models import PersonSubscription, BillActionSubscription, CommitteeActionSubscription, CommitteeEventSubscription, BillSearchSubscription, EventsSubscription
 from django.core.exceptions import ObjectDoesNotExist
 #from councilmatic.settings import * # XXX seems like I should definitely not be importing "from councilmatic. " over in django-councilmatic
 
@@ -22,6 +22,8 @@ from redis import Redis
 
 import django_rq
 import json
+import datetime
+import pytz
 
 from django.core.mail import send_mail
 from django.core.cache import cache
@@ -33,6 +35,8 @@ from django.contrib.auth.models import User # XXX TODO: migrate to custom User m
 
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
+
+app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 # These are the main two redis queues: notifications_queues is woken up when a loaddata run completes;
 # notifications_emails_queue is woken up when an email should be sent to a notification subscriber.
@@ -299,27 +303,33 @@ def worker_handle_notification_loaddata(update_since, updated_orgs_ids, updated_
         # For person updates, we want to hear about any new sponsorships... so look for bills where the most recent date is
         # also one with an Introduction. 
         person_subscriptions = PersonSubscription.objects.filter(user=user)
-
         # find all bills who have this person as a sponsor. 
         for p_subscription in person_subscriptions:
             p = p_subscription.person
-            bills=Bill.objects.filter(bill_id__in=updated_bills_ids, sponsorships___person__id = p.id)
+            bills=Bill.objects.filter(id__in=updated_bills_ids, sponsorships___person__id = p.id)
             for bill in bills:
                 actions = bill.actions.all()
                 # get the most recent date of all actions
                 most_recent_date = max([a.date for a in actions])
+                print ("most_recent_date = ", most_recent_date)
+                if (most_recent_date < update_since):
+                    # we can ignore this one as the most recent action date is before our period of updating, therefore there could
+                    # not have been an introduction in the most recent update
+                    print ("most_recent_date (", most_recent_date, ") < update_since(", update_since, ")")
+                    continue
                 # given this, did any introductions occur on this date?
                 for a in actions:
                     if (a.date == most_recent_date and a.classification == 'introduction'):
                         # Found bill with introduction on most recent date, so *probably* a new bill (but could still be an updated
                         # bill with no progress since the introduction date).
-                        # XXX: We may be able to look at ocd_created_at vs. ocd_updated_at to disambiguate the above!
+                        # XXX: We may be able to look at ocd_created_at vs. ocd_updated_at to disambiguate the above..?
+                        print ("found a recent introduction, and for bill id ", bill.id, " we have bill.ocd_created_at=", bill.ocd_created_at, "and bill.ocd_updated_at=", bill.ocd_updated_at)
                         person_updates.append((p, bill))
                         break
         
         committee_actions_subscriptions = CommitteeActionSubscription.objects.filter(user=user)
-        c = ca_subscription.committee
         for ca_subscription in committee_actions_subscriptions:
+            c = ca_subscription.committee
             bills=Bill.objects.filter(
                 Q(bill_id__in=updated_bills_ids),
                 Q(actions__organization = c) | Q(actions__related_organization = c)
@@ -334,7 +344,8 @@ def worker_handle_notification_loaddata(update_since, updated_orgs_ids, updated_
                         # Found action with this organization on most recent date, so *probably* a new action related to this org
                         # (but could still be an updated bill with no progress since the last action date)
                         # XXX: We may be able to look at ocd_created_at vs. ocd_updated_at to disambiguate the above!
-                        committee_action_updates.append((bill, a, c))
+                        print ("found a recent bill action, and for bill id ", bill.id, " we have bill.ocd_created_at=", bill.ocd_created_at, "and bill.ocd_updated_at=", bill.ocd_updated_at)
+                        committee_action_updates.append((c, bill, a))
                         break
            
         committee_event_subscriptions = CommitteeEventSubscription.objects.filter(user=user)
@@ -370,12 +381,13 @@ def notification_loaddata(request):
         print("ERROR: notifications/views.py:notification_loaddata() called without POST")
 
     update_since = json.loads(request.POST.get('update_since'))
+    update_since_dt = datetime.datetime.strptime(update_since, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=app_timezone) # XXX is this the right time/place to unmarshal this datetime? 
     updated_orgs_ids = json.loads(request.POST.get('updated_orgs_ids'))
     updated_people_ids = json.loads(request.POST.get('updated_people_ids'))
     updated_bills_ids = json.loads(request.POST.get('updated_bills_ids'))
     updated_events_ids = json.loads(request.POST.get('updated_events_ids'))
 
-    print('update_since=', update_since)
+    print('update_since_dt=', update_since_dt)
     print('updated_orgs_ids=', updated_orgs_ids)
     print('updated_people_ids=', updated_people_ids)
     print('updated_bills_ids=', updated_bills_ids)
@@ -387,7 +399,7 @@ def notification_loaddata(request):
     # According to http://python-rq.org/docs/ , uses pickle
     notifications_queue = django_rq.get_queue('notifications')
     notifications_queue.enqueue(worker_handle_notification_loaddata,
-                                update_since=update_since,
+                                update_since=update_since_dt,
                                 updated_orgs_ids = updated_orgs_ids,
                                 updated_people_ids = updated_people_ids,
                                 updated_bills_ids = updated_bills_ids,
