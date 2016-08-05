@@ -116,8 +116,8 @@ class Command(BaseCommand):
                 updated_bills_ids = self.grab_bills(delete=options['delete'])
                 updated_events_ids = self.grab_events(delete=options['delete'])
             else:
-                updated_bills_ids = self.grab_bills(delete=options['delete'])
-                updated_events_ids = self.grab_events(delete=options['delete'])
+                (created_bills_ids, updated_bills_ids) = self.grab_bills(delete=options['delete'])
+                (created_events_ids, updated_events_ids) = self.grab_events(delete=options['delete'])
 
             print ("calling requests.post()")
             update_since_iso = self.update_since.isoformat()
@@ -127,7 +127,9 @@ class Command(BaseCommand):
                           {'update_since':json.dumps(update_since_iso),
                            'updated_orgs_ids':json.dumps(updated_orgs_ids),
                            'updated_people_ids':json.dumps(updated_people_ids),
+                           'created_bills_ids':json.dumps(created_bills_ids),
                            'updated_bills_ids':json.dumps(updated_bills_ids),
+                           'created_events_ids':json.dumps(created_events_ids),
                            'updated_events_ids':json.dumps(updated_events_ids),})
 
             print("\ndone!", datetime.datetime.now().replace(tzinfo=app_timezone))
@@ -313,7 +315,8 @@ class Command(BaseCommand):
         return [] # XXX mcc
         
     def grab_bills(self, delete=False):
-        ret_bill_list = []
+        ret_created_bill_list = []
+        ret_updated_bill_list = []
         #import pdb; pdb.set_trace()
 
         # this grabs all bills & associated actions, documents from city council
@@ -399,11 +402,14 @@ class Command(BaseCommand):
                     leg_session_obj = LegislativeSession.objects.get(
                         identifier=leg_session_id)
 
-                bill = self.grab_bill(bill_detail.json(), leg_session_obj)
-                if (bill):
-                    ret_bill_list.append(bill)
+                # XXX could create two lists of created and updated bills. Would probably make things simpler in notifications/views.py
+                (created, updated, bill) = self.grab_bill(bill_detail.json(), leg_session_obj)
+                if (created and bill):
+                    ret_created_bill_list.append(bill)
+                elif (updated and bill):
+                    ret_updated_bill_list.append(bill)                    
         print("\n\nDONE LOADING BILLS", datetime.datetime.now().replace(tzinfo=app_timezone))
-        return ret_bill_list
+        return (ret_created_bill_list, ret_updated_bill_list)
 
     def grab_legislative_sessions(self):
         session_ids = []
@@ -480,6 +486,12 @@ class Command(BaseCommand):
 
         bill_id = page_json['id']
 
+        # XXX convert created_at and updated_at to be real datetimes using the app timezone
+        created_at_str = page_json['created_at']
+        updated_at_str = page_json['updated_at']
+
+        created_at_dt = datetime.datetime
+        
         bill_fields = {
             'ocd_id': bill_id,
             'ocd_created_at': page_json['created_at'],
@@ -503,7 +515,6 @@ class Command(BaseCommand):
         # look for existing bill
         try:
             obj = Bill.objects.get(ocd_id=bill_id)
-            print ("grab_bill: got bill ", obj.id)
 
             # XXX: why do the search results from the OCD not include updated_at (which we are searching with??)
             obj.ocd_created_at = page_json['created_at']
@@ -575,8 +586,7 @@ class Command(BaseCommand):
             for sponsor_json in page_json['sponsorships']:
                 self.load_bill_sponsorship(sponsor_json, obj)
 
-            print ("grab_bill(): returning ", obj.id)
-            return obj.id
+            return (created, updated, obj.id)
         
     def load_bill_sponsorship(self, sponsor_json, bill):
 
@@ -868,6 +878,9 @@ class Command(BaseCommand):
     def grab_events(self, delete=False):
         print("\n\nLOADING EVENTS", datetime.datetime.now().replace(tzinfo=app_timezone))
         #import pdb; pdb.set_trace()
+        ret_created_event_list = []
+        ret_updated_event_list = []
+
         if delete:
             with psycopg2.connect(**self.db_conn_kwargs) as conn:
                 with conn.cursor() as curs:
@@ -894,13 +907,14 @@ class Command(BaseCommand):
 
         query_params = {}
         query_params['sort'] = 'updated_at'
-        query_params['updated_at__gte'] = max_updated.isoformat()
+        #query_params['updated_at__gte'] = max_updated.isoformat() # XXX: updated_at__gte seems to return everything. Not cool
+        query_params['created_at__gte'] = max_updated.isoformat()
         query_params['jurisdiction_id'] = settings.OCD_JURISDICTION_ID
         
         # this grabs a paginated listing of all events within a jurisdiction
         events_url = '{}/events/'.format(base_url)
         events_results = requests.get(events_url, params=query_params)
-        print ('EVENTS: ' + events_url + '?' + urllib.parse.urlencode(query_params))
+        #print ('grab_events URL is ' + events_url + '?' + urllib.parse.urlencode(query_params))
         page_json = json.loads(events_results.text)
         
         for i in range(page_json['meta']['max_page']):
@@ -916,11 +930,17 @@ class Command(BaseCommand):
             page_json = json.loads(result_page.text)
 
             for result in page_json['results']:
-                self.grab_event(result['id'])
+                (created, updated, event) = self.grab_event(result['id'])
+            if (created and event):
+                ret_created_event_list.append(event)
+            elif (updated and event):
+                ret_updated_event_list.append(event)                    
+
         print("\n\nDONE LOADING EVENTS", datetime.datetime.now().replace(tzinfo=app_timezone))
-        return [] # XXX mcc
+        return (ret_created_event_list, ret_updated_event_list)
 
     def grab_event(self, event_ocd_id):
+        #print("grab_event(", event_ocd_id,")")
 
         event_url = base_url + '/' + event_ocd_id + '/'
         print(event_url)
@@ -1015,7 +1035,12 @@ class Command(BaseCommand):
 
             if created or updated:
 
+                if created:
+                    #print("created new event ", event_obj.slug, event_obj.start_time, event_obj.end_time, event_obj.classification, event_obj.name, event_obj.description)
+                    pass
+                
                 if updated:
+                    #print("updated event ", event_obj.slug, event_obj.classification, event_obj.name, event_obj.description)
                     # delete existing participants, documents, agenda items
                     event_obj.participants.all().delete()
                     event_obj.documents.all().delete()
@@ -1036,6 +1061,10 @@ class Command(BaseCommand):
 
                 for agenda_item_json in page_json['agenda']:
                     self.load_eventagendaitem(agenda_item_json, event_obj)
+
+                #print ("grab_event(): returning ", event_obj.id)
+                return (created, updated, event_obj.id)
+                
 
         else:
             print("\n\n" + "*" * 60)
