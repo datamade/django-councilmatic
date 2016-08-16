@@ -109,7 +109,6 @@ class SubscriptionsManageView(LoginRequiredMixin, TemplateView):
     template_name = 'subscriptions_manage.html'
 
     def get_context_data(self, *args, **kwargs):
-        print ("SubscriptionsManageView: DOIN IT")
         context = super(SubscriptionsManageView, self).get_context_data(*args, **kwargs)
         
         context['person_subscriptions'] = self.request.user.personsubscriptions.all()
@@ -117,9 +116,8 @@ class SubscriptionsManageView(LoginRequiredMixin, TemplateView):
         context['committee_event_subscriptions'] = self.request.user.committeeeventsubscriptions.all()
         context['bill_search_subscriptions'] = self.request.user.billsearchsubscriptions.all()
         context['bill_action_subscriptions'] = self.request.user.billactionsubscriptions.all()
+        context['events_subscriptions'] = self.request.user.eventssubscriptions.all()
 
-        # XXX not implemented yet
-        #context['events_subscriptions'] = self.request.user.personsubscriptions.all()
         return context 
 
 @csrf_exempt
@@ -228,15 +226,15 @@ def search_unsubscribe(request, search_subscription_id):
 
 @csrf_exempt
 @login_required(login_url='/login/')
-def events_subscribe(request, slug):
+def events_subscribe(request):
     (events_subscription, created) = EventsSubscription.objects.get_or_create(user=request.user) # XXX handle exceptions
     return HttpResponse('person subscribe()d to all events')
 
 @csrf_exempt
 @login_required(login_url='/login/')
-def events_unsubscribe(request, slug):
+def events_unsubscribe(request):
     events_subscription = EventsSubscription.objects.get(user=request.user) # XXX handle exceptions
-    committee_events_subscription.delete() # XXX handle exceptions
+    events_subscription.delete() # XXX handle exceptions
     return HttpResponse('unsubscribe()d')
 
 

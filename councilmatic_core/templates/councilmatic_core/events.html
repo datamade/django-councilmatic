@@ -51,7 +51,17 @@
                 {% endif %}
 
 	    {% else %}
-		   <small>
+		    {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+		    {% if user_subscribed %}
+		    <a href="#" id="eventsSubscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a>
+		    {% else %}
+		    <a href="#" id="eventsSubscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a>
+		    {% endif %}
+		    
+
+		    {% endif %} 
+		    
+		    <small>
 			   <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
 		   </small>
 		    
@@ -90,7 +100,38 @@
             var year = $("#year-dropdown").val()
             var new_url = '/events/?year='+year+'&month='+month
             $("#view-events-btn").attr("href", new_url)
-        });
-
+            });
     </script>
+
+    {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+    <script>
+    $(document).ready(function() {
+	    $("#eventsSubscribe").click(function() {
+		    if ($(this).hasClass('createSubscription')) {
+			    posturl = "/events/subscribe/";
+			    $.post(posturl, function(data) {
+			    }).error(function() {
+				    console.log("Error subscribing to all events");
+			    });
+			    $(this).removeClass('createSubscription');
+			    $(this).addClass('removeSubscription');
+			    $(this).text('[REMOVE SUBSCRIPTION]');
+		    } else if ($(this).hasClass('removeSubscription')) {
+			    posturl = "/events/unsubscribe/";
+			    $.post(posturl, function(data) {
+			    }).error(function() {
+				    console.log("Error unsubscribing from all events");
+			    });
+			    $(this).removeClass('removeSubscription');
+			    $(this).addClass('createSubscription');
+			    $(this).text('[CREATE SUBSCRIPTION]');
+		    }
+		    else {
+			    alert("ID #eventsSubscribe has neither createSubscription or removeSubscription class");
+		    }
+	    }
+	    )});
+    </script>
+    {% endif %}
+
 {% endblock %}

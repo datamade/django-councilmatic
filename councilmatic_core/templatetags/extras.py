@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.core.serializers import serialize
 import json
 from django.db.models.query import QuerySet
-
+import urllib
 
 register = template.Library()
 
@@ -84,8 +84,8 @@ def strip_mailto(email):
 @register.filter
 @stringfilter
 def committee_topic_only(committee_name):
-    clean = re.sub('Committee on', '', committee_name)
-    clean = re.sub('Subcommittee on', '', clean)
+    clean = re.sub('Committee on ', '', committee_name)
+    clean = re.sub('Subcommittee on ', '', clean)
     if 'Mental Health, Developmental Disability' in clean:
         clean = 'Mental Health & Disability'
     return clean
@@ -127,3 +127,20 @@ def jsonify(object):
         return mark_safe(serialize('json', object))
     return mark_safe(json.dumps(object))
 jsonify.is_safe = True   
+
+# Given a search subscription object, successfully reconstruct the 
+# URL representing it
+@register.filter
+def custom_reverse_search_url(subscription):
+    url = '/search/'
+    d = [('q',subscription.search_term)]
+    for k,vs in subscription.search_facets.items():
+        #print ("k=",k, "vs=",vs)
+        for v in vs: 
+            #print ("k=",k, "v=",v)
+            d.append(("selected_facets","%s_exact:%s" % (k,v)))
+    url += "?" + urllib.parse.urlencode(d)
+    #print ("custom_reverse_search_url: url is=", url)
+    return url
+        
+    

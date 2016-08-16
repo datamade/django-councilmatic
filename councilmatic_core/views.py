@@ -72,6 +72,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
             except ObjectDoesNotExist as e:
                 print ("MATCH NOT FOUND!")
                 print (e)
+        print ("CouncilmaticFacetedSearchView: extra = ", extra)
         return extra
 
 
@@ -440,6 +441,13 @@ class EventsView(ListView):
             context['this_month'] = int(current_month)
             context['this_year'] = int(current_year)
             context['this_start_date']= datetime(year=int(current_year), month=int(current_month), day=1)
+
+        context['user_subscribed'] = False            
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            context['user'] = user
+            if (len(user.eventssubscriptions.all()) > 0):
+                context['user_subscribed'] = True
 
         upcoming_dates = upcoming_dates.order_by('start_time')
 

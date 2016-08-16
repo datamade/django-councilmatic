@@ -24,7 +24,7 @@
     -->
      <div class="row-fluid">
         <div class="col-sm-8 table-col">
-		<h3>Person Subscriptions</h3>
+		<h3>{{ CITY_VOCAB.COUNCIL_MEMBER }} Subscriptions</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -142,7 +142,7 @@
 				    </td>
 				    
 				    <td>
-					    <a href="{# url 'search' subscription.search_term #}">{{subscription.search_term }}</a></td>
+					    <a href="{{ subscription|custom_reverse_search_url }}">{{subscription.search_term }}</a></td>
 				    <td>{% for key, values in subscription.search_facets.items %}
 					    <b>{{key}}</b>:
 					    {% for v in values %}
@@ -192,7 +192,7 @@
             </div>
 
 
-		<h3>Events Subscriptions</h3>
+		<h3>{{ CITY_VOCAB.EVENTS }} Subscriptions</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -202,13 +202,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for subscription in committeeaction_subscriptions %}
-                            <tr subscription_id="{{subscription.id}}">
+                        {% for subscription in events_subscriptions %} {# When the only possible subscription is for "all" events, there should only be one #}
+                            <tr class="subscription" subscription_id="{{subscription.id}}">
                              <td align="left">
-				     FOO 
+				     <div>
+					     <input type="checkbox" class="removeButton" name="remove" style="float:left;">
+					     <span style="display: none;"">&nbsp;<button class="removeEventsSubscription">Remove</button></span>
+				     </div>
                              </td>
 			     <td>
-				     {{subscription.person }}
+				     All {{ CITY_VOCAB.EVENTS }}
 			     </td>
                             </tr>
                         {% endfor %}
@@ -284,20 +287,20 @@
 				    console.log("Error deleting interest " + committee_slug);
 			    });
 			    break;
-		    case "committeeActionsSubscription":
-			    var committee_slug = container.attr("committee_slug");
-			    $.post("/committee/" + committee_slug + "/actions/unsubscribe/", function(data) {
-				    console.log("Deleted interest " + committee_slug);
-				    container.remove();
-			    }).error(function() {
-				    console.log("Error deleting interest " + committee_slug);
-			    });
-			    break;
 		    case "billSearchSubscription":
 			    var search_id = container.attr("subscription_id");
 			    posturl = '/search_unsubscribe/' + search_id + '/';
 			    $.post(posturl).error(function() {
 				    console.log("Error unsubscribing to BillSearchSubscription ", search_id);
+			    });
+			    console.log("Deleted search");
+			    container.remove();
+			    break;
+		    case "eventsSubscription":
+			    var search_id = container.attr("subscription_id");
+			    posturl = '/events/unsubscribe/';
+			    $.post(posturl).error(function() {
+				    console.log("Error unsubscribing to EventsSubscription ");
 			    });
 			    console.log("Deleted search");
 			    container.remove();

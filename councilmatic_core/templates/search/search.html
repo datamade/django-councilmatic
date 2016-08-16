@@ -132,11 +132,11 @@
 
                     {% if query %}
                         <p class="search-result">
-                            {{ result.highlighted.text.0|safe  }}
+				{{ result.highlighted.text.0|safe  }}
                         </p>
                     {% else %}
                         <p>
-                            {{result.object.listing_description | short_blurb}}
+				{{result.object.listing_description | short_blurb}}
                         </p>
                     {% endif %}
 
@@ -167,7 +167,7 @@
                     <i class="fa fa-fw fa-tag"></i>
                     {% for tag in result.object.topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag }}'>{{ tag }}</a>
+                            <a href='/search/?q={{request.GET.q}}&selected_facets=topics_exact:{{ tag }}'>{{tag}}</a>
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
@@ -175,7 +175,7 @@
                     <i class="fa fa-fw fa-tag"></i>
                     {% for tag in result.object.pseudo_topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag | committee_topic_only }}'>{{ tag | committee_topic_only }}</a>
+                            <a href='/search/?q={{request.GET.q}}&selected_facets=topics_exact:{{ tag | committee_topic_only }}'>{{ tag | committee_topic_only }}</a>
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
