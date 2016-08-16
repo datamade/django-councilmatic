@@ -34,7 +34,7 @@ urlpatterns = [
         views.PersonWidgetView.as_view(), name='person_widget'),
 
     url(r'^events/$', views.EventsView.as_view(), name='events'),
-    url(r'^event/(?P<slug>[^/]*)/$',
+    url(r'^event/(?P<slug>.+)/$',
         views.EventDetailView.as_view(), name='event_detail'),
 
     url(r'^flush-cache/(.*)/$', views.flush, name='flush'),
