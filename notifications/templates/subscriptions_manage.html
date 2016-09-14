@@ -7,7 +7,11 @@
     <div class="row-fluid">
         <div class="col-sm-12">
             <br class="non-mobile-only"/>
-            <h1>Subscriptions</h1>
+            <h1>
+                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                Alerts
+            </h1>
+            <p>This page shows the people, committees, searches, bills, and events you are subscribed to.</p>
             <hr />
         </div>
     </div>
@@ -24,7 +28,7 @@
     -->
      <div class="row-fluid">
         <div class="col-sm-8 table-col">
-		<h3>{{ CITY_VOCAB.COUNCIL_MEMBER }} Subscriptions</h3>
+		<h3>{{ CITY_VOCAB.COUNCIL_MEMBERS }}</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -40,7 +44,7 @@
 					<td align="left">
 						<div>
 						<input type="checkbox" class="removeButton" name="remove" style="float:left;">
-						<span style="display: none;"">&nbsp;<button class="removePersonSubscription">Remove</button></span>
+						<span style="display: none;">&nbsp;<button class="removePersonSubscription">Remove</button></span>
 						</div>
 					</td>
 					<td>
@@ -56,7 +60,7 @@
 			</table>
 		</div>
 
-		<h3>Committee Action Subscriptions</h3>
+		<h3>Committee Actions</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -72,7 +76,7 @@
 				    <td align="left">
 					    <div>
 						    <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-						    <span style="display: none;"">&nbsp;<button class="removeCommitteeActionsSubscription">Remove</button></span>
+						    <span style="display: none;">&nbsp;<button class="removeCommitteeActionsSubscription">Remove</button></span>
 					    </div>
 				    </td>
 				    <td>
@@ -86,7 +90,7 @@
                 </table>
             </div>
 
-		<h3>Committee Event Subscriptions</h3>
+		<h3>Committee Events</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -120,7 +124,7 @@
 
 
 
-		<h3>Bill Search Subscriptions</h3>
+		<h3>Bill Searches</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -133,7 +137,7 @@
                     </thead>
                     <tbody>
                         {% for subscription in bill_search_subscriptions %}
-			    <tr class="subscription"  subscription_id="{{subscription.id}}"" search_term="{{subscription.search_term}}" search_facets='{{subscription.search_facets|jsonify}}'>
+			    <tr class="subscription"  subscription_id="{{subscription.id}}" search_term="{{subscription.search_term}}" search_facets='{{subscription.search_facets|jsonify}}'>
 				    <td align="left">
 					    <div>
 						    <input type="checkbox" class="removeButton" name="remove" style="float:left;">
@@ -161,7 +165,7 @@
             </div>
 
 
-		<h3>Bill Action Subscriptions</h3>
+		<h3>Bill Actions</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -177,7 +181,7 @@
 				    <td align="left">
 					    <div>
 						    <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-						    <span style="display: none;"">&nbsp;<button class="removeBillActionsSubscription">Remove</button></span>
+						    <span style="display: none;">&nbsp;<button class="removeBillActionsSubscription">Remove</button></span>
 					    </div>
 				    </td>
 				    <td>
@@ -192,7 +196,7 @@
             </div>
 
 
-		<h3>{{ CITY_VOCAB.EVENTS }} Subscriptions</h3>
+		<h3>{{ CITY_VOCAB.EVENTS }}</h3>
 		<div class="table-responsive">
 			<table class='table' id='subscriptions'>
 			<thead>
@@ -207,7 +211,7 @@
                              <td align="left">
 				     <div>
 					     <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-					     <span style="display: none;"">&nbsp;<button class="removeEventsSubscription">Remove</button></span>
+					     <span style="display: none;">&nbsp;<button class="removeEventsSubscription">Remove</button></span>
 				     </div>
                              </td>
 			     <td>
@@ -224,15 +228,6 @@
 
         </div>
 
-
-        <div class="col-sm-4">
-            <div class='well info-blurb'>
-                <h4><i class='fa fa-fw fa-info-circle'></i> What are subscriptions?</h4>
-
-		<p>This page shows all of the various people, committees, searches, bills, and events you are subscribed to.</p>
-                <!-- XXX TODO <p><a href='/about/#about-subscriptions'>More on Councilmatic subscriptions &raquo;</a></p>-->
-            </div>
-        </div>
     </div>
 
 {% endblock %}
