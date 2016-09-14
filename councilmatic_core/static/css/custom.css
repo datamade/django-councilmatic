@@ -42,7 +42,7 @@ h1, h2, h3, h4 {
     display: block;
     float: left;
 }
-#nav-items > li > a {
+#nav-items > li > a, #nav-items > li > .dropdown > a {
     color: #000;
     position: relative;
     display: block;
@@ -63,10 +63,16 @@ h1, h2, h3, h4 {
     padding-bottom: 19.5px;
     line-height: 21px;
 }
-#nav-items > li > a:hover, #nav-items > li > a:focus {
+#nav-items > li > a:hover, 
+#nav-items > li > a:focus, 
+#nav-items > li a.dropdown-toggle:hover, 
+#nav-items > li a.dropdown-toggle:focus {
     color: #000;
     background-color: #EEE;
     text-decoration: none;
+}
+.dropdown-menu > li.non-link {
+    padding: 3px 20px;
 }
 .nav-pills > li > a{
     border-radius: 0px;
