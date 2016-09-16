@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}Sign in{% endblock %}
 {% block full_content %}
 
     <div class="container" id="main-container">
 	    <div class="row">
+	    	<br/>
 		    <div class='well col-md-6 col-md-offset-3'>
-			    <h2>Login</h2>
+			    <h2>Sign in</h2>
 			    <form role="form" method="POST">
 				    {% csrf_token %} 
 				    {{ form.non_field_errors }}
