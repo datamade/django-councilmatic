@@ -24,18 +24,22 @@
 
             
             <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
-		    <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-		{% if user_subscribed_actions %}	
-		    <!-- <small><a href="{% url 'committee_actions_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>-->
-		    <small><a href="#" id="committee_actions_Subscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a></small> 
-		{% else %}
-		    <small><a href="#" id="committee_actions_Subscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a></small> 
-		<!-- <small><a href="{% url 'committee_actions_subscribe' committee.slug %}">[CREATE ALERT]</a></small>-->
-	    	{% endif %}
-		{% endif %}
-		    
-	    </h4>
+            <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+        {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+        {% if user_subscribed_actions %}    
+            <!-- <small><a href="{% url 'committee_actions_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>-->
+            <a href="#" id="committee_actions_Subscribe" class="removeSubscription" title="remove alert">
+                <i class="fa fa-bullhorn"></i>
+            </a>
+        {% else %}
+            <a href="#" id="committee_actions_Subscribe" class="createSubscription" title="create alert">
+                <i class="fa fa-bullhorn"></i>
+            </a>
+        <!-- <small><a href="{% url 'committee_actions_subscribe' committee.slug %}">[CREATE ALERT]</a></small>-->
+            {% endif %}
+        {% endif %}
+            
+        </h4>
             {% if committee.recent_activity %}
             <div class="table-responsive">
                 <table class='table' id='committee-actions'>
@@ -83,20 +87,24 @@
                 <hr />
 
                 <h4>
-		    <a name="#committeeEvents"></a>
+            <a name="#committeeEvents"></a>
                     <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
                     <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-		{% if user_subscribed_events %}
-		    <!-- <small><a href="{% url 'committee_events_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>-->
-		    <small><a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a></small> 
-		{% else %}
-		    <!-- <small><a href="{% url 'committee_events_subscribe' committee.slug %}">[CREATE ALERT]</a></small>-->
-		    <small><a href="#committeeEvents" id="committee_events_Subscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a></small> 
-		{% endif %}
-		{% endif %}
-		    
-		    
+        {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+        {% if user_subscribed_events %}
+            <!-- <small><a href="{% url 'committee_events_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>-->
+            <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" title="remove alert">
+                <i class="fa fa-bullhorn"></i>
+            </a>
+        {% else %}
+            <!-- <small><a href="{% url 'committee_events_subscribe' committee.slug %}">[CREATE ALERT]</a></small>-->
+            <a href="#committeeEvents" id="committee_events_Subscribe" class="createSubscription" title="create alert">
+                <i class="fa fa-bullhorn"></i>
+            </a>
+        {% endif %}
+        {% endif %}
+            
+            
                 </h4>
 
                 {% for event in committee.recent_events %}
@@ -174,39 +182,39 @@
     <script>
     // events_or_actions can be 'events' or 'actions'
     function committeeCallback(events_or_actions) {
-	    if (events_or_actions != 'events' && events_or_actions != 'actions') {
-		    alert("committee.html: committeeCallback called with incorrect value");
-	    }
-	    console.log("Callback for #committee_" + events_or_actions + "_Subscribe");
-	    $("#committee_" + events_or_actions + "_Subscribe").click(function() {
-		    if ($(this).hasClass('createSubscription')) {
-			    posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/subscribe/";
-			    $.post(posturl, function(data) {
-			    }).error(function() {
-				    console.log("Error subscribing to  interest {{committee.slug}}");
-			    });
-			    $(this).removeClass('createSubscription');
-			    $(this).addClass('removeSubscription');
-			    $(this).text('[REMOVE SUBSCRIPTION]');
-		    } else if ($(this).hasClass('removeSubscription')) {
-			    posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/unsubscribe/";
-			    $.post(posturl, function(data) {
-			    }).error(function() {
-				    console.log("Error unsubscribing from  interest {{committee.slug}}");
-			    });
-			    $(this).removeClass('removeSubscription');
-			    $(this).addClass('createSubscription');
-			    $(this).text('[CREATE SUBSCRIPTION]');
-		    }
-		    else {
-			    alert("ID #committee_" + events_or_actions + "Subscribe" + " has neither createSubscription or removeSubscription class");
-		    }
-	    }
-	    )};
+        if (events_or_actions != 'events' && events_or_actions != 'actions') {
+            alert("committee.html: committeeCallback called with incorrect value");
+        }
+        console.log("Callback for #committee_" + events_or_actions + "_Subscribe");
+        $("#committee_" + events_or_actions + "_Subscribe").click(function() {
+            if ($(this).hasClass('createSubscription')) {
+                posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/subscribe/";
+                $.post(posturl, function(data) {
+                }).error(function() {
+                    console.log("Error subscribing to  interest {{committee.slug}}");
+                });
+                $(this).removeClass('createSubscription');
+                $(this).addClass('removeSubscription');
+                $(this).attr('title','remove alert');
+            } else if ($(this).hasClass('removeSubscription')) {
+                posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/unsubscribe/";
+                $.post(posturl, function(data) {
+                }).error(function() {
+                    console.log("Error unsubscribing from  interest {{committee.slug}}");
+                });
+                $(this).removeClass('removeSubscription');
+                $(this).addClass('createSubscription');
+                $(this).attr('title','create alert');
+            }
+            else {
+                alert("ID #committee_" + events_or_actions + "Subscribe" + " has neither createSubscription or removeSubscription class");
+            }
+        }
+        )};
 
     $(document).ready(function() {
-	    committeeCallback('events');
-	    committeeCallback('actions');
+        committeeCallback('events');
+        committeeCallback('actions');
     });
     </script>
 
