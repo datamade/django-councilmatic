@@ -90,33 +90,37 @@
         <div class="col-sm-8">
             {% if query %}
                 <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
-			
-			{% if selected_facets %}
-			<a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}"
-			title="RSS feed">
-			{% else %}	
-				<a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
-			{% endif %}
-			
-			<i class="fa fa-rss-square" aria-hidden="true"></i></a>
-				
-			{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-			{% if user_subscribed %}
-				<small><a href="#" id="searchSubscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a></small> 
-				{% else %}
-				<small><a href="#" id="searchSubscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a></small> 
-				<!-- <small><a href="/search/unsubscribe/?q={{request.GET.q}}">[REMOVE ALERT]</a></small>
-				<small><a href="/search/subscribe/?q={{request.GET.q}}">[CREATE ALERT]</a></small> -->
-			{% endif %}
-			{% endif %}
-
-				
-		</h3>
-				
-		
+            
+            {% if selected_facets %}
+            <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}"
+            title="RSS feed">
+            {% else %}  
+                <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
+            {% endif %}
+            
+            <i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                
+            {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+                {% if user_subscribed %}
+                <a href="#" id="searchSubscribe" class="removeSubscription" title="remove alert">
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                </a>
+                {% else %}
+                <a href="#" id="searchSubscribe" class="createSubscription" title="create alert">
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                </a>
+                <!-- <small><a href="/search/unsubscribe/?q={{request.GET.q}}">[REMOVE ALERT]</a></small>
+                <small><a href="/search/subscribe/?q={{request.GET.q}}">[CREATE ALERT]</a></small> -->
+                {% endif %}
             {% endif %}
 
-		
+                
+        </h3>
+                
+        
+            {% endif %}
+
+        
         {% for result in page.object_list %}
 
             <!-- Legislation result -->
@@ -132,11 +136,11 @@
 
                     {% if query %}
                         <p class="search-result">
-				{{ result.highlighted.text.0|safe  }}
+                {{ result.highlighted.text.0|safe  }}
                         </p>
                     {% else %}
                         <p>
-				{{result.object.listing_description | short_blurb}}
+                {{result.object.listing_description | short_blurb}}
                         </p>
                     {% endif %}
 
@@ -236,43 +240,43 @@
 {% block extra_js %}
     <script>
     $(document).ready(function() {
-	    $("#searchSubscribe").click(function() {
-		    if ($(this).hasClass('createSubscription')) {
-			    posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
-			    //facets = "{{request.GET.selected_facets}}"
-			    //facets = "{{selected_facets|safe}}" // XXX: is this actually safe?
-			    facets = JSON.stringify({{selected_facets|safe}});
-			    //console.log("selected_facets are" , facets);
-			    //console.log("selected_facets!=", facets);
-			    //console.log("posturl=", posturl);
-			    //$.post(posturl, function(data) {}
-			    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
-				    console.log("Error subscribing to  interest {{request.GET.q}} with {{selected_facets}}" );
-			    });
-			    $(this).removeClass('createSubscription');
-			    $(this).addClass('removeSubscription');
-			    $(this).text('[REMOVE SUBSCRIPTION]');
-		    } else if ($(this).hasClass('removeSubscription')) {
-			    posturl = "/search_unsubscribe/";
-			    facets = JSON.stringify({{selected_facets|safe}});
-			    //console.log("selected_facets!=", facets);
-			    //console.log("posturl=", posturl);
-			    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
-				    console.log("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
-			    });
-			    $(this).removeClass('removeSubscription');
-			    $(this).addClass('createSubscription');
-			    $(this).text('[CREATE SUBSCRIPTION]');
-		    }
-		    else {
-			    alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
-		    }
-	    }
-	)});	    
+        $("#searchSubscribe").click(function() {
+            if ($(this).hasClass('createSubscription')) {
+                posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
+                //facets = "{{request.GET.selected_facets}}"
+                //facets = "{{selected_facets|safe}}" // XXX: is this actually safe?
+                facets = JSON.stringify({{selected_facets|safe}});
+                //console.log("selected_facets are" , facets);
+                //console.log("selected_facets!=", facets);
+                //console.log("posturl=", posturl);
+                //$.post(posturl, function(data) {}
+                $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
+                    console.log("Error subscribing to  interest {{request.GET.q}} with {{selected_facets}}" );
+                });
+                $(this).removeClass('createSubscription');
+                $(this).addClass('removeSubscription');
+                $(this).attr('title', 'remove alert');
+            } else if ($(this).hasClass('removeSubscription')) {
+                posturl = "/search_unsubscribe/";
+                facets = JSON.stringify({{selected_facets|safe}});
+                //console.log("selected_facets!=", facets);
+                //console.log("posturl=", posturl);
+                $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
+                    console.log("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
+                });
+                $(this).removeClass('removeSubscription');
+                $(this).addClass('createSubscription');
+                $(this).attr('title', 'create alert');
+            }
+            else {
+                alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
+            }
+        }
+    )});        
     </script>
-	
+    
 
-	
+    
     <script>
         $(function() {
             // filters are collapsed be default b/c they are long

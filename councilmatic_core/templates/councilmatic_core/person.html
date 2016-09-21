@@ -18,16 +18,22 @@
                 <span>{{person.name}}</span>
                 <br class="non-desktop-only"/>
                 <small>
-			{{ title }}
-			<a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+            {{ title }}
+            <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                 </small>
-		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-		{% if user_subscribed %}
-		<small><a href="#" id="personSubscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a></small> 
-		{% else %}
-		<small><a href="#" id="personSubscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a></small> 
-		{% endif %}
-		{% endif %}
+        {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+        <small>
+            {% if user_subscribed %}
+            <a href="#" id="personSubscribe" class="removeSubscription" title="remove alert">
+                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+            </a>
+            {% else %}
+            <a href="#" id="personSubscribe" class="createSubscription" title="create alert">
+                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+        </small>
+        {% endif %}
             </h1>
         </div>
     </div>
@@ -202,31 +208,31 @@
     {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
     <script>
     $(document).ready(function() {
-	    $("#personSubscribe").click(function() {
-		    if ($(this).hasClass('createSubscription')) {
-			    posturl = "/person/" + "{{person.slug}}" + "/subscribe/";
-			    $.post(posturl, function(data) {
-			    }).error(function() {
-				    console.log("Error subscribing to  interest {{person.slug}}");
-			    });
-			    $(this).removeClass('createSubscription');
-			    $(this).addClass('removeSubscription');
-			    $(this).text('[REMOVE SUBSCRIPTION]');
-		    } else if ($(this).hasClass('removeSubscription')) {
-			    posturl = "/person/" + "{{person.slug}}" + "/unsubscribe/";
-			    $.post(posturl, function(data) {
-			    }).error(function() {
-				    console.log("Error unsubscribing from  interest {{person.slug}}");
-			    });
-			    $(this).removeClass('removeSubscription');
-			    $(this).addClass('createSubscription');
-			    $(this).text('[CREATE SUBSCRIPTION]');
-		    }
-		    else {
-			    alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
-		    }
-	    }
-	)});	    
+        $("#personSubscribe").click(function() {
+            if ($(this).hasClass('createSubscription')) {
+                posturl = "/person/" + "{{person.slug}}" + "/subscribe/";
+                $.post(posturl, function(data) {
+                }).error(function() {
+                    console.log("Error subscribing to  interest {{person.slug}}");
+                });
+                $(this).removeClass('createSubscription');
+                $(this).addClass('removeSubscription');
+                $(this).attr('title', 'remove alert');
+            } else if ($(this).hasClass('removeSubscription')) {
+                posturl = "/person/" + "{{person.slug}}" + "/unsubscribe/";
+                $.post(posturl, function(data) {
+                }).error(function() {
+                    console.log("Error unsubscribing from  interest {{person.slug}}");
+                });
+                $(this).removeClass('removeSubscription');
+                $(this).addClass('createSubscription');
+                $(this).attr('title', 'create alert');
+            }
+            else {
+                alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
+            }
+        }
+    )});        
     </script>
     {% endif %}
     
