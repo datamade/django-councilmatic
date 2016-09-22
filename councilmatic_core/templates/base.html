@@ -44,7 +44,7 @@
                 <li>
                     <a href="/search/">Legislation</a>
                 </li>
-		{% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+        {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
         <li>
             <div class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" title="Account">
@@ -70,14 +70,14 @@
             </div>
         </li>
         </div>
-		{% endif %}
-		{% if USING_NOTIFICATIONS and not request.user.is_authenticated %}
-		<li>
-			<a href="/login/" title="Sign in">
+        {% endif %}
+        {% if USING_NOTIFICATIONS and not request.user.is_authenticated %}
+        <li>
+            <a href="/login/" title="Sign in">
                 <i class="fa fa-sign-in" aria-hidden="true"></i>
             </a>
-		</li>
-		{% endif %}
+        </li>
+        {% endif %}
             </ul>
 
         </div>
