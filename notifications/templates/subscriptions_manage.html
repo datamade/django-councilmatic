@@ -25,7 +25,7 @@
             </thead>
             <tbody>
                 {% for subscription in person_subscriptions %}
-                <tr class="subscription person"  person_id="{{subscription.person.id}}" person_slug ="{{subscription.person.slug}}">
+                <tr class="subscription person" data-unsubscribe-url="/person/{{subscription.person.slug}}/unsubscribe/">
                     <td>
                         <i class="fa fa-user fa-fw" aria-hidden="true"></i>
                         Council member
@@ -45,7 +45,7 @@
                 </tr>
                 {% endfor %}
                 {% for subscription in committee_action_subscriptions %}
-                <tr class="subscription committee-action"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
+                <tr class="subscription committee-action" data-unsubscribe-url="/committee/{{subscription.committee.slug}}/actions/unsubscribe/">
                     <td>
                         <i class="fa fa-users fa-fw" aria-hidden="true"></i>
                         Committee actions
@@ -64,7 +64,7 @@
                 </tr>
                 {% endfor %}
                 {% for subscription in committee_event_subscriptions %}
-                <tr class="subscription committee-event"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
+                <tr class="subscription committee-event" data-unsubscribe-url="/committee/{{subscription.committee.slug}}/events/unsubscribe/">
                     <td>
                         <i class="fa fa-calendar-o fa-fw" aria-hidden="true"></i>
                         Committee events
@@ -83,7 +83,7 @@
                 </tr>
                 {% endfor %}
                 {% for subscription in bill_search_subscriptions %}
-                <tr class="subscription bill-search"  subscription_id="{{subscription.id}}" search_term="{{subscription.search_term}}" search_facets='{{subscription.search_facets|jsonify}}'>
+                <tr class="subscription bill-search" data-unsubscribe-url="/search_unsubscribe/{{subscription.id}}/">
                     <td>
                         <i class="fa fa-search fa-fw" aria-hidden="true"></i>
                         Bill search
@@ -116,7 +116,7 @@
                 </tr>
                 {% endfor %}
                 {% for subscription in bill_action_subscriptions %}
-                <tr class="subscription bill-action"  bill_id="{{subscription.bill.id}}" bill_slug ="{{subscription.bill.slug}}">
+                <tr class="subscription bill-action" data-unsubscribe-url="/legislation/{{subscription.bill.slug}}/unsubscribe/">
                     <td>
                         <i class="fa fa-list-ul fa-fw" aria-hidden="true"></i>
                         Bill actions
@@ -135,7 +135,7 @@
                 </tr>
                 {% endfor %}
                 {% for subscription in events_subscriptions %} {# When the only possible subscription is for "all" events, there should only be one #}
-                <tr class="subscription events" subscription_id="{{subscription.id}}">
+                <tr class="subscription events" data-unsubscribe-url="/events/unsubscribe/">
                     <td>
                         <i class="fa fa-calendar-o fa-fw" aria-hidden="true"></i>
                         {{ CITY_VOCAB.EVENTS }}
@@ -180,24 +180,7 @@
 
     function removeSubscription(container) {
 
-        if(container.hasClass("person")){
-            var slug = container.attr("person_slug");
-            var del_url = "/person/" + slug + "/unsubscribe/"
-        } else if(container.hasClass("committee-action")){
-            var slug = container.attr("committee_slug");
-            var del_url = "/committee/" + slug + "/actions/unsubscribe/"
-        } else if(container.hasClass("committee-event")){
-            var slug = container.attr("committee_slug");
-            var del_url = "/committee/" + slug + "/events/unsubscribe/"
-        } else if(container.hasClass("bill-search")){
-            var slug = container.attr("subscription_id");
-            var del_url = '/search_unsubscribe/' + slug + '/'
-        } else if(container.hasClass("bill-action")){
-            var slug = container.attr("bill_slug");
-            var del_url = "/legislation/" + slug + "/unsubscribe/"
-        } else if(container.hasClass("events")){
-            var del_url = "/events/unsubscribe/"
-        }
+        var del_url = container.attr("data-unsubscribe-url")
 
         $.post(del_url, function(data){
             console.log("deleted "+del_url);
