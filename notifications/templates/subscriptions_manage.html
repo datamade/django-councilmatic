@@ -25,7 +25,7 @@
             </thead>
             <tbody>
                 {% for subscription in person_subscriptions %}
-                <tr class="subscription"  person_id="{{subscription.person.id}}" person_slug ="{{subscription.person.slug}}">
+                <tr class="subscription person"  person_id="{{subscription.person.id}}" person_slug ="{{subscription.person.slug}}">
                     <td>
                         <i class="fa fa-user fa-fw" aria-hidden="true"></i>
                         Council member
@@ -39,13 +39,13 @@
                     <td align="left">
                         <div>
                         <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                        <span style="display: none;">&nbsp;<button class="removePersonSubscription">Remove</button></span>
+                        <span style="display: none;">&nbsp;<button class="remove-subscription removePersonSubscription">Remove</button></span>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% for subscription in committee_action_subscriptions %}
-                <tr class="subscription"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
+                <tr class="subscription committee-action"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
                     <td>
                         <i class="fa fa-users fa-fw" aria-hidden="true"></i>
                         Committee actions
@@ -58,13 +58,13 @@
                     <td align="left">
                         <div>
                             <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="removeCommitteeActionsSubscription">Remove</button></span>
+                            <span style="display: none;">&nbsp;<button class="remove-subscription removeCommitteeActionsSubscription">Remove</button></span>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% for subscription in committee_event_subscriptions %}
-                <tr class="subscription"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
+                <tr class="subscription committee-event"  committee_id="{{subscription.committee.id}}" committee_slug ="{{subscription.committee.slug}}">
                     <td>
                         <i class="fa fa-calendar-o fa-fw" aria-hidden="true"></i>
                         Committee events
@@ -77,13 +77,13 @@
                     <td align="left">
                         <div>
                         <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                        <span style="display: none;">&nbsp;<button class="removeCommitteeEventsSubscription">Remove</button></span>
+                        <span style="display: none;">&nbsp;<button class="remove-subscription removeCommitteeEventsSubscription">Remove</button></span>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% for subscription in bill_search_subscriptions %}
-                <tr class="subscription"  subscription_id="{{subscription.id}}" search_term="{{subscription.search_term}}" search_facets='{{subscription.search_facets|jsonify}}'>
+                <tr class="subscription bill-search"  subscription_id="{{subscription.id}}" search_term="{{subscription.search_term}}" search_facets='{{subscription.search_facets|jsonify}}'>
                     <td>
                         <i class="fa fa-search fa-fw" aria-hidden="true"></i>
                         Bill search
@@ -110,13 +110,13 @@
                     <td align="left">
                         <div>
                             <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="removeBillSearchSubscription">Remove</button></span>
+                            <span style="display: none;">&nbsp;<button class="remove-subscription removeBillSearchSubscription">Remove</button></span>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% for subscription in bill_action_subscriptions %}
-                <tr class="subscription"  bill_id="{{subscription.bill.id}}" bill_slug ="{{subscription.bill.slug}}">
+                <tr class="subscription bill-action"  bill_id="{{subscription.bill.id}}" bill_slug ="{{subscription.bill.slug}}">
                     <td>
                         <i class="fa fa-list-ul fa-fw" aria-hidden="true"></i>
                         Bill actions
@@ -129,13 +129,13 @@
                     <td align="left">
                         <div>
                             <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="removeBillActionsSubscription">Remove</button></span>
+                            <span style="display: none;">&nbsp;<button class="remove-subscription removeBillActionsSubscription">Remove</button></span>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% for subscription in events_subscriptions %} {# When the only possible subscription is for "all" events, there should only be one #}
-                <tr class="subscription" subscription_id="{{subscription.id}}">
+                <tr class="subscription events" subscription_id="{{subscription.id}}">
                     <td>
                         <i class="fa fa-calendar-o fa-fw" aria-hidden="true"></i>
                         {{ CITY_VOCAB.EVENTS }}
@@ -146,7 +146,7 @@
                     <td align="left">
                         <div>
                             <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="removeEventsSubscription">Remove</button></span>
+                            <span style="display: none;">&nbsp;<button class="remove-subscription removeEventsSubscription">Remove</button></span>
                         </div>
                     </td>
                 </tr>
@@ -178,68 +178,34 @@
     <script>
     // remove the actual interest
 
-    function removeSubscription(container, subscriptionType) {
-        console.log("container is "  + container);
-        console.log(container);
+    function removeSubscription(container) {
 
-        switch(subscriptionType) {
-            /*
-               Types of subscriptions:
-               1) person subscription
-               2) committee action subscriptions
-               3) committee event subscriptions
-               4) bill (action) subscriptions
-               5) bill search subscriptions
-               6) (all) events subscriptions
-             */
-            case "personSubscription":
-                var person_slug = container.attr("person_slug");
-                $.post("/person/" + person_slug + "/unsubscribe/", function(data) {
-                    console.log("Deleted interest " + person_slug);
-                    container.remove();
-                }).error(function() {
-                    console.log("Error deleting interest " + person_slug);
-                });
-                break;
-            case "committeeActionsSubscription":
-                var committee_slug = container.attr("committee_slug");
-                $.post("/committee/" + committee_slug + "/actions/unsubscribe/", function(data) {
-                    console.log("Deleted interest " + committee_slug);
-                    container.remove();
-                }).error(function() {
-                    console.log("Error deleting interest " + committee_slug);
-                });
-                break;
-            case "committeeEventsSubscription":
-                var committee_slug = container.attr("committee_slug");
-                console.log("committeeEventsSubscription: slug=" + committee_slug);
-                
-                $.post("/committee/" + committee_slug + "/events/unsubscribe/", function(data) {
-                    console.log("Deleted interest " + committee_slug);
-                    container.remove();
-                }).error(function() {
-                    console.log("Error deleting interest " + committee_slug);
-                });
-                break;
-            case "billSearchSubscription":
-                var search_id = container.attr("subscription_id");
-                posturl = '/search_unsubscribe/' + search_id + '/';
-                $.post(posturl).error(function() {
-                    console.log("Error unsubscribing to BillSearchSubscription ", search_id);
-                });
-                console.log("Deleted search");
-                container.remove();
-                break;
-            case "eventsSubscription":
-                var search_id = container.attr("subscription_id");
-                posturl = '/events/unsubscribe/';
-                $.post(posturl).error(function() {
-                    console.log("Error unsubscribing to EventsSubscription ");
-                });
-                console.log("Deleted search");
-                container.remove();
-                break;
+        if(container.hasClass("person")){
+            var slug = container.attr("person_slug");
+            var del_url = "/person/" + slug + "/unsubscribe/"
+        } else if(container.hasClass("committee-action")){
+            var slug = container.attr("committee_slug");
+            var del_url = "/committee/" + slug + "/actions/unsubscribe/"
+        } else if(container.hasClass("committee-event")){
+            var slug = container.attr("committee_slug");
+            var del_url = "/committee/" + slug + "/events/unsubscribe/"
+        } else if(container.hasClass("bill-search")){
+            var slug = container.attr("subscription_id");
+            var del_url = '/search_unsubscribe/' + slug + '/'
+        } else if(container.hasClass("bill-action")){
+            var slug = container.attr("bill_slug");
+            var del_url = "/legislation/" + slug + "/unsubscribe/"
+        } else if(container.hasClass("events")){
+            var del_url = "/events/unsubscribe/"
         }
+
+        $.post(del_url, function(data){
+            console.log("deleted "+del_url);
+            container.remove();
+        }).error(function(){
+            console.log("error deleting "+del_url)
+        });
+
     }
 
     // Add callbacks for hidden "remove" buttons
@@ -249,35 +215,11 @@
     // 4. Bill Search Subscriptions
     // 5. Bill Actions Subscriptions
     // 6. Events Subscriptions
-    $("button.removePersonSubscription").click(function() {
+    $("button.remove-subscription").click(function () {
         var container = $(this).parents(".subscription");
-        removeSubscription(container, "personSubscription");
+        removeSubscription(container)
     });
 
-    $("button.removeCommitteeActionsSubscription").click(function() {
-        var container = $(this).parents(".subscription");
-        removeSubscription(container, "committeeActionsSubscription");
-    });
-
-    $("button.removeCommitteeEventsSubscription").click(function() {
-        var container = $(this).parents(".subscription");
-        removeSubscription(container, "committeeEventsSubscription");
-    });
-
-    $("button.removeBillSearchSubscription").click(function() {
-        var container = $(this).parents(".subscription");
-        removeSubscription(container, "billSearchSubscription");
-    });
-
-    $("button.removeBillActionsSubscription").click(function() {
-        var container = $(this).parents(".subscription");
-        removeSubscription(container, "billActionsSubscription");
-    });
-
-    $("button.removeEventsSubscription").click(function() {
-        var container = $(this).parents(".subscription");
-        removeSubscription(container, "eventsSubscription");
-    });
 
     $("input.removeButton").click(function() {
         // find the adjacent button and make it visible
