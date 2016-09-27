@@ -37,10 +37,7 @@
                         <a href="{% url 'person_feed' subscription.person.slug %}" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     </td>
                     <td align="left">
-                        <div>
-                        <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                        <span style="display: none;">&nbsp;<button class="remove-subscription removePersonSubscription">Remove</button></span>
-                        </div>
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -56,10 +53,7 @@
                         <a href="{% url 'committee_detail_action_feed' subscription.committee.slug %}" title="RSS feed for Actions for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     </td>
                     <td align="left">
-                        <div>
-                            <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="remove-subscription removeCommitteeActionsSubscription">Remove</button></span>
-                        </div>
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -75,10 +69,7 @@
                         <a href="{% url 'committee_detail_events_feed' subscription.committee.slug %}" title="RSS feed for Events for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     </td>
                     <td align="left">
-                        <div>
-                        <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                        <span style="display: none;">&nbsp;<button class="remove-subscription removeCommitteeEventsSubscription">Remove</button></span>
-                        </div>
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -108,10 +99,7 @@
                         <a href="{# url 'councilmatic_search_feed' subscription.search_term #}" title="RSS feed for Actions for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     </td>
                     <td align="left">
-                        <div>
-                            <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="remove-subscription removeBillSearchSubscription">Remove</button></span>
-                        </div>
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -127,10 +115,7 @@
                         <a href="{% url 'bill_detail_action_feed' subscription.bill.slug %}" title="RSS feed for Actions for {{subscription.bill.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     </td>
                     <td align="left">
-                        <div>
-                            <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="remove-subscription removeBillActionsSubscription">Remove</button></span>
-                        </div>
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -144,16 +129,29 @@
                         All
                     </td>
                     <td align="left">
-                        <div>
-                            <input type="checkbox" class="removeButton" name="remove" style="float:left;">
-                            <span style="display: none;">&nbsp;<button class="remove-subscription removeEventsSubscription">Remove</button></span>
-                        </div>
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
                     </td>
                 </tr>
                 {% endfor %}
                 </div>
             </tbody>
         </table>
+
+        <div class="modal fade" id="unsubscribe-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <p>
+                        Are you sure you want to unsubscribe from this alert?
+                    </p>
+                    <br/>
+
+                    <button id="trigger-unsubscribe" data-dismiss="modal" class="btn btn-default btn-unsubscribe">Yes, unsubscribe</button>
+                </div>
+            </div>
+          </div>
+        </div>
+
     </div>
 </div>
 
@@ -171,87 +169,46 @@
 
 {% endblock %}
 {% block extra_js %}
-    <script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
-    <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
+<script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
 
-    <script>
-    // remove the actual interest
+<script>
 
-    function removeSubscription(container) {
+    $('#unsubscribe-modal').modal({show:false})   
 
-        var del_url = container.attr("data-unsubscribe-url")
 
-        $.post(del_url, function(data){
-            console.log("deleted "+del_url);
-            container.remove();
-        }).error(function(){
-            console.log("error deleting "+del_url)
-        });
-
-    }
-
-    // Add callbacks for hidden "remove" buttons
     // 1. Person Subscriptions
     // 2. Committee Actions Subscriptions
     // 3. Committee Events Subscriptions
     // 4. Bill Search Subscriptions
     // 5. Bill Actions Subscriptions
     // 6. Events Subscriptions
-    $("button.remove-subscription").click(function () {
-        var container = $(this).parents(".subscription");
-        removeSubscription(container)
+    var row_to_delete = null
+    $(".prompt-unsubscribe").click(function() {
+        console.log("prompt unsubscribe")
+        row_to_delete = $(this).parents(".subscription");
     });
 
 
-    $("input.removeButton").click(function() {
-        // find the adjacent button and make it visible
-        button = $(this).next();
-        if ($(this).is(":checked")) {
-            button.css("display", "block");
-        }
-        else {
-            button.css("display", "none");
-        }
+    // remove the actual interest
+    function removeSubscription() {
+
+        var del_url = row_to_delete.attr("data-unsubscribe-url")
+
+        $.post(del_url, function(data){
+            console.log("deleted "+del_url);
+            row_to_delete.fadeOut();
+        }).error(function(){
+            console.log("error deleting "+del_url)
+        });
+    }
+
+    $("#trigger-unsubscribe").click(function(){
+        console.log(row_to_delete)
+        removeSubscription()
     });
 
-        $("#committees").DataTable({
-            "info": false,
-            "searching": false,
-            "bLengthChange": false,
-            "paging": false,
-            "aaSorting": [ [0,'asc'] ],
-            "aoColumns": [
-                null,
-                null,
-                null
-            ]
-        });
 
-        $("#subcommittees").DataTable({
-            "info": false,
-            "searching": false,
-            "bLengthChange": false,
-            "paging": false,
-            "aaSorting": [ [0,'asc'] ],
-            "aoColumns": [
-                null,
-                null,
-                null
-            ]
-        });
-
-        $("#taskforces").DataTable({
-            "info": false,
-            "searching": false,
-            "bLengthChange": false,
-            "paging": false,
-            "aaSorting": [ [0,'asc'] ],
-            "aoColumns": [
-                null,
-                null,
-                null
-            ]
-        });
-    </script>
+</script>
 {% endblock %}
