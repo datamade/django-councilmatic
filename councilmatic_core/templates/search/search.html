@@ -99,7 +99,7 @@
             {% endif %}
             
             <i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                
+
             {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
                 {% if user_subscribed %}
                 <a href="#" id="searchSubscribe" class="removeSubscription" title="remove alert">
@@ -240,16 +240,19 @@
 {% block extra_js %}
     <script>
     $(document).ready(function() {
-        $("#searchSubscribe").click(function() {
+            $("#searchSubscribe").click(function() {
             if ($(this).hasClass('createSubscription')) {
-                posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
-                //facets = "{{request.GET.selected_facets}}"
-                //facets = "{{selected_facets|safe}}" // XXX: is this actually safe?
-                facets = JSON.stringify({{selected_facets|safe}});
-                //console.log("selected_facets are" , facets);
-                //console.log("selected_facets!=", facets);
-                //console.log("posturl=", posturl);
-                //$.post(posturl, function(data) {}
+		posturl2 = "/search_check_subscription/"
+		facets2 = JSON.stringify({{selected_facets|safe}});
+                stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
+			function(data, status) {
+				console.log("returned from post with data: ", data, "status:", status);
+			}).error(function() {
+				console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
+			}), 
+
+		posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
+                facets =  JSON.stringify({{selected_facets|safe}});
                 $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
                     console.log("Error subscribing to  interest {{request.GET.q}} with {{selected_facets}}" );
                 });
@@ -259,8 +262,6 @@
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/search_unsubscribe/";
                 facets = JSON.stringify({{selected_facets|safe}});
-                //console.log("selected_facets!=", facets);
-                //console.log("posturl=", posturl);
                 $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
                     console.log("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
                 });
@@ -290,18 +291,20 @@
                     $(this).find('i').removeClass("fa-plus").addClass("fa-minus");
                 }
             });
-
+  	    var timestamp = Date.now();
+		
             var existing_q = decodeURIComponent("{{ q_filters }}").replace(/&amp;/g, '&').replace(/\+/g, ' ');
 
             $(".filter-value").click(function() {
-
                 var addtl_filter = $(this).attr('data');
 
                 if(existing_q){
-                    window.location = '/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter);
+			window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
+			
                 }
                 else{
-                    window.location = '/search/?selected_facets=' + encodeURIComponent(addtl_filter);
+			window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
+			
                 };
 
             });
@@ -315,7 +318,8 @@
                     return encodeURIComponent(value) != to_remove;
                 });
 
-                window.location = '/search/?' + new_components.join('&');
+                window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+		    
 
             });
 

@@ -19,29 +19,38 @@ import re
 import json
 from django.core.exceptions import ObjectDoesNotExist
 
+from notifications.models import BillSearchSubscription
+
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
+# XXX mcc: genuinely not sure if this is helping or not
+class NeverCacheMixin(object):
+    @method_decorator(never_cache)
+    def dispatch(self, *args, **kwargs):
+        return super(NeverCacheMixin, self).dispatch(*args, **kwargs)
 
-
-class CouncilmaticFacetedSearchView(FacetedSearchView):
-
+class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
     def extra_context(self):
-
         extra = super(FacetedSearchView, self).extra_context()
         extra['request'] = self.request
         extra['facets'] = self.results.facet_counts()
 
         q_filters = ''
         url_params = [(p, val) for (p, val) in self.request.GET.items(
-        ) if p != 'page' and p != 'selected_facets' and p != 'amp']
+        ) if p != 'page' and p != 'selected_facets' and p != 'amp' and p != '_']
         selected_facet_vals = self.request.GET.getlist('selected_facets')
+        search_term = self.request.GET.get('q')
         for facet_val in selected_facet_vals:
             url_params.append(('selected_facets', facet_val))
         if url_params:
             q_filters = urllib.parse.urlencode(url_params)
 
         extra['q_filters'] = q_filters
-
+        
         selected_facets = {}
         for val in self.request.GET.getlist("selected_facets"):
             if val:
@@ -51,28 +60,26 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
                 except KeyError:
                     selected_facets[k] = [v]
 
-        print ("CouncilmaticFacetedSearchView(): selected_facets = ", selected_facets)
         extra['selected_facets'] = selected_facets
 
-        #print ("CouncilmaticFacetedSearchView(): selected_facets=", selected_facets)
-        
         extra['current_council_members'] = {
             p.current_member.person.name: p.label for p in Post.objects.all() if p.current_member
         }
 
-        extra['user_subscribed'] = False            
-        if self.request.user.is_authenticated():
-            user = self.request.user
-            extra['user'] = user
-            # check if person of interest is subscribed to by user
-            try:
-                bss = user.billsearchsubscriptions.get(user=user, search_facets__exact=selected_facets)
-                print ("MATCH FOUND!!")
-                extra['user_subscribed'] = True
-            except ObjectDoesNotExist as e:
-                print ("MATCH NOT FOUND!")
-                print (e)
-        print ("CouncilmaticFacetedSearchView: extra = ", extra)
+        if (settings.USING_NOTIFICATIONS):
+            extra['user_subscribed'] = False            
+            if self.request.user.is_authenticated():
+                user = self.request.user
+                extra['user'] = user
+                # check if person of interest is subscribed to by user
+                print ("checking the notifications_billsearchsubscription table for search term ", search_term, "with exact search_facets: ", selected_facets)
+                # there should be only one..
+                try:
+                    bss = user.billsearchsubscriptions.get(user=user, search_term=search_term, search_facets__exact=selected_facets)
+                    extra['user_subscribed'] = True
+                except BillSearchSubscription.DoesNotExist:
+                    extra['user_subscribed'] = False                
+
         return extra
 
 
@@ -250,8 +257,6 @@ class BillDetailView(DetailView):
                 if bill == bas.bill:
                     context['user_subscribed'] = True
                     break
-
-        
         
         return context
 

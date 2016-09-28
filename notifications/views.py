@@ -199,30 +199,42 @@ def search_subscribe(request):
 
 @csrf_exempt
 @login_required(login_url='/login/')
-def search_unsubscribe_old(request):
+def search_unsubscribe(request):
     q = request.POST.get('query')
     selected_facets = request.POST.get('selected_facets')
-    #print("q=",q, "selected_facets=", selected_facets, type(selected_facets))
     selected_facets_json = json.loads(selected_facets)
     bss=None
     try:
-        bss = BillSearchSubscription.objects.get(user=request.user,search_facets=selected_facets_json)
+        bss = BillSearchSubscription.objects.get(user=request.user,search_term__exact=q, search_facets__exact=selected_facets_json)
     except ObjectDoesNotExist as e:
         print ("error", e)     # XXX handle exceptions
     bss.delete() 
     return HttpResponse('unsubscribe()d')
 
-# search_unsubscribe just takes an ID because it's easier to do this than to marshal dictionaries of search facets around as JSON.
 @csrf_exempt
 @login_required(login_url='/login/')
-def search_unsubscribe(request, search_subscription_id):
+def search_check_subscription(request):
+    q = request.POST.get('query')
+    selected_facets = request.POST.get('selected_facets')
+    dict_selected_facets = json.loads(selected_facets)
     try:
-        # Make sure that the user in question is the owner of this search subscription by also looking up user=request.user
-        bss = BillSearchSubscription.objects.get(user=request.user, id=search_subscription_id)    
-    except ObjectDoesNotExist as e:
-        print ("error", e)     # XXX handle exceptions
-    bss.delete()
-    return HttpResponse('unsubscribe()d')
+        bss  = BillSearchSubscription.objects.get(user=request.user, search_term__exact=q, search_facets__exact = dict_selected_facets) # XXX handle exceptions
+    except BillSearchSubscription.DoesNotExist:
+        return HttpResponse('false')
+    return HttpResponse('true')
+
+# search_unsubscribe just takes an ID because it's easier to do this than to marshal dictionaries of search facets around as JSON.
+# actually don't do this
+#@csrf_exempt
+#@login_required(login_url='/login/')
+#def search_unsubscribe(request):
+#    try:
+#        # Make sure that the user in question is the owner of this search subscription by also looking up user=request.user
+#        bss = BillSearchSubscription.objects.get(user=request.user, id=search_subscription_id)    
+#    except ObjectDoesNotExist as e:
+#        print ("error", e)     # XXX handle exceptions
+#    bss.delete()
+#    return HttpResponse('unsubscribe()d')
 
 @csrf_exempt
 @login_required(login_url='/login/')
