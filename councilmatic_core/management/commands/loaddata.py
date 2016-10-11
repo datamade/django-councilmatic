@@ -1,3 +1,14 @@
+import json
+import re
+import datetime
+import os
+
+import requests
+import pytz
+import psycopg2
+
+from dateutil import parser as date_parser
+
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
@@ -5,19 +16,11 @@ from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.text import slugify
 from django.db.utils import IntegrityError, DataError
 from django.db.models import Max
+
 from councilmatic_core.models import Person, Bill, Organization, Action, ActionRelatedEntity, \
     Post, Membership, Sponsorship, LegislativeSession, \
     Document, BillDocument, Event, EventParticipant, EventDocument, \
     EventAgendaItem, AgendaItemBill
-
-from dateutil import parser as date_parser
-
-import requests
-import json
-import pytz
-import re
-import datetime
-import psycopg2
 
 for configuration in ['OCD_JURISDICTION_ID',
                       'HEADSHOT_PATH',
@@ -62,9 +65,14 @@ class Command(BaseCommand):
 
         parser.add_argument('--update_since',
                             help='Only update objects in the database that have changed since this date')
-
+        
+        parser.add_argument('--import_only',
+                            action='store_true',
+                            default=False,
+                            help='Load already downloaded OCD data')
+    
     def handle(self, *args, **options):
-
+        
         db_conn = settings.DATABASES['default']
         self.db_conn_kwargs = {
             'database': db_conn['NAME'],
@@ -73,12 +81,25 @@ class Command(BaseCommand):
             'host': db_conn['HOST'],
             'port': db_conn['PORT'],
         }
+        
+        self.this_folder = os.path.abspath(os.path.dirname(__file__))
+        
+        self.organizations_folder = os.path.join(self.this_folder, 'organizations')
+        self.posts_folder = os.path.join(self.this_folder, 'posts')
+        self.bills_folder = os.path.join(self.this_folder, 'bills')
+        self.people_folder = os.path.join(self.this_folder, 'people')
+        self.events_folder = os.path.join(self.this_folder, 'events')
 
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
 
         if options['endpoint'] == 'organizations':
-            self.grab_organizations(delete=options['delete'])
+            
+            if not options['import_only']:
+                self.grab_organizations()
+            
+            self.insert_organizations(delete=options['delete'])
+            
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'bills':
@@ -95,23 +116,30 @@ class Command(BaseCommand):
 
         else:
             print("\n** loading all data types! **\n")
+            
+            if not options['import_only']:
+                self.grab_organizations()
+                self.grab_people(delete=options['delete'])
+                self.grab_bills(delete=options['delete'])
+                self.grab_events(delete=options['delete'])
+            
+            self.insert_organizations(delete=options['delete'])
 
-            self.grab_organizations(delete=options['delete'])
-            self.grab_people(delete=options['delete'])
-            self.grab_bills(delete=options['delete'])
-            self.grab_events(delete=options['delete'])
 
             print("\ndone!", datetime.datetime.now())
 
-    def grab_organizations(self, delete=False):
+    def grab_organizations(self):
         print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
-        if delete:
-            with psycopg2.connect(**self.db_conn_kwargs) as conn:
-                with conn.cursor() as curs:
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_organization CASCADE')
-                    curs.execute('TRUNCATE councilmatic_core_post CASCADE')
-            print("deleted all organizations and posts")
+        
+        try:
+            os.mkdir(os.path.join(self.organizations_folder))
+        except OSError:
+            pass
+        
+        try:
+            os.mkdir(os.path.join(self.posts_folder))
+        except OSError:
+            pass
 
         # first grab city council root
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
@@ -139,8 +167,9 @@ class Command(BaseCommand):
         if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
             self.populate_council_district_shapes()
 
-    def grab_organization_posts(self, org_dict, parent=None):
+    def grab_organization_posts(self, org_dict):
         url = base_url + '/organizations/'
+
         r = requests.get(url, params=org_dict)
         page_json = json.loads(r.text)
         organization_ocd_id = page_json['results'][0]['id']
@@ -151,57 +180,82 @@ class Command(BaseCommand):
 
         if page_json.get('error'):
             raise DataError(page_json['error'])
-
-        source_url = ''
-        if page_json['sources']:
-            source_url = page_json['sources'][0]['url']
-
-        org_obj, created = Organization.objects.get_or_create(
-            ocd_id=organization_ocd_id,
-            name=page_json['name']
-        )
         
-        org_obj.classification = page_json['classification']
-        org_obj.source_url = source_url
-        org_obj._parent = parent
-        org_obj.slug = slugify(page_json['name'])
+        ocd_uuid = org_dict['id'].split('/')[-1]
+        organization_filename = '{}.json'.format(ocd_uuid)
+        
+        with open(os.path.join(self.organizations_folder, organization_filename), 'w') as f:
+            f.write(json.dumps(page_json))
 
-        try:
-            org_obj.save()
-        except IntegrityError:
-            # Slug must be unique
-            ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
-            org_obj.slug = slugify(page_json['name']) + ocd_id_part
-            org_obj.save()
+        # Break here and write to file
+        # Then do bulk inserts
 
+        # org_obj, created = Organization.objects.get_or_create(
+        #     ocd_id=organization_ocd_id,
+        #     name=page_json['name']
+        # )
+        # 
+        # org_obj.classification = page_json['classification']
+        # org_obj.source_url = source_url
+        # org_obj._parent = parent
+        # org_obj.slug = slugify(page_json['name'])
+
+        # try:
+        #     org_obj.save()
+        # except IntegrityError:
+        #     # Slug must be unique
+        #     ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
+        #     org_obj.slug = slugify(page_json['name']) + ocd_id_part
+        #     org_obj.save()
+
+        # # if created and DEBUG:
+        # #     print('   adding organization: %s' % org_obj.name )
         # if created and DEBUG:
-        #     print('   adding organization: %s' % org_obj.name )
-        if created and DEBUG:
-            print('\u263A', end=' ', flush=True)
+        #     print('\u263A', end=' ', flush=True)
 
         for post_json in page_json['posts']:
+            
+            post_uuid = post_json['id'].split('/')[-1]
+            post_filename = '{}.json'.format(post_uuid)
 
-            try:
-                obj = Post.objects.get(ocd_id=post_json['id'])
+            with open(os.path.join(self.posts_folder, post_filename), 'w') as f:
+                f.write(json.dumps(post_json))
 
-                obj.label = post_json['label']
-                obj.role = post_json['role']
-                obj._organization = org_obj
-                obj.division_ocd_id = post_json['division_id']
+        #     try:
+        #         obj = Post.objects.get(ocd_id=post_json['id'])
 
-                obj.save()
+        #         obj.label = post_json['label']
+        #         obj.role = post_json['role']
+        #         obj._organization = org_obj
+        #         obj.division_ocd_id = post_json['division_id']
 
-            except Post.DoesNotExist:
-                obj, created = Post.objects.get_or_create(
-                    ocd_id=post_json['id'],
-                    label=post_json['label'],
-                    role=post_json['role'],
-                    _organization=org_obj,
-                    division_ocd_id=post_json['division_id'],
-                )
+        #         obj.save()
+
+        #     except Post.DoesNotExist:
+        #         obj, created = Post.objects.get_or_create(
+        #             ocd_id=post_json['id'],
+        #             label=post_json['label'],
+        #             role=post_json['role'],
+        #             _organization=org_obj,
+        #             division_ocd_id=post_json['division_id'],
+        #         )
 
         for child in page_json['children']:
-            self.grab_organization_posts({'id': child['id']}, org_obj)
+            self.grab_organization_posts({'id': child['id']})
+    
+    def insert_organizations(self, delete=False):
+        
+        if delete:
+            with psycopg2.connect(**self.db_conn_kwargs) as conn:
+                with conn.cursor() as curs:
+                    curs.execute(
+                        'TRUNCATE councilmatic_core_organization CASCADE')
+                    curs.execute('TRUNCATE councilmatic_core_post CASCADE')
+            print("deleted all organizations and posts")
+        
+        for organization in os.listdir(self.organizations_folder):
+            # First insert raw 
+
 
     def populate_council_district_shapes(self):
 
