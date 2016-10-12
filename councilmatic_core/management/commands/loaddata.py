@@ -16,6 +16,7 @@ from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.text import slugify
 from django.db.utils import IntegrityError, DataError
 from django.db.models import Max
+from django.db import connection
 
 from councilmatic_core.models import Person, Bill, Organization, Action, ActionRelatedEntity, \
     Post, Membership, Sponsorship, LegislativeSession, \
@@ -98,8 +99,15 @@ class Command(BaseCommand):
             if not options['import_only']:
                 self.grab_organizations()
             
-            self.insert_organizations(delete=options['delete'])
+            self.insert_raw_organizations(delete=options['delete'])
+            self.insert_raw_posts(delete=options['delete'])
             
+            self.update_existing_organizations()
+            self.update_existing_posts()
+            
+            self.add_new_organizations()
+            self.add_new_posts()
+
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'bills':
@@ -107,8 +115,18 @@ class Command(BaseCommand):
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'people':
-            self.grab_people(delete=options['delete'])
-            print("\ndone!", datetime.datetime.now())
+            if not options['import_only']:
+                self.grab_people()
+                print("\ndone!", datetime.datetime.now())
+            
+            self.insert_raw_people(delete=options['delete'])
+            self.insert_raw_memberships(delete=options['delete'])
+            
+            self.update_existing_people()
+            self.update_existing_memberships()
+            
+            self.add_new_people()
+            self.add_new_memberships()
 
         elif options['endpoint'] == 'events':
             self.grab_events(delete=options['delete'])
@@ -119,12 +137,24 @@ class Command(BaseCommand):
             
             if not options['import_only']:
                 self.grab_organizations()
-                self.grab_people(delete=options['delete'])
+                self.grab_people()
                 self.grab_bills(delete=options['delete'])
                 self.grab_events(delete=options['delete'])
             
-            self.insert_organizations(delete=options['delete'])
-
+            self.insert_raw_organizations(delete=options['delete'])
+            self.insert_raw_posts(delete=options['delete'])
+            self.insert_raw_people(delete=options['delete'])
+            self.insert_raw_memberships(delete=options['delete'])
+            
+            self.update_existing_organizations()
+            self.update_existing_posts()
+            self.update_existing_people()
+            self.update_existing_memberships()
+            
+            self.add_new_organizations()
+            self.add_new_posts()
+            self.add_new_people()
+            self.add_new_memberships()
 
             print("\ndone!", datetime.datetime.now())
 
@@ -187,75 +217,641 @@ class Command(BaseCommand):
         with open(os.path.join(self.organizations_folder, organization_filename), 'w') as f:
             f.write(json.dumps(page_json))
 
-        # Break here and write to file
-        # Then do bulk inserts
-
-        # org_obj, created = Organization.objects.get_or_create(
-        #     ocd_id=organization_ocd_id,
-        #     name=page_json['name']
-        # )
-        # 
-        # org_obj.classification = page_json['classification']
-        # org_obj.source_url = source_url
-        # org_obj._parent = parent
-        # org_obj.slug = slugify(page_json['name'])
-
-        # try:
-        #     org_obj.save()
-        # except IntegrityError:
-        #     # Slug must be unique
-        #     ocd_id_part = organization_ocd_id.rsplit('-', 1)[1]
-        #     org_obj.slug = slugify(page_json['name']) + ocd_id_part
-        #     org_obj.save()
-
-        # # if created and DEBUG:
-        # #     print('   adding organization: %s' % org_obj.name )
-        # if created and DEBUG:
-        #     print('\u263A', end=' ', flush=True)
 
         for post_json in page_json['posts']:
             
             post_uuid = post_json['id'].split('/')[-1]
             post_filename = '{}.json'.format(post_uuid)
+            post_json['org_ocd_id'] = org_dict['id']
 
             with open(os.path.join(self.posts_folder, post_filename), 'w') as f:
                 f.write(json.dumps(post_json))
 
-        #     try:
-        #         obj = Post.objects.get(ocd_id=post_json['id'])
-
-        #         obj.label = post_json['label']
-        #         obj.role = post_json['role']
-        #         obj._organization = org_obj
-        #         obj.division_ocd_id = post_json['division_id']
-
-        #         obj.save()
-
-        #     except Post.DoesNotExist:
-        #         obj, created = Post.objects.get_or_create(
-        #             ocd_id=post_json['id'],
-        #             label=post_json['label'],
-        #             role=post_json['role'],
-        #             _organization=org_obj,
-        #             division_ocd_id=post_json['division_id'],
-        #         )
-
         for child in page_json['children']:
             self.grab_organization_posts({'id': child['id']})
     
-    def insert_organizations(self, delete=False):
-        
-        if delete:
-            with psycopg2.connect(**self.db_conn_kwargs) as conn:
-                with conn.cursor() as curs:
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_organization CASCADE')
-                    curs.execute('TRUNCATE councilmatic_core_post CASCADE')
-            print("deleted all organizations and posts")
-        
-        for organization in os.listdir(self.organizations_folder):
-            # First insert raw 
+    def grab_people(self):
+        # find people associated with existing organizations & bills
 
+        print("\n\nLOADING PEOPLE", datetime.datetime.now())
+        
+        try:
+            os.mkdir(os.path.join(self.people_folder))
+        except OSError:
+            pass
+        
+        for organization_json in os.listdir(self.organizations_folder):
+            
+            org_info = json.load(open(os.path.join(self.organizations_folder, organization_json)))
+            
+            for membership_json in org_info['memberships']:
+                person_json = self.grab_person_memberships(membership_json['person']['id'])
+                
+                person_uuid = person_json['id'].split('/')[-1]
+                person_filename = '{}.json'.format(person_uuid)
+                
+                with open(os.path.join(self.people_folder, person_filename), 'w') as f:
+                    f.write(json.dumps(person_json))
+    
+    def grab_person_memberships(self, person_id):
+        # this grabs a person and all their memberships
+        
+        url = base_url + '/' + person_id + '/'
+        r = requests.get(url)
+        page_json = json.loads(r.text)
+
+        # save image to disk
+        if page_json['image']:
+            r = requests.get(page_json['image'], verify=False)
+            if r.status_code == 200:
+                with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
+                    for chunk in r.iter_content(1000):
+                        f.write(chunk)
+                        f.flush()
+
+        page_json['email'] = None
+        for contact_detail in page_json['contact_details']:
+            if contact_detail['type'] == 'email':
+                if contact_detail['value'] != 'mailto:':
+                    page_json['email'] = contact_detail['value']
+
+        page_json['website_url'] = None
+        for link in page_json['links']:
+            if link['note'] == "web site":
+                page_json['website_url'] = link['url']
+        
+        return page_json
+
+    def remake_raw(self, entity_type, delete=False):
+        with connection.cursor() as curs:
+            
+            if delete:
+                curs.execute(
+                    'TRUNCATE councilmatic_core_{} CASCADE'.format(entity_type))
+                
+                print("deleted all {}".format(entity_type))
+            
+            curs.execute('DROP TABLE IF EXISTS raw_{}'.format(entity_type))
+            
+            curs.execute(''' 
+                CREATE TABLE raw_{0} AS (
+                  SELECT * FROM councilmatic_core_{0}
+                ) WITH NO DATA
+            '''.format(entity_type))
+
+    def setup_raw(self, entity_type, delete=False):
+        
+        self.remake_raw(entity_type, delete=delete)
+
+        with connection.cursor() as curs:
+            
+            curs.execute('''
+                ALTER TABLE raw_{} ADD PRIMARY KEY (ocd_id)
+            '''.format(entity_type))
+            
+            curs.execute('''
+                ALTER TABLE raw_{} 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            '''.format(entity_type))
+
+    def insert_raw_organizations(self, delete=False):
+
+        self.setup_raw('organization', delete=delete)
+
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_organization (
+                ocd_id,
+                name,
+                classification,
+                source_url,
+                slug,
+                parent_id
+            ) VALUES {}
+            '''
+
+        with connection.cursor() as curs:
+            for organization_json in os.listdir(self.organizations_folder):
+                
+                org_info = json.load(open(os.path.join(self.organizations_folder, organization_json)))
+                
+                source_url = None 
+                if org_info['sources']:
+                    source_url = org_info['sources'][0]['url']
+                
+                parent_ocd_id = None
+                if org_info['parent']:
+                    parent_ocd_id = org_info['parent']['id']
+                
+                ocd_part = org_info['id'].rsplit('-', 1)[1]
+                slug = '{0}-{1}'.format(slugify(org_info['name']),ocd_part)
+
+                insert = (
+                    org_info['id'],
+                    org_info['name'],
+                    org_info['classification'],
+                    source_url,
+                    slug,
+                    parent_ocd_id,
+                )
+                
+                inserts.append(insert)
+
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_organization')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} organizations'.format(raw_count)))
+
+    def insert_raw_posts(self, delete=False):
+        
+        self.setup_raw('post', delete=delete)
+        
+        inserts = []
+
+        insert_fmt = ''' 
+            INSERT INTO raw_post (
+                ocd_id,
+                label,
+                role,
+                organization_id,
+                division_ocd_id
+            ) VALUES {}
+        '''
+
+        with connection.cursor() as curs:
+            for post_json in os.listdir(self.posts_folder):
+                
+                post_info = json.load(open(os.path.join(self.posts_folder, post_json)))
+                
+                insert = (
+                    post_info['id'],
+                    post_info['label'],
+                    post_info['role'],
+                    post_info['org_ocd_id'],
+                    post_info['division_id'],
+                )
+                
+                inserts.append(insert)
+
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+
+            curs.execute('select count(*) from raw_post')
+            raw_count = curs.fetchone()[0]
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} posts'.format(raw_count)))
+    
+    def insert_raw_people(self, delete=False):
+
+        self.setup_raw('person', delete=delete)
+
+        inserts = []
+
+        insert_fmt = ''' 
+            INSERT INTO raw_person (
+                ocd_id,
+                name,
+                headshot,
+                source_url,
+                source_note,
+                website_url,
+                email,
+                slug
+            ) VALUES {}
+        '''
+
+        with connection.cursor() as curs:
+            for person_json in os.listdir(self.people_folder):
+                
+                person_info = json.load(open(os.path.join(self.people_folder, person_json)))
+                
+                source_url = None 
+                if person_info['sources']:
+                    source_url = person_info['sources'][0]['url']
+                
+                source_note = None 
+                if person_info['sources']:
+                    source_note = person_info['sources'][0]['note']
+                
+                ocd_part = person_info['id'].rsplit('-', 1)[1]
+                slug = '{0}-{1}'.format(slugify(person_info['name']),ocd_part)
+                
+                insert = (
+                    person_info['id'],
+                    person_info['name'],
+                    person_info['image'],
+                    source_url,
+                    source_note,
+                    person_info['website_url'],
+                    person_info['email'],
+                    slug
+                )
+                
+                inserts.append(insert)
+
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+
+            curs.execute('select count(*) from raw_person')
+            raw_count = curs.fetchone()[0]
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} people'.format(raw_count)))
+    
+    def insert_raw_memberships(self, delete=False):
+
+        self.remake_raw('membership', delete=delete)
+        
+        with connection.cursor() as curs:
+            
+            curs.execute('''
+                ALTER TABLE raw_membership 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+
+        insert_fmt = ''' 
+            INSERT INTO raw_membership (
+                label,
+                role,
+                start_date,
+                end_date,
+                organization_id,
+                person_id,
+                post_id
+            ) VALUES {}
+        '''
+
+        with connection.cursor() as curs:
+            for person_json in os.listdir(self.people_folder):
+                
+                person_info = json.load(open(os.path.join(self.people_folder, person_json)))
+
+                for membership_json in person_info['memberships']:
+                    
+                    end_date = parse_date(membership_json['end_date'])
+                    
+                    start_date = parse_date(membership_json['start_date'])
+                    
+                    post_id = None
+                    if membership_json['post']:
+                        post_id = membership_json['post']['id']
+
+                    insert = (
+                        membership_json['label'],
+                        membership_json['role'],
+                        start_date,
+                        end_date,
+                        membership_json['organization']['id'],
+                        person_info['id'],
+                        post_id,
+                    )
+                    
+                    inserts.append(insert)
+
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+
+            curs.execute('select count(*) from raw_membership')
+            raw_count = curs.fetchone()[0]
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} memberships'.format(raw_count)))
+    
+    def setup_update(self, entity_type):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_{}'.format(entity_type))
+            curs.execute(''' 
+                CREATE TABLE change_{} (
+                    ocd_id VARCHAR,
+                    PRIMARY KEY (ocd_id)
+                )
+            '''.format(entity_type))
+    
+    def get_update_parts(self, cols, extra_cols):
+        wheres = []
+        sets = []
+        fields = []
+        for col in cols:
+            condition = '''
+                ((raw."{0}" IS NOT NULL OR dat.{0} IS NOT NULL) AND raw."{0}" <> dat.{0})
+            '''.format(col)
+            wheres.append(condition)
+            
+            sets.append('{0}=s.{0}'.format(col))
+            fields.append('raw.{0}'.format(col))
+        
+        for col in extra_cols:
+            sets.append('{0}=s.{0}'.format(col))
+            fields.append('raw.{0}'.format(col))
+
+        where_clause = ' OR '.join(wheres)
+        set_values = ', '.join(sets)
+        fields = ', '.join(fields)
+        
+        return where_clause, set_values, fields
+
+    def update_entity_type(self, entity_type, cols=[], extra_cols=['updated_at']):
+        
+        self.setup_update(entity_type)
+        
+        where_clause, set_values, fields = self.get_update_parts(cols, extra_cols)
+
+        find_changes = ''' 
+            INSERT INTO change_{0}
+              SELECT raw.ocd_id 
+              FROM raw_{0} AS raw
+              JOIN councilmatic_core_{0} AS dat
+                ON raw.ocd_id = dat.ocd_id
+              WHERE {1}
+        '''.format(entity_type, where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_{entity_type} SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_{entity_type} AS raw
+              JOIN change_{entity_type} AS change
+                ON raw.ocd_id = change.ocd_id
+            ) AS s
+            WHERE councilmatic_core_{entity_type}.ocd_id = s.ocd_id
+        '''.format(set_values=set_values, 
+                   fields=fields,
+                   entity_type=entity_type)
+        
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_{}'.format(entity_type))
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed {1}'.format(change_count, entity_type)))
+
+    def update_existing_organizations(self):
+
+        cols = [
+            'ocd_id',
+            'name', 
+            'classification',
+            'source_url',
+            'parent_id',
+            'slug'
+        ]
+        
+        self.update_entity_type('organization', cols=cols)
+    
+    def update_existing_posts(self):
+        
+        cols = [
+            'ocd_id',
+            'label',
+            'role',
+            'organization_id',
+            'division_ocd_id'
+        ]
+        
+        self.update_entity_type('post', cols=cols)
+    
+    def update_existing_people(self):
+        cols = [
+            'ocd_id',
+            'name',
+            'headshot',
+            'source_url',
+            'source_note',
+            'website_url',
+            'email',
+            'slug',
+        ]
+        self.update_entity_type('person', cols=cols)
+
+    def update_existing_memberships(self):
+        
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_membership')
+            curs.execute(''' 
+                CREATE TABLE change_membership (
+                    organization_id VARCHAR,
+                    person_id VARCHAR,
+                    post_id VARCHAR
+                )
+            ''')
+        
+        cols = [
+           'label',
+           'role',
+           'start_date',
+           'end_date',
+           'organization_id',
+           'person_id',
+           'post_id',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, [])
+        
+        find_changes = ''' 
+            INSERT INTO change_membership
+              SELECT 
+                raw.organization_id,
+                raw.person_id,
+                raw.post_id
+              FROM raw_membership AS raw
+              JOIN councilmatic_core_membership AS dat
+                ON (raw.organization_id = dat.organization_id
+                    AND raw.person_id = dat.person_id
+                    AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, ''))
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_membership SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_membership AS raw
+              JOIN change_membership AS change
+                ON (raw.organization_id = change.organization_id
+                    AND raw.person_id = change.person_id
+                    AND COALESCE(raw.post_id, '') = COALESCE(change.post_id, ''))
+            ) AS s
+            WHERE councilmatic_core_membership.organization_id = s.organization_id
+              AND councilmatic_core_membership.person_id = s.person_id
+              AND COALESCE(councilmatic_core_membership.post_id, '') = COALESCE(s.post_id, '')
+        '''.format(set_values=set_values, 
+                   fields=fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_membership')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed membership'.format(change_count)))
+
+    def add_entity_type(self, entity_type, cols=[], extra_cols=['updated_at']):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS new_{}'.format(entity_type))
+            curs.execute(''' 
+                CREATE TABLE new_{} (
+                    ocd_id VARCHAR,
+                    PRIMARY KEY (ocd_id)
+                )
+            '''.format(entity_type))
+        
+        find_new = ''' 
+            INSERT INTO new_{0}
+              SELECT raw.ocd_id
+              FROM raw_{0} AS raw
+              LEFT JOIN councilmatic_core_{0} AS dat
+                ON raw.ocd_id = dat.ocd_id
+              WHERE dat.ocd_id IS NULL
+        '''.format(entity_type)
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_{}'.format(entity_type))
+            new_count = curs.fetchone()[0]
+        
+        cols = cols + extra_cols
+
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_{entity_type} (
+              {insert_fields}
+            )
+              SELECT {select_fields}
+              FROM raw_{entity_type} AS raw
+              JOIN new_{entity_type} AS new
+                USING(ocd_id)
+        '''.format(entity_type=entity_type,
+                   insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new {1}'.format(new_count, entity_type)))
+    
+    def add_new_organizations(self):
+        cols = [
+            'ocd_id',
+            'name', 
+            'classification',
+            'source_url',
+            'parent_id',
+            'slug',
+        ]
+        
+        self.add_entity_type('organization', cols=cols)
+
+    def add_new_posts(self):
+        cols = [
+            'ocd_id',
+            'label',
+            'role',
+            'organization_id',
+            'division_ocd_id'
+        ]
+        
+        self.add_entity_type('post', cols=cols)
+
+    def add_new_people(self):
+        cols = [
+            'ocd_id',
+            'name',
+            'headshot',
+            'source_url',
+            'source_note',
+            'website_url',
+            'email',
+            'slug',
+        ]
+        
+        self.add_entity_type('person', cols=cols)
+    
+    def add_new_memberships(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS new_membership')
+            curs.execute(''' 
+                CREATE TABLE new_membership (
+                    organization_id VARCHAR,
+                    person_id VARCHAR,
+                    post_id VARCHAR
+                )
+            ''')
+        
+        find_new = ''' 
+            INSERT INTO new_membership
+              SELECT 
+                raw.organization_id,
+                raw.person_id,
+                raw.post_id
+              FROM raw_membership AS raw
+              LEFT JOIN councilmatic_core_membership AS dat
+                ON (raw.organization_id = dat.organization_id
+                    AND raw.person_id = dat.person_id
+                    AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, ''))
+              WHERE dat.organization_id IS NULL
+                AND dat.person_id IS NULL
+                AND dat.post_id IS NULL
+        '''
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_membership')
+            new_count = curs.fetchone()[0]
+        
+        cols = [
+           'label',
+           'role',
+           'start_date',
+           'end_date',
+           'organization_id',
+           'person_id',
+           'post_id',
+           'updated_at',
+        ]
+
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_membership (
+              {insert_fields}
+            )
+              SELECT {select_fields}
+              FROM raw_membership AS raw
+              JOIN new_membership AS new
+                ON (raw.organization_id = new.organization_id
+                    AND raw.person_id = new.person_id
+                    AND COALESCE(raw.post_id, '') = COALESCE(new.post_id, ''))
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new membership'.format(new_count)))
 
     def populate_council_district_shapes(self):
 
@@ -283,28 +879,6 @@ class Command(BaseCommand):
                 Post.objects.filter(
                     division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
 
-    def grab_people(self, delete=False):
-        # find people associated with existing organizations & bills
-
-        print("\n\nLOADING PEOPLE", datetime.datetime.now())
-        if delete:
-            with psycopg2.connect(**self.db_conn_kwargs) as conn:
-                with conn.cursor() as curs:
-                    curs.execute('TRUNCATE councilmatic_core_person CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_membership CASCADE')
-            print("deleted all people, memberships")
-
-        # grab people associated with all existing organizations
-        orgs = Organization.objects.exclude(
-            name='Democratic').exclude(name='Republican').all()
-        for organization in orgs:
-            url = base_url + '/' + organization.ocd_id + '/'
-            r = requests.get(url)
-            page_json = json.loads(r.text)
-
-            for membership_json in page_json['memberships']:
-                self.grab_person_memberships(membership_json['person']['id'])
 
     def grab_bills(self, delete=False):
         # this grabs all bills & associated actions, documents from city council
@@ -677,141 +1251,6 @@ class Command(BaseCommand):
             document_type='V',
         )
 
-    def grab_person_memberships(self, person_id):
-        # this grabs a person and all their memberships
-        
-        url = base_url + '/' + person_id + '/'
-        r = requests.get(url)
-        page_json = json.loads(r.text)
-
-        # TO DO: handle updating people & memberships
-        person = Person.objects.filter(ocd_id=person_id).first()
-        if not person:
-
-            # save image to disk
-            if page_json['image']:
-                r = requests.get(page_json['image'], verify=False)
-                if r.status_code == 200:
-                    with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
-                        for chunk in r.iter_content(1000):
-                            f.write(chunk)
-                            f.flush()
-
-            email = ''
-            for contact_detail in page_json['contact_details']:
-                if contact_detail['type'] == 'email':
-                    if contact_detail['value'] != 'mailto:':
-                        email = contact_detail['value']
-
-            website_url = ''
-            for link in page_json['links']:
-                if link['note'] == "web site":
-                    website_url = link['url']
-
-            try:
-                person = Person.objects.create(
-                    ocd_id=page_json['id'],
-                    name=page_json['name'],
-                    headshot=page_json['image'],
-                    source_url=page_json['sources'][0]['url'],
-                    source_note=page_json['sources'][0]['note'],
-                    website_url=website_url,
-                    email=email,
-                    slug=slugify(page_json['name']),
-                )
-            except IntegrityError:
-                ocd_id_part = page_json['id'].rsplit('-', 1)[1]
-                person = Person.objects.create(
-                    ocd_id=page_json['id'],
-                    name=page_json['name'],
-                    headshot=page_json['image'],
-                    source_url=page_json['sources'][0]['url'],
-                    source_note=page_json['sources'][0]['note'],
-                    website_url='',
-                    email=email,
-                    slug=slugify(page_json['name']) + ocd_id_part,
-                )
-
-            # if DEBUG:
-            #     print('   adding person: %s' % person.name)
-            if DEBUG:
-                print('\u263A', end=' ', flush=True)
-
-        for membership_json in page_json['memberships']:
-
-            if membership_json['post']:
-                post = Post.objects.filter(ocd_id=membership_json[
-                                           'post']['id']).first()
-            else:
-                post = None
-
-            organization = Organization.objects.filter(
-                ocd_id=membership_json['organization']['id']).first()
-            # adding republican or democratic party when encountered
-            # b/c parties are not added when organizations are loaded (in
-            # grab_organizations)
-            if not organization and membership_json['organization']['name'] in ['Republican', 'Democratic']:
-                self.grab_organization_posts({'id': membership_json['organization']['id']})
-                organization = Organization.objects.filter(
-                    ocd_id=membership_json['organization']['id']).first()
-
-            try:
-                end_date = parse_date(membership_json['end_date'])
-            except:
-                end_date = None
-            try:
-                start_date = parse_date(membership_json['start_date'])
-            except:
-                start_date = None
-            
-            try:
-
-                obj = Membership.objects.get(
-                            _organization=organization,
-                            _person=person,
-                            _post=post)
-                created = False
-                
-                obj.label = membership_json['label']
-                obj.role = membership_json['role']
-                obj.start_date = start_date
-                obj.end_date = end_date
-                obj.save()
-            
-            except Membership.DoesNotExist:
-                obj = Membership.objects.create(
-                            _organization=organization,
-                            _person=person,
-                            _post=post,
-                            label=membership_json['label'],
-                            role=membership_json['role'],
-                            start_date=start_date,
-                            end_date=end_date)
-                created = True
-            except Membership.MultipleObjectsReturned:
-                memberships = Membership.objects.filter(
-                                _organization=organization,
-                                _post=post,
-                                _person=person)
-
-                for membership in memberships[1:]:
-                    membership.delete()
-                
-                obj = Membership.objects.get(
-                            _organization=organization,
-                            _person=person,
-                            _post=post)
-                created = False
-                
-                obj.label = membership_json['label']
-                obj.role = membership_json['role']
-                obj.start_date = start_date
-                obj.end_date = end_date
-                obj.save()
-
-
-            # if created and DEBUG:
-            #     print('      adding membership: %s' % obj.role)
 
     def grab_events(self, delete=False):
 
