@@ -117,10 +117,11 @@ class Command(BaseCommand):
             if not options['import_only']:
                 self.grab_bills()
             
-            self.insert_raw_bills(delete=options['delete'])
-            self.insert_raw_actions(delete=options['delete'])
-            self.insert_raw_sponsorships(delete=options['delete'])
+            # self.insert_raw_bills(delete=options['delete'])
+            # self.insert_raw_actions(delete=options['delete'])
+            self.insert_raw_action_related_entity(delete=options['delete'])
             self.insert_raw_documents(delete=options['delete'])
+            self.insert_raw_sponsorships(delete=options['delete'])
 
             print("\ndone!", datetime.datetime.now())
 
@@ -1098,11 +1099,112 @@ class Command(BaseCommand):
     
         self.stdout.write(self.style.SUCCESS('Found {0} actions'.format(raw_count)))
     
+    def insert_raw_action_related_entity(self, delete=False):
+
+        self.remake_raw('actionrelatedentity', delete=delete)
+        
+        with connection.cursor() as curs:
+            curs.execute('''
+                ALTER TABLE raw_actionrelatedentity 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_actionrelatedentity (
+                entity_type,
+                entity_name,
+                organization_ocd_id,
+                person_ocd_id,
+                action_id
+            ) VALUES {}
+            '''
+
+        with connection.cursor() as curs:
+            for bill_json in os.listdir(self.bills_folder):
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+
+                for order, action in enumerate(bill_info['actions']):
+                    
+                    curs.execute(""" 
+                        SELECT id 
+                        FROM raw_action
+                        WHERE organization_id = %s
+                          AND bill_id = %s
+                          AND "order" = %s
+                    """, [action['organization']['id'], bill_info['id'], order])
+                    
+                    action_id = curs.fetchone()[0]
+                    
+                    for related_entity in action['related_entities']:
+                        
+                        person_id = None
+                        organization_id = None
+
+                        if related_entity['entity_type'] == 'organization':
+
+                            organization_id = related_entity['organization_id']
+                            
+                            if not organization_id:
+                                curs.execute(""" 
+                                    SELECT ocd_id 
+                                    FROM councilmatic_core_organization
+                                    WHERE name = %s
+                                    LIMIT 1
+                                """, [related_entity['name']])
+                                
+                                organization_id = curs.fetchone()[0]
+                        
+                        elif related_entity['entity_type'] == 'person':
+
+                            person_id = related_entity['person_id']
+                            
+                            if not person_id:
+                                curs.execute(""" 
+                                    SELECT ocd_id 
+                                    FROM councilmatic_core_person
+                                    WHERE name = %s
+                                    LIMIT 1
+                                """, [related_entity['name']])
+
+                                person_id = curs.fetchone()[0]
+                        
+
+                        insert = (
+                            related_entity['name'],
+                            related_entity['entity_type'],
+                            organization_id,
+                            person_id,
+                            action_id,
+                        )
+                        
+                        inserts.append(insert)
+                        
+                        if len(inserts) % 10000 == 0:
+                            template = ','.join(['%s'] * len(inserts))
+                            curs.execute(insert_fmt.format(template), inserts)
+                            
+                            inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_actionrelatedentity')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} action related entities'.format(raw_count)))
+
+
+
+    def insert_raw_documents(self, delete=False):
+        pass
+    
     def insert_raw_sponsorships(self, delete=False):
         pass
     
-    def insert_raw_documents(self, delete=False):
-        pass
 
     def grab_bill(self, page_json, leg_session_obj):
 
