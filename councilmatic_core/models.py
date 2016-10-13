@@ -156,16 +156,16 @@ class Bill(models.Model):
     classification = models.CharField(max_length=100)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
-    subject = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=255, blank=True, null=True)
 
     _from_organization = models.ForeignKey('Organization',
                                            related_name='bills',
                                            null=True,
                                            db_column='from_organization_id')
 
-    full_text = models.TextField(blank=True)
-    ocr_full_text = models.TextField(blank=True)
-    abstract = models.TextField(blank=True)
+    full_text = models.TextField(blank=True, null=True)
+    ocr_full_text = models.TextField(blank=True, null=True)
+    abstract = models.TextField(blank=True, null=True)
     last_action_date = models.DateTimeField(default=None, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -454,7 +454,7 @@ class Organization(models.Model):
 
 class Action(models.Model):
     date = models.DateTimeField(default=None)
-    classification = models.CharField(max_length=100)
+    classification = models.CharField(max_length=100, null=True)
     description = models.TextField(blank=True)
 
     _organization = models.ForeignKey('Organization',

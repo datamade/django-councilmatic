@@ -105,6 +105,7 @@ class Command(BaseCommand):
             self.update_existing_organizations()
             self.update_existing_posts()
             
+
             self.add_new_organizations()
             self.add_new_posts()
 
@@ -119,9 +120,17 @@ class Command(BaseCommand):
             
             # self.insert_raw_bills(delete=options['delete'])
             # self.insert_raw_actions(delete=options['delete'])
-            self.insert_raw_action_related_entity(delete=options['delete'])
-            self.insert_raw_documents(delete=options['delete'])
-            self.insert_raw_sponsorships(delete=options['delete'])
+            
+            self.update_existing_bills()
+            self.update_existing_actions()
+            
+            self.add_new_bills()
+            self.add_new_actions()
+            
+            # self.insert_raw_action_related_entity(delete=options['delete'])
+            # self.insert_raw_documents(delete=options['delete'])
+            # self.insert_raw_sponsorships(delete=options['delete'])
+            
 
             print("\ndone!", datetime.datetime.now())
 
@@ -168,6 +177,12 @@ class Command(BaseCommand):
             self.add_new_memberships()
 
             print("\ndone!", datetime.datetime.now())
+    
+    #########################
+    ###                   ###
+    ### DOWNLOAD FROM OCD ###
+    ###                   ###
+    #########################
 
     def grab_organizations(self):
         print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
@@ -292,7 +307,64 @@ class Command(BaseCommand):
                 page_json['website_url'] = link['url']
         
         return page_json
+    
+    def grab_bills(self):
 
+        print("\n\nLOADING BILLS", datetime.datetime.now())
+        
+        try:
+            os.mkdir(self.bills_folder)
+        except OSError:
+            pass
+
+        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+            query_params = {'from_organization__id': settings.OCD_CITY_COUNCIL_ID}
+        else:
+            query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
+
+        # grab all legislative sessions
+        if self.update_since is None:
+            max_updated = Bill.objects.all().aggregate(
+                Max('ocd_updated_at'))['ocd_updated_at__max']
+
+            if max_updated is None:
+                max_updated = datetime.datetime(1900, 1, 1)
+        else:
+            max_updated = self.update_since
+
+        query_params['sort'] = 'updated_at'
+        query_params['updated_at__gte'] = max_updated.isoformat()
+
+        print('grabbing bills since', query_params['updated_at__gte'])
+
+        search_url = '{}/bills/'.format(base_url)
+        search_results = requests.get(search_url, params=query_params)
+        page_json = search_results.json()
+
+        for page_num in range(page_json['meta']['max_page']):
+
+            query_params['page'] = int(page_num) + 1
+            result_page = requests.get(search_url, params=query_params)
+
+            for result in result_page.json()['results']:
+
+                bill_url = '{base}/{bill_id}/'.format(
+                    base=base_url, bill_id=result['id'])
+                bill_detail = requests.get(bill_url)
+                
+                bill_json = bill_detail.json()
+                ocd_uuid = bill_json['id'].split('/')[-1]
+                bill_filename = '{}.json'.format(ocd_uuid)
+                
+                with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
+                    f.write(json.dumps(bill_json))
+
+    ###########################
+    ###                     ###
+    ### INSERT RAW ENTITIES ###
+    ###                     ###
+    ###########################
+    
     def remake_raw(self, entity_type, delete=False):
         with connection.cursor() as curs:
             
@@ -348,57 +420,6 @@ class Command(BaseCommand):
             if created and DEBUG:
                 print('adding legislative session: %s' % obj.name)
     
-    def grab_bills(self):
-
-        print("\n\nLOADING BILLS", datetime.datetime.now())
-        
-        try:
-            os.mkdir(self.bills_folder)
-        except OSError:
-            pass
-
-        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            query_params = {'from_organization__id': settings.OCD_CITY_COUNCIL_ID}
-        else:
-            query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
-
-        # grab all legislative sessions
-        if self.update_since is None:
-            max_updated = Bill.objects.all().aggregate(
-                Max('ocd_updated_at'))['ocd_updated_at__max']
-
-            if max_updated is None:
-                max_updated = datetime.datetime(1900, 1, 1)
-        else:
-            max_updated = self.update_since
-
-        query_params['sort'] = 'updated_at'
-        query_params['updated_at__gte'] = max_updated.isoformat()
-
-        print('grabbing bills since', query_params['updated_at__gte'])
-
-        search_url = '{}/bills/'.format(base_url)
-        search_results = requests.get(search_url, params=query_params)
-        page_json = search_results.json()
-
-        for page_num in range(page_json['meta']['max_page']):
-
-            query_params['page'] = int(page_num) + 1
-            result_page = requests.get(search_url, params=query_params)
-
-            for result in result_page.json()['results']:
-
-                bill_url = '{base}/{bill_id}/'.format(
-                    base=base_url, bill_id=result['id'])
-                bill_detail = requests.get(bill_url)
-                
-                bill_json = bill_detail.json()
-                ocd_uuid = bill_json['id'].split('/')[-1]
-                bill_filename = '{}.json'.format(ocd_uuid)
-                
-                with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
-                    f.write(json.dumps(bill_json))
-
     def insert_raw_organizations(self, delete=False):
 
         self.setup_raw('organization', delete=delete)
@@ -610,6 +631,289 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS('Found {0} memberships'.format(raw_count)))
     
+    def insert_raw_bills(self, delete=False):
+        
+        self.setup_raw('bill', delete=delete)
+        
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_bill (
+                ocd_id,
+                ocd_created_at,
+                ocd_updated_at,
+                description,
+                identifier,
+                classification,
+                source_url,
+                source_note,
+                from_organization_id,
+                full_text,
+                ocr_full_text,
+                abstract,
+                legislative_session_id,
+                bill_type,
+                subject,
+                slug
+            ) VALUES {}
+            '''
+
+        with connection.cursor() as curs:
+            for bill_json in os.listdir(self.bills_folder):
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+                
+                source_url = None
+                for source in bill_info['sources']:
+                    if source['note'] == 'web':
+                        source_url = source['url']
+                
+                full_text = None
+                if 'full_text' in bill_info['extras']:
+                    full_text = bill_info['extras']['full_text']
+                
+                ocr_full_text = None
+                if 'ocr_full_text' in bill_info['extras']:
+                    ocr_full_text = bill_info['extras']['ocr_full_text']
+                
+                elif 'plain_text' in bill_info['extras']:
+                    ocr_full_text = bill_info['extras']['plain_text']
+                
+                abstract = None
+                if bill_info['abstracts']:
+                    abstract = bill_info['abstracts'][0]['abstract']
+                
+                if bill_info['extras'].get('local_classification'):
+                    bill_type = bill_info['extras']['local_classification']
+
+                elif len(bill_info['classification']) == 1:
+                    bill_type = bill_info['classification'][0]
+
+                else:
+                    raise Exception(bill_info['classification'])
+                
+                subject = None
+                if 'subject' in bill_info and bill_info['subject']:
+                    subject = bill_info['subject'][0]
+                
+
+                ocd_part = bill_info['id'].rsplit('-', 1)[1]
+                slug = '{0}-{1}'.format(slugify(bill_info['identifier']),ocd_part)
+
+                insert = (
+                    bill_info['id'],
+                    bill_info['created_at'],
+                    bill_info['updated_at'],
+                    bill_info['title'],
+                    bill_info['identifier'],
+                    bill_info['classification'][0],
+                    source_url,
+                    bill_info['sources'][0]['note'],
+                    bill_info['from_organization']['id'],
+                    full_text,
+                    ocr_full_text,
+                    abstract,
+                    bill_info['legislative_session']['identifier'],
+                    bill_type,
+                    subject,
+                    slug,
+                )
+                
+                inserts.append(insert)
+
+                if len(inserts) % 10000 == 0:
+                    template = ','.join(['%s'] * len(inserts))
+                    curs.execute(insert_fmt.format(template), inserts)
+                    
+                    inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_bill')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} bill'.format(raw_count)))
+    
+    def insert_raw_actions(self, delete=False):
+        
+        self.remake_raw('action', delete=delete)
+        
+        with connection.cursor() as curs:
+            curs.execute('''
+                ALTER TABLE raw_action 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_action (
+                date,
+                classification,
+                description,
+                organization_id,
+                bill_id,
+                "order"
+            ) VALUES {}
+            '''
+
+        with connection.cursor() as curs:
+            for bill_json in os.listdir(self.bills_folder):
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+
+                for order, action in enumerate(bill_info['actions']):
+                    
+                    classification = None
+                    if action['classification']:
+                        classification = action['classification'][0]
+                    
+                    action_date = app_timezone.localize(date_parser.parse(action['date']))
+                    
+                    insert = (
+                        action_date,
+                        classification,
+                        action['description'],
+                        action['organization']['id'],
+                        bill_info['id'],
+                        order
+                    )
+                    
+                    inserts.append(insert)
+                    
+                    if len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+                        
+                        inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_action')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} actions'.format(raw_count)))
+    
+    def insert_raw_action_related_entity(self, delete=False):
+
+        self.remake_raw('actionrelatedentity', delete=delete)
+        
+        with connection.cursor() as curs:
+            curs.execute('''
+                ALTER TABLE raw_actionrelatedentity 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_actionrelatedentity (
+                entity_type,
+                entity_name,
+                organization_ocd_id,
+                person_ocd_id,
+                action_id
+            ) VALUES {}
+            '''
+        
+        read_cursor = connection.cursor()
+
+        with connection.cursor() as curs:
+
+            read_cursor.execute(''' 
+                SELECT id, bill_id, "order" FROM councilmatic_core_action
+            ''')
+
+            for action in read_cursor:
+                
+                action_id, bill_id, order = action
+
+                ocd_uuid = bill_id.split('/')[-1]
+                bill_filename = '{}.json'.format(ocd_uuid)
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_filename)))
+                
+                action = bill_info['actions'][order]
+
+                for related_entity in action['related_entities']:
+                    
+                    person_id = None
+                    organization_id = None
+
+                    if related_entity['entity_type'] == 'organization':
+
+                        organization_id = related_entity['organization_id']
+                        
+                        if not organization_id:
+                            curs.execute(""" 
+                                SELECT ocd_id 
+                                FROM councilmatic_core_organization
+                                WHERE name = %s
+                                LIMIT 1
+                            """, [related_entity['name']])
+                            
+                            for row in curs:
+                                organization_id = row[0]
+                    
+                    elif related_entity['entity_type'] == 'person':
+
+                        person_id = related_entity['person_id']
+                        
+                        if not person_id:
+                            curs.execute(""" 
+                                SELECT ocd_id 
+                                FROM councilmatic_core_person
+                                WHERE name = %s
+                                LIMIT 1
+                            """, [related_entity['name']])
+
+                            for row in curs:
+                                person_id = row[0]
+                    
+                    
+                    print(organization_id, person_id, action_id)
+
+                    insert = (
+                        related_entity['name'],
+                        related_entity['entity_type'],
+                        organization_id,
+                        person_id,
+                        action_id,
+                    )
+                    
+                    inserts.append(insert)
+                    
+                    if len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+                        
+                        inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_actionrelatedentity')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} action related entities'.format(raw_count)))
+
+    def insert_raw_documents(self, delete=False):
+        pass
+    
+    def insert_raw_sponsorships(self, delete=False):
+        pass
+    
+    ################################
+    ###                          ###
+    ### UPDATE EXISTING ENTITIES ###
+    ###                          ###
+    ################################
+    
     def setup_update(self, entity_type):
         with connection.cursor() as curs:
             
@@ -627,16 +931,16 @@ class Command(BaseCommand):
         fields = []
         for col in cols:
             condition = '''
-                ((raw."{0}" IS NOT NULL OR dat.{0} IS NOT NULL) AND raw."{0}" <> dat.{0})
+                ((raw."{0}" IS NOT NULL OR dat."{0}" IS NOT NULL) AND raw."{0}" <> dat."{0}")
             '''.format(col)
             wheres.append(condition)
             
-            sets.append('{0}=s.{0}'.format(col))
-            fields.append('raw.{0}'.format(col))
+            sets.append('"{0}"=s."{0}"'.format(col))
+            fields.append('raw."{0}"'.format(col))
         
         for col in extra_cols:
-            sets.append('{0}=s.{0}'.format(col))
-            fields.append('raw.{0}'.format(col))
+            sets.append('"{0}"=s."{0}"'.format(col))
+            fields.append('raw."{0}"'.format(col))
 
         where_clause = ' OR '.join(wheres)
         set_values = ', '.join(sets)
@@ -788,6 +1092,95 @@ class Command(BaseCommand):
             curs.execute(update_dat)
 
         self.stdout.write(self.style.SUCCESS('Found {0} changed membership'.format(change_count)))
+    
+    def update_existing_bills(self):
+        cols = [
+            'ocd_id',
+            'ocd_created_at',
+            'ocd_updated_at',
+            'description',
+            'identifier',
+            'bill_type',
+            'classification',
+            'source_url',
+            'source_note',
+            'subject',
+            'from_organization_id',
+            'full_text',
+            'ocr_full_text',
+            'abstract',
+            'last_action_date',
+            'legislative_session_id',
+            'slug',
+        ]
+        self.update_entity_type('bill', cols=cols)
+    
+    def update_existing_actions(self):
+        
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_action')
+            curs.execute(''' 
+                CREATE TABLE change_action (
+                    bill_id VARCHAR,
+                    "order" INTEGER
+                )
+            ''')
+        
+        cols = [
+            'date',
+            'classification',
+            'description',
+            'order',
+            'bill_id',
+            'organization_id',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
+        
+        find_changes = ''' 
+            INSERT INTO change_action
+              SELECT 
+                raw.bill_id,
+                raw."order"
+              FROM raw_action AS raw
+              JOIN councilmatic_core_action AS dat
+                ON (raw.bill_id = dat.bill_id
+                    AND raw."order" = dat."order")
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_action SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_action AS raw
+              JOIN change_action AS change
+                ON (raw.bill_id = change.bill_id
+                    AND raw."order" = change."order")
+            ) AS s
+            WHERE councilmatic_core_action.bill_id = s.bill_id
+              AND councilmatic_core_action."order" = s."order"
+        '''.format(set_values=set_values, 
+                   fields=fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_action')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed action'.format(change_count)))
+    
+    ########################
+    ###                  ###
+    ### ADD NEW ENTITIES ###
+    ###                  ###
+    ########################
 
     def add_entity_type(self, entity_type, cols=[], extra_cols=['updated_at']):
         with connection.cursor() as curs:
@@ -938,306 +1331,88 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Found {0} new membership'.format(new_count)))
     
-    def insert_raw_bills(self, delete=False):
+    def add_new_bills(self):
+        cols = [
+            'ocd_id',
+            'ocd_created_at',
+            'ocd_updated_at',
+            'description',
+            'identifier',
+            'bill_type',
+            'classification',
+            'source_url',
+            'source_note',
+            'subject',
+            'from_organization_id',
+            'full_text',
+            'ocr_full_text',
+            'abstract',
+            'last_action_date',
+            'legislative_session_id',
+            'slug',
+        ]
         
-        self.setup_raw('bill', delete=delete)
-        
-        inserts = []
-        
-        insert_fmt = ''' 
-            INSERT INTO raw_bill (
-                ocd_id,
-                ocd_created_at,
-                ocd_updated_at,
-                description,
-                identifier,
-                classification,
-                source_url,
-                source_note,
-                from_organization_id,
-                full_text,
-                ocr_full_text,
-                abstract,
-                legislative_session_id,
-                bill_type,
-                subject
-            ) VALUES {}
-            '''
-
+        self.add_entity_type('bill', cols=cols)
+    
+    def add_new_actions(self):
         with connection.cursor() as curs:
-            for bill_json in os.listdir(self.bills_folder):
-                
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
-                
-                source_url = None
-                for source in bill_info['sources']:
-                    if source['note'] == 'web':
-                        source_url = source['url']
-                
-                full_text = None
-                if 'full_text' in bill_info['extras']:
-                    full_text = bill_info['extras']['full_text']
-                
-                ocr_full_text = None
-                if 'ocr_full_text' in bill_info['extras']:
-                    ocr_full_text = bill_info['extras']['ocr_full_text']
-                
-                elif 'plain_text' in bill_info['extras']:
-                    ocr_full_text = bill_info['extras']['plain_text']
-                
-                abstract = None
-                if bill_info['abstracts']:
-                    abstract = bill_info['abstracts'][0]['abstract']
-                
-                if bill_info['extras'].get('local_classification'):
-                    bill_type = bill_info['extras']['local_classification']
-
-                elif len(bill_info['classification']) == 1:
-                    bill_type = bill_info['classification'][0]
-
-                else:
-                    raise Exception(bill_info['classification'])
-                
-                subject = None
-                if 'subject' in bill_info and bill_info['subject']:
-                    subject = bill_info['subject'][0]
-
-                insert = (
-                    bill_info['id'],
-                    bill_info['created_at'],
-                    bill_info['updated_at'],
-                    bill_info['title'],
-                    bill_info['identifier'],
-                    bill_info['classification'][0],
-                    source_url,
-                    bill_info['sources'][0]['note'],
-                    bill_info['from_organization']['id'],
-                    full_text,
-                    ocr_full_text,
-                    abstract,
-                    bill_info['legislative_session']['identifier'],
-                    bill_type,
-                    subject,
+            
+            curs.execute('DROP TABLE IF EXISTS new_action')
+            curs.execute(''' 
+                CREATE TABLE new_action (
+                    bill_id VARCHAR,
+                    "order" INTEGER
                 )
-                
-                inserts.append(insert)
-
-                if len(inserts) % 10000 == 0:
-                    template = ','.join(['%s'] * len(inserts))
-                    curs.execute(insert_fmt.format(template), inserts)
-                    
-                    inserts = []
-            
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-            
-            curs.execute('select count(*) from raw_bill')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} bill'.format(raw_count)))
-    
-    def insert_raw_actions(self, delete=False):
-        
-        self.remake_raw('action', delete=delete)
-        
-        with connection.cursor() as curs:
-            curs.execute('''
-                ALTER TABLE raw_action 
-                ALTER COLUMN updated_at SET DEFAULT NOW()
             ''')
-
-        inserts = []
         
-        insert_fmt = ''' 
-            INSERT INTO raw_action (
-                date,
-                classification,
-                description,
-                organization_id,
-                bill_id,
-                "order"
-            ) VALUES {}
-            '''
+        find_new = ''' 
+            INSERT INTO new_action
+              SELECT 
+                raw.bill_id,
+                raw."order"
+              FROM raw_action AS raw
+              LEFT JOIN councilmatic_core_action AS dat
+                ON (raw.bill_id = dat.bill_id
+                    AND raw."order" = dat."order")
+              WHERE dat.bill_id IS NULL
+                AND dat."order" IS NULL
+        '''
 
         with connection.cursor() as curs:
-            for bill_json in os.listdir(self.bills_folder):
-                
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_action')
+            new_count = curs.fetchone()[0]
+        
+        cols = [
+            'date',
+            'classification',
+            'description',
+            'order',
+            'bill_id',
+            'organization_id',
+        ]
 
-                for order, action in enumerate(bill_info['actions']):
-                    
-                    classification = None
-                    if action['classification']:
-                        classification = action['classification'][0]
-                    
-                    action_date = app_timezone.localize(date_parser.parse(action['date']))
-                    
-                    insert = (
-                        action_date,
-                        classification,
-                        action['description'],
-                        action['organization']['id'],
-                        bill_info['id'],
-                        order
-                    )
-                    
-                    inserts.append(insert)
-                    
-                    if len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-                        
-                        inserts = []
-            
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-            
-            curs.execute('select count(*) from raw_action')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} actions'.format(raw_count)))
-    
-    def insert_raw_action_related_entity(self, delete=False):
+        insert_fields = ', '.join('"{}"'.format(c) for c in cols)
+        select_fields = ', '.join('raw."{}"'.format(c) for c in cols)
 
-        self.remake_raw('actionrelatedentity', delete=delete)
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_action (
+              {insert_fields},
+              updated_at
+            )
+              SELECT {select_fields}, raw.updated_at
+              FROM raw_action AS raw
+              JOIN new_action AS new
+                ON (raw.bill_id = new.bill_id
+                    AND raw."order" = new."order")
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
         
         with connection.cursor() as curs:
-            curs.execute('''
-                ALTER TABLE raw_actionrelatedentity 
-                ALTER COLUMN updated_at SET DEFAULT NOW()
-            ''')
+            curs.execute(insert_new)
 
-        inserts = []
-        
-        insert_fmt = ''' 
-            INSERT INTO raw_actionrelatedentity (
-                entity_type,
-                entity_name,
-                organization_ocd_id,
-                person_ocd_id,
-                action_id
-            ) VALUES {}
-            '''
-
-        with connection.cursor() as curs:
-            for bill_json in os.listdir(self.bills_folder):
-                
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
-
-                for order, action in enumerate(bill_info['actions']):
-                    
-                    curs.execute(""" 
-                        SELECT id 
-                        FROM raw_action
-                        WHERE organization_id = %s
-                          AND bill_id = %s
-                          AND "order" = %s
-                    """, [action['organization']['id'], bill_info['id'], order])
-                    
-                    action_id = curs.fetchone()[0]
-                    
-                    for related_entity in action['related_entities']:
-                        
-                        person_id = None
-                        organization_id = None
-
-                        if related_entity['entity_type'] == 'organization':
-
-                            organization_id = related_entity['organization_id']
-                            
-                            if not organization_id:
-                                curs.execute(""" 
-                                    SELECT ocd_id 
-                                    FROM councilmatic_core_organization
-                                    WHERE name = %s
-                                    LIMIT 1
-                                """, [related_entity['name']])
-                                
-                                organization_id = curs.fetchone()[0]
-                        
-                        elif related_entity['entity_type'] == 'person':
-
-                            person_id = related_entity['person_id']
-                            
-                            if not person_id:
-                                curs.execute(""" 
-                                    SELECT ocd_id 
-                                    FROM councilmatic_core_person
-                                    WHERE name = %s
-                                    LIMIT 1
-                                """, [related_entity['name']])
-
-                                person_id = curs.fetchone()[0]
-                        
-
-                        insert = (
-                            related_entity['name'],
-                            related_entity['entity_type'],
-                            organization_id,
-                            person_id,
-                            action_id,
-                        )
-                        
-                        inserts.append(insert)
-                        
-                        if len(inserts) % 10000 == 0:
-                            template = ','.join(['%s'] * len(inserts))
-                            curs.execute(insert_fmt.format(template), inserts)
-                            
-                            inserts = []
-            
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-            
-            curs.execute('select count(*) from raw_actionrelatedentity')
-            raw_count = curs.fetchone()[0]
+        self.stdout.write(self.style.SUCCESS('Found {0} new action'.format(new_count)))
     
-        self.stdout.write(self.style.SUCCESS('Found {0} action related entities'.format(raw_count)))
-
-
-
-    def insert_raw_documents(self, delete=False):
-        pass
-    
-    def insert_raw_sponsorships(self, delete=False):
-        pass
-    
-
-    def grab_bill(self, page_json, leg_session_obj):
-
-        if created or updated:
-
-            if updated:
-                # delete existing bill actions, sponsorships, billdocuments
-                obj.actions.all().delete()
-                obj.sponsorships.all().delete()
-                obj.documents.all().delete()
-
-            # update actions for a bill
-            action_order = 0
-            for action_json in page_json['actions']:
-                self.load_action(action_json, obj, action_order)
-                action_order += 1
-
-            # update bill last_action_date with most recent action
-            obj.last_action_date = obj.get_last_action_date()
-            obj.save()
-
-            # update documents for with a bill (attachments & versions)
-            # attachments are related files
-            for document_json in page_json['documents']:
-                self.load_bill_attachment(document_json, obj)
-            # versions are the bill itself
-            for document_json in page_json['versions']:
-                self.load_bill_version(document_json, obj)
-
-            # update sponsorships for a bill
-            for sponsor_json in page_json['sponsorships']:
-                self.load_bill_sponsorship(sponsor_json, obj)
-
     def load_bill_sponsorship(self, sponsor_json, bill):
 
         # if the sponsor is a city council member, it has alread been loaded in
@@ -1273,81 +1448,6 @@ class Command(BaseCommand):
             print("**SPONSOR MISSING FROM PEOPLE**")
             print(sponsor_json)
             print(bill.ocd_id)
-
-    def load_action(self, action_json, bill, action_order):
-
-        org = Organization.objects.filter(
-            ocd_id=action_json['organization']['id']).first()
-
-        classification = ""
-        if action_json['classification']:
-            classification = action_json['classification'][0]
-
-        action_date = app_timezone.localize(
-            date_parser.parse(action_json['date']))
-
-        action_obj, created = Action.objects.get_or_create(
-            date=action_date,
-            classification=classification,
-            description=action_json['description'],
-            _organization=org,
-            _bill=bill,
-            order=action_order,
-        )
-
-        # if created and DEBUG:
-        #     print('      adding action: %s' %action_json['description'])
-
-        for related_entity_json in action_json['related_entities']:
-
-            action_related_entity = {
-                '_action': action_obj,
-                'entity_name': related_entity_json['name'],
-                'entity_type': related_entity_json['entity_type'],
-                'organization_ocd_id': '',
-                'person_ocd_id': '',
-            }
-
-            if related_entity_json['entity_type'] == 'organization':
-
-                if not related_entity_json['organization_id']:
-                    org = Organization.objects.filter(
-                        name=action_related_entity['entity_name']).first()
-                    if org:
-                        action_related_entity[
-                            'organization_ocd_id'] = org.ocd_id
-                    else:
-                        print("\n\n" + "-" * 60)
-                        print("WARNING: ORGANIZATION NOT FOUND %s" %
-                              action_related_entity['entity_name'])
-                        print("cannot find related entity for bill %s" %
-                              bill.ocd_id)
-                        print("-" * 60 + "\n")
-
-                else:
-                    action_related_entity[
-                        'organization_ocd_id'] = related_entity_json['organization_id']
-
-            elif related_entity_json['entity_type'] == 'person':
-
-                if not related_entity_json['person_id']:
-                    org = Person.objects.filter(name=action_related_entity[
-                                                'entity_name']).first()
-                    if org:
-                        action_related_entity['person_ocd_id'] = org.ocd_id
-                    else:
-                        raise Exception('person called {0} does not exist'
-                                        .format(action_related_entity['entity_name']))
-                else:
-                    action_related_entity[
-                        'person_ocd_id'] = related_entity_json['person_id']
-
-            if org:
-                obj, created = ActionRelatedEntity.objects.get_or_create(
-                    **action_related_entity)
-
-            # if created and DEBUG:
-            #     print('         adding related entity: %s' %obj.entity_name)
 
     def load_bill_attachment(self, document_json, bill):
 
