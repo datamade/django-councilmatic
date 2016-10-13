@@ -111,7 +111,17 @@ class Command(BaseCommand):
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'bills':
-            self.grab_bills(delete=options['delete'])
+            
+            self.create_legislative_sessions()
+
+            if not options['import_only']:
+                self.grab_bills()
+            
+            self.insert_raw_bills(delete=options['delete'])
+            self.insert_raw_actions(delete=options['delete'])
+            self.insert_raw_sponsorships(delete=options['delete'])
+            self.insert_raw_documents(delete=options['delete'])
+
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'people':
@@ -313,6 +323,80 @@ class Command(BaseCommand):
                 ALTER TABLE raw_{} 
                 ALTER COLUMN updated_at SET DEFAULT NOW()
             '''.format(entity_type))
+    
+    def create_legislative_sessions(self):
+        session_ids = []
+
+        if hasattr(settings, 'LEGISLATIVE_SESSIONS') and settings.LEGISLATIVE_SESSIONS:
+            session_ids = settings.LEGISLATIVE_SESSIONS
+        else:
+            url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
+            r = requests.get(url)
+            page_json = json.loads(r.text)
+            session_ids = [session['identifier']
+                           for session in page_json['legislative_sessions']]
+
+        # Sort so most recent session last
+        session_ids.sort()
+        for leg_session in session_ids:
+            obj, created = LegislativeSession.objects.get_or_create(
+                identifier=leg_session,
+                jurisdiction_ocd_id=settings.OCD_JURISDICTION_ID,
+                name='%s Legislative Session' % leg_session,
+            )
+            if created and DEBUG:
+                print('adding legislative session: %s' % obj.name)
+    
+    def grab_bills(self):
+
+        print("\n\nLOADING BILLS", datetime.datetime.now())
+        
+        try:
+            os.mkdir(self.bills_folder)
+        except OSError:
+            pass
+
+        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+            query_params = {'from_organization__id': settings.OCD_CITY_COUNCIL_ID}
+        else:
+            query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
+
+        # grab all legislative sessions
+        if self.update_since is None:
+            max_updated = Bill.objects.all().aggregate(
+                Max('ocd_updated_at'))['ocd_updated_at__max']
+
+            if max_updated is None:
+                max_updated = datetime.datetime(1900, 1, 1)
+        else:
+            max_updated = self.update_since
+
+        query_params['sort'] = 'updated_at'
+        query_params['updated_at__gte'] = max_updated.isoformat()
+
+        print('grabbing bills since', query_params['updated_at__gte'])
+
+        search_url = '{}/bills/'.format(base_url)
+        search_results = requests.get(search_url, params=query_params)
+        page_json = search_results.json()
+
+        for page_num in range(page_json['meta']['max_page']):
+
+            query_params['page'] = int(page_num) + 1
+            result_page = requests.get(search_url, params=query_params)
+
+            for result in result_page.json()['results']:
+
+                bill_url = '{base}/{bill_id}/'.format(
+                    base=base_url, bill_id=result['id'])
+                bill_detail = requests.get(bill_url)
+                
+                bill_json = bill_detail.json()
+                ocd_uuid = bill_json['id'].split('/')[-1]
+                bill_filename = '{}.json'.format(ocd_uuid)
+                
+                with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
+                    f.write(json.dumps(bill_json))
 
     def insert_raw_organizations(self, delete=False):
 
@@ -852,237 +936,175 @@ class Command(BaseCommand):
             curs.execute(insert_new)
 
         self.stdout.write(self.style.SUCCESS('Found {0} new membership'.format(new_count)))
+    
+    def insert_raw_bills(self, delete=False):
+        
+        self.setup_raw('bill', delete=delete)
+        
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_bill (
+                ocd_id,
+                ocd_created_at,
+                ocd_updated_at,
+                description,
+                identifier,
+                classification,
+                source_url,
+                source_note,
+                from_organization_id,
+                full_text,
+                ocr_full_text,
+                abstract,
+                legislative_session_id,
+                bill_type,
+                subject
+            ) VALUES {}
+            '''
 
-    def populate_council_district_shapes(self):
+        with connection.cursor() as curs:
+            for bill_json in os.listdir(self.bills_folder):
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+                
+                source_url = None
+                for source in bill_info['sources']:
+                    if source['note'] == 'web':
+                        source_url = source['url']
+                
+                full_text = None
+                if 'full_text' in bill_info['extras']:
+                    full_text = bill_info['extras']['full_text']
+                
+                ocr_full_text = None
+                if 'ocr_full_text' in bill_info['extras']:
+                    ocr_full_text = bill_info['extras']['ocr_full_text']
+                
+                elif 'plain_text' in bill_info['extras']:
+                    ocr_full_text = bill_info['extras']['plain_text']
+                
+                abstract = None
+                if bill_info['abstracts']:
+                    abstract = bill_info['abstracts'][0]['abstract']
+                
+                if bill_info['extras'].get('local_classification'):
+                    bill_type = bill_info['extras']['local_classification']
 
-        print("\n\npopulating boundaries: %s" % settings.BOUNDARY_SET)
+                elif len(bill_info['classification']) == 1:
+                    bill_type = bill_info['classification'][0]
 
-        # grab boundary listing
-        bndry_set_url = bndry_base_url + '/boundaries/' + settings.BOUNDARY_SET
-        r = requests.get(bndry_set_url + '/?limit=0')
-        page_json = json.loads(r.text)
+                else:
+                    raise Exception(bill_info['classification'])
+                
+                subject = None
+                if 'subject' in bill_info and bill_info['subject']:
+                    subject = bill_info['subject'][0]
 
-        # loop through boundary listing
-        for bndry_json in page_json['objects']:
-            # grab boundary shape
-            shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-            r = requests.get(shape_url)
-            # update the right post(s) with the shape
-            if 'ocd-division' in bndry_json['external_id']:
-                division_ocd_id = bndry_json['external_id']
-                Post.objects.filter(
-                    division_ocd_id=division_ocd_id).update(shape=r.text)
-            else:
-                # Represent API doesn't use OCD id as external_id,
-                # so we must work around that
-                division_ocd_id_fragment = ':' + bndry_json['external_id']
-                Post.objects.filter(
-                    division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
+                insert = (
+                    bill_info['id'],
+                    bill_info['created_at'],
+                    bill_info['updated_at'],
+                    bill_info['title'],
+                    bill_info['identifier'],
+                    bill_info['classification'][0],
+                    source_url,
+                    bill_info['sources'][0]['note'],
+                    bill_info['from_organization']['id'],
+                    full_text,
+                    ocr_full_text,
+                    abstract,
+                    bill_info['legislative_session']['identifier'],
+                    bill_type,
+                    subject,
+                )
+                
+                inserts.append(insert)
 
+                if len(inserts) % 10000 == 0:
+                    template = ','.join(['%s'] * len(inserts))
+                    curs.execute(insert_fmt.format(template), inserts)
+                    
+                    inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_bill')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} bill'.format(raw_count)))
+    
+    def insert_raw_actions(self, delete=False):
+        
+        self.remake_raw('action', delete=delete)
+        
+        with connection.cursor() as curs:
+            curs.execute('''
+                ALTER TABLE raw_action 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
 
-    def grab_bills(self, delete=False):
-        # this grabs all bills & associated actions, documents from city council
-        # organizations need to be populated before bills & actions are
-        # populated
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_action (
+                date,
+                classification,
+                description,
+                organization_id,
+                bill_id,
+                "order"
+            ) VALUES {}
+            '''
 
-        print("\n\nLOADING BILLS", datetime.datetime.now())
-        if delete:
-            with psycopg2.connect(**self.db_conn_kwargs) as conn:
-                with conn.cursor() as curs:
-                    curs.execute('TRUNCATE councilmatic_core_bill CASCADE')
-                    curs.execute('TRUNCATE councilmatic_core_action CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_actionrelatedentity CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_legislativesession CASCADE')
-                    curs.execute('TRUNCATE councilmatic_core_document CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_billdocument CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_sponsorship CASCADE')
-            print(
-                "deleted all bills, actions, legislative sessions, documents, sponsorships\n")
+        with connection.cursor() as curs:
+            for bill_json in os.listdir(self.bills_folder):
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
 
-        # get legislative sessions
-        self.grab_legislative_sessions()
-
-        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            query_params = {'from_organization__id': settings.OCD_CITY_COUNCIL_ID}
-        else:
-            query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
-
-        # grab all legislative sessions
-        if self.update_since is None:
-            max_updated = Bill.objects.all().aggregate(
-                Max('ocd_updated_at'))['ocd_updated_at__max']
-
-            if max_updated is None:
-                max_updated = datetime.datetime(1900, 1, 1)
-        else:
-            max_updated = self.update_since
-
-        query_params['sort'] = 'updated_at'
-        query_params['updated_at__gte'] = max_updated.isoformat()
-
-        print('grabbing bills since', query_params['updated_at__gte'])
-
-        search_url = '{}/bills/'.format(base_url)
-        search_results = requests.get(search_url, params=query_params)
-        page_json = search_results.json()
-
-        leg_session_obj = None
-
-        for page_num in range(page_json['meta']['max_page']):
-
-            query_params['page'] = int(page_num) + 1
-            result_page = requests.get(search_url, params=query_params)
-
-            for result in result_page.json()['results']:
-
-                bill_url = '{base}/{bill_id}/'.format(
-                    base=base_url, bill_id=result['id'])
-                bill_detail = requests.get(bill_url)
-
-                leg_session_id = bill_detail.json()['legislative_session'][
-                    'identifier']
-
-                if leg_session_obj is None:
-                    leg_session_obj = LegislativeSession.objects.get(
-                        identifier=leg_session_id)
-
-                elif leg_session_obj.identifier != leg_session_id:
-                    leg_session_obj = LegislativeSession.objects.get(
-                        identifier=leg_session_id)
-
-                self.grab_bill(bill_detail.json(), leg_session_obj)
-
-    def grab_legislative_sessions(self):
-        session_ids = []
-
-        if hasattr(settings, 'LEGISLATIVE_SESSIONS') and settings.LEGISLATIVE_SESSIONS:
-            session_ids = settings.LEGISLATIVE_SESSIONS
-        else:
-            url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
-            r = requests.get(url)
-            page_json = json.loads(r.text)
-            session_ids = [session['identifier']
-                           for session in page_json['legislative_sessions']]
-
-        # Sort so most recent session last
-        session_ids.sort()
-        for leg_session in session_ids:
-            obj, created = LegislativeSession.objects.get_or_create(
-                identifier=leg_session,
-                jurisdiction_ocd_id=settings.OCD_JURISDICTION_ID,
-                name='%s Legislative Session' % leg_session,
-            )
-            if created and DEBUG:
-                print('adding legislative session: %s' % obj.name)
+                for order, action in enumerate(bill_info['actions']):
+                    
+                    classification = None
+                    if action['classification']:
+                        classification = action['classification'][0]
+                    
+                    action_date = app_timezone.localize(date_parser.parse(action['date']))
+                    
+                    insert = (
+                        action_date,
+                        classification,
+                        action['description'],
+                        action['organization']['id'],
+                        bill_info['id'],
+                        order
+                    )
+                    
+                    inserts.append(insert)
+                    
+                    if len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+                        
+                        inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_action')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} actions'.format(raw_count)))
+    
+    def insert_raw_sponsorships(self, delete=False):
+        pass
+    
+    def insert_raw_documents(self, delete=False):
+        pass
 
     def grab_bill(self, page_json, leg_session_obj):
-
-        from_org = Organization.objects.get(
-            ocd_id=page_json['from_organization']['id'])
-
-        if page_json['extras'].get('local_classification'):
-            bill_type = page_json['extras']['local_classification']
-
-        elif len(page_json['classification']) == 1:
-            bill_type = page_json['classification'][0]
-
-        else:
-            raise Exception(page_json['classification'])
-
-        if 'full_text' in page_json['extras']:
-            full_text = page_json['extras']['full_text']
-
-        else:
-            full_text = ''
-
-        if 'ocr_full_text' in page_json['extras']:
-            ocr_full_text = page_json['extras']['ocr_full_text']
-        elif 'plain_text' in page_json['extras']:
-            ocr_full_text = page_json['extras']['plain_text']
-        else:
-            ocr_full_text = ''
-
-        if 'subject' in page_json and page_json['subject']:
-            subject = page_json['subject'][0]
-        else:
-            subject = ''
-
-        if page_json['abstracts']:
-            abstract = page_json['abstracts'][0]['abstract']
-        else:
-            abstract = ''
-
-        source_url = ''
-        for source in page_json['sources']:
-            if source['note'] == 'web':
-                source_url = source['url']
-
-        bill_id = page_json['id']
-
-        bill_fields = {
-            'ocd_id': bill_id,
-            'ocd_created_at': page_json['created_at'],
-            'ocd_updated_at': page_json['updated_at'],
-            'description': page_json['title'],
-            'identifier': page_json['identifier'],
-            'classification': page_json['classification'][0],
-            'source_url': source_url,
-            'source_note': page_json['sources'][0]['note'],
-            '_from_organization': from_org,
-            'full_text': full_text,
-            'ocr_full_text': ocr_full_text,
-            'abstract': abstract,
-            '_legislative_session': leg_session_obj,
-            'bill_type': bill_type,
-            'subject': subject,
-        }
-
-        updated = False
-        created = False
-        # look for existing bill
-        try:
-            obj = Bill.objects.get(ocd_id=bill_id)
-
-            obj.ocd_created_at = page_json['created_at']
-            obj.ocd_updated_at = page_json['updated_at']
-            obj.description = page_json['title']
-            obj.identifier = page_json['identifier']
-            obj.classification = page_json['classification'][0]
-            obj.source_url = source_url
-            obj.source_note = page_json['sources'][0]['note']
-            obj._from_organization = from_org
-            obj.full_text = full_text
-            obj.ocr_full_text = ocr_full_text
-            obj.abstract = abstract
-            obj._legislative_session = leg_session_obj
-            obj.bill_type = bill_type
-            obj.subject = subject
-
-            obj.save()
-            updated = True
-
-            if DEBUG:
-                print('\u270E', end=' ', flush=True)
-
-        # except if it doesn't exist, we need to make it
-        except Bill.DoesNotExist:
-
-            try:
-                bill_fields['slug'] = slugify(page_json['identifier'])
-                obj, created = Bill.objects.get_or_create(**bill_fields)
-
-            except IntegrityError:
-                ocd_id_part = bill_id.rsplit('-', 1)[1]
-                bill_fields['slug'] = slugify(
-                    page_json['identifier']) + ocd_id_part
-                obj, created = Bill.objects.get_or_create(**bill_fields)
-
-            if created and DEBUG:
-                print('\u263A', end=' ', flush=True)
 
         if created or updated:
 
@@ -1461,3 +1483,29 @@ class Command(BaseCommand):
 
         # if created and DEBUG:
         #     print('      adding document: %s' % doc_obj.note)
+    
+    def populate_council_district_shapes(self):
+
+        print("\n\npopulating boundaries: %s" % settings.BOUNDARY_SET)
+
+        # grab boundary listing
+        bndry_set_url = bndry_base_url + '/boundaries/' + settings.BOUNDARY_SET
+        r = requests.get(bndry_set_url + '/?limit=0')
+        page_json = json.loads(r.text)
+
+        # loop through boundary listing
+        for bndry_json in page_json['objects']:
+            # grab boundary shape
+            shape_url = bndry_base_url + bndry_json['url'] + 'shape'
+            r = requests.get(shape_url)
+            # update the right post(s) with the shape
+            if 'ocd-division' in bndry_json['external_id']:
+                division_ocd_id = bndry_json['external_id']
+                Post.objects.filter(
+                    division_ocd_id=division_ocd_id).update(shape=r.text)
+            else:
+                # Represent API doesn't use OCD id as external_id,
+                # so we must work around that
+                division_ocd_id_fragment = ':' + bndry_json['external_id']
+                Post.objects.filter(
+                    division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)

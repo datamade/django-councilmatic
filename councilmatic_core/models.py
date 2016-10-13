@@ -743,7 +743,7 @@ class EventDocument(models.Model):
 
 
 class LegislativeSession(models.Model):
-    identifier = models.CharField(max_length=255)
+    identifier = models.CharField(max_length=255, primary_key=True)
     jurisdiction_ocd_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     updated_at = models.DateTimeField(auto_now=True)
