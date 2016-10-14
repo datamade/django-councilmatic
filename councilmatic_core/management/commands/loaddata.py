@@ -129,7 +129,11 @@ class Command(BaseCommand):
             
             # self.insert_raw_action_related_entity(delete=options['delete'])
             # self.insert_raw_sponsorships(delete=options['delete'])
-            self.insert_raw_documents(delete=options['delete'])
+            # self.insert_raw_billdocuments(delete=options['delete'])
+            
+            self.update_existing_action_related_entity()
+            self.update_existing_sponsorships()
+            self.update_existing_billdocuments()
             
 
             print("\ndone!", datetime.datetime.now())
@@ -721,7 +725,7 @@ class Command(BaseCommand):
                 
                 inserts.append(insert)
 
-                if len(inserts) % 10000 == 0:
+                if inserts and len(inserts) % 10000 == 0:
                     template = ','.join(['%s'] * len(inserts))
                     curs.execute(insert_fmt.format(template), inserts)
                     
@@ -783,7 +787,7 @@ class Command(BaseCommand):
                     
                     inserts.append(insert)
                     
-                    if len(inserts) % 10000 == 0:
+                    if inserts and len(inserts) % 10000 == 0:
                         template = ','.join(['%s'] * len(inserts))
                         curs.execute(insert_fmt.format(template), inserts)
                         
@@ -884,7 +888,7 @@ class Command(BaseCommand):
                     
                     inserts.append(insert)
                     
-                    if len(inserts) % 10000 == 0:
+                    if inserts and len(inserts) % 10000 == 0:
                         template = ','.join(['%s'] * len(inserts))
                         curs.execute(insert_fmt.format(template), inserts)
                         
@@ -947,7 +951,7 @@ class Command(BaseCommand):
                     
                     inserts.append(insert)
                     
-                    if len(inserts) % 10000 == 0:
+                    if inserts and len(inserts) % 10000 == 0:
                         template = ','.join(['%s'] * len(inserts))
                         curs.execute(insert_fmt.format(template), inserts)
                         
@@ -971,32 +975,28 @@ class Command(BaseCommand):
     
         self.stdout.write(self.style.SUCCESS('Found {0} sponsorships'.format(raw_count)))
 
-
-    def insert_raw_documents(self, delete=False):
+    def insert_raw_billdocuments(self, delete=False):
         
-        self.remake_raw('document', delete=delete)
+        self.remake_raw('billdocument', delete=delete)
         
         with connection.cursor() as curs:
             curs.execute('''
-                ALTER TABLE raw_document 
+                ALTER TABLE raw_billdocument 
                 ALTER COLUMN updated_at SET DEFAULT NOW()
             ''')
             
-            curs.execute('''
-                ALTER TABLE raw_document 
-                ADD COLUMN bill_id VARCHAR
-            ''')
-            
         inserts = []
-        
+
         insert_fmt = ''' 
-            INSERT INTO raw_document (
+            INSERT INTO raw_billdocument (
                 note,
                 url, 
-                bill_id
+                bill_id,
+                document_type
             ) VALUES {}
-            '''
+        '''
         
+        count = 0
         with connection.cursor() as curs:
             for bill_json in os.listdir(self.bills_folder):
                 
@@ -1008,34 +1008,37 @@ class Command(BaseCommand):
                         document['note'],
                         document['links'][0]['url'],
                         bill_info['id'],
+                        'A',
+                    )
+                    
+                    inserts.append(insert)
+
+                for document in bill_info['versions']:
+
+                    insert = (
+                        document['note'],
+                        document['links'][0]['url'],
+                        bill_info['id'],
+                        'V',
                     )
 
                     inserts.append(insert)
+
+                if inserts and len(inserts) % 10000 == 0:
+                    template = ','.join(['%s'] * len(inserts))
+                    curs.execute(insert_fmt.format(template), inserts)
                     
-                    if len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-
-                        inserts = []
-
+                    inserts = []
+            
             if inserts:
                 template = ','.join(['%s'] * len(inserts))
                 curs.execute(insert_fmt.format(template), inserts)
-        
-        inserts = []
-        
-        insert_fmt = ''' 
-            INSERT INTO raw_document (
-                note,
-                url, 
-                bill_id
-            ) VALUES {}
-            '''
-        
-        read_cursor = connection.cursor()
-        
-        with connection.cursor() as curs:
-            
+                
+            curs = connection.cursor()
+            curs.execute('select count(*) from raw_billdocument')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} bill attachments and versions'.format(raw_count)))
 
 
     ################################
@@ -1165,7 +1168,9 @@ class Command(BaseCommand):
                 CREATE TABLE change_membership (
                     organization_id VARCHAR,
                     person_id VARCHAR,
-                    post_id VARCHAR
+                    post_id VARCHAR,
+                    start_date,
+                    end_date
                 )
             ''')
         
@@ -1176,7 +1181,7 @@ class Command(BaseCommand):
            'end_date',
            'organization_id',
            'person_id',
-           'post_id',
+           'post_id'
         ]
 
         where_clause, set_values, fields = self.get_update_parts(cols, [])
@@ -1186,12 +1191,16 @@ class Command(BaseCommand):
               SELECT 
                 raw.organization_id,
                 raw.person_id,
-                raw.post_id
+                raw.post_id,
+                raw_start_date,
+                raw.end_date
               FROM raw_membership AS raw
               JOIN councilmatic_core_membership AS dat
                 ON (raw.organization_id = dat.organization_id
                     AND raw.person_id = dat.person_id
-                    AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, ''))
+                    AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, '')
+                    AND COALESCE(raw.start_date, '') = COALESCE(dat.start_date, '')
+                    AND COALESCE(raw.end_date, '') = COALESCE(dat.end_date, ''))
               WHERE {}
         '''.format(where_clause)
         
@@ -1205,11 +1214,15 @@ class Command(BaseCommand):
               JOIN change_membership AS change
                 ON (raw.organization_id = change.organization_id
                     AND raw.person_id = change.person_id
-                    AND COALESCE(raw.post_id, '') = COALESCE(change.post_id, ''))
+                    AND COALESCE(raw.post_id, '') = COALESCE(change.post_id, '')
+                    AND COALESCE(raw.start_date, '') = COALESCE(change.start_date, '')
+                    AND COALESCE(raw.end_date, '') = COALESCE(change.end_date, ''))
             ) AS s
             WHERE councilmatic_core_membership.organization_id = s.organization_id
               AND councilmatic_core_membership.person_id = s.person_id
               AND COALESCE(councilmatic_core_membership.post_id, '') = COALESCE(s.post_id, '')
+              AND COALESCE(councilmatic_core_membership.start_date, '') = COALESCE(s.start_date, '')
+              AND COALESCE(councilmatic_core_membership.end_date, '') = COALESCE(s.end_date, '')
         '''.format(set_values=set_values, 
                    fields=fields)
         
@@ -1306,6 +1319,202 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Found {0} changed action'.format(change_count)))
     
+    def update_existing_action_related_entity(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_actionrelatedentity')
+            curs.execute(''' 
+                CREATE TABLE change_actionrelatedentity (
+                    organization_ocd_id VARCHAR,
+                    person_ocd_id VARCHAR,
+                    action_id INTEGER
+                )
+            ''')
+        
+        cols = [
+            'entity_type',
+            'entity_name',
+            'organization_ocd_id',
+            'person_ocd_id',
+            'action_id',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
+        
+        find_changes = ''' 
+            INSERT INTO change_actionrelatedentity
+              SELECT 
+                raw.organization_ocd_id,
+                raw.person_ocd_id,
+                raw.action_id
+              FROM raw_actionrelatedentity AS raw
+              JOIN councilmatic_core_actionrelatedentity AS dat
+                ON (COALESCE(raw.organization_ocd_id, '') = COALESCE(dat.organization_ocd_id, '')
+                    AND COALESCE(raw.person_ocd_id, '') = COALESCE(dat.person_ocd_id, '')
+                    AND raw.action_id = dat.action_id)
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_actionrelatedentity SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_actionrelatedentity AS raw
+              JOIN change_actionrelatedentity AS change
+                ON (COALESCE(raw.organization_ocd_id, '') = COALESCE(change.organization_ocd_id, '')
+                    AND COALESCE(raw.person_ocd_id, '') = COALESCE(change.person_ocd_id, '')
+                    AND raw.action_id = change.action_id)
+            ) AS s
+            WHERE COALESCE(councilmatic_core_actionrelatedentity.organization_ocd_id, '') = COALESCE(s.organization_ocd_id, '')
+              AND COALESCE(councilmatic_core_actionrelatedentity.person_ocd_id, '') = COALESCE(s.person_ocd_id, '')
+              AND councilmatic_core_actionrelatedentity.action_id = s.action_id
+        '''.format(set_values=set_values, 
+                   fields=fields)
+
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_actionrelatedentity')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed action related entities'.format(change_count)))
+
+    def update_existing_sponsorships(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_sponsorship')
+            curs.execute(''' 
+                CREATE TABLE change_sponsorship (
+                    classification VARCHAR,
+                    is_primary BOOLEAN,
+                    bill_id VARCHAR,
+                    person_id VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'classification',
+            'is_primary',
+            'bill_id',
+            'person_id',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
+        
+        find_changes = ''' 
+            INSERT INTO change_sponsorship
+              SELECT 
+                raw.classification,
+                raw.is_primary,
+                raw.bill_id,
+                raw.person_id
+              FROM raw_sponsorship AS raw
+              JOIN councilmatic_core_sponsorship AS dat
+                ON (raw.classification = dat.classification
+                    AND raw.is_primary = dat.is_primary
+                    AND raw.bill_id = dat.bill_id
+                    AND raw.person_id = dat.person_id)
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_sponsorship SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_sponsorship AS raw
+              JOIN change_sponsorship AS change
+                ON (raw.classification = change.classification
+                    AND raw.is_primary = change.is_primary
+                    AND raw.bill_id = change.bill_id
+                    AND raw.person_id = change.person_id)
+            ) AS s
+            WHERE councilmatic_core_sponsorship.classification = s.classification
+              AND councilmatic_core_sponsorship.is_primary = s.is_primary
+              AND councilmatic_core_sponsorship.bill_id = s.bill_id
+              AND councilmatic_core_sponsorship.person_id = s.person_id
+        '''.format(set_values=set_values, 
+                   fields=fields)
+
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_sponsorship')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed sponsorships'.format(change_count)))
+
+    def update_existing_billdocuments(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_billdocument')
+            curs.execute(''' 
+                CREATE TABLE change_billdocument (
+                    bill_id VARCHAR,
+                    url VARCHAR,
+                    document_type VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'bill_id',
+            'url',
+            'document_type',
+            'note',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
+        
+        find_changes = ''' 
+            INSERT INTO change_billdocument
+              SELECT 
+                raw.bill_id,
+                raw.url,
+                raw.document_type
+              FROM raw_bill_document AS raw
+              JOIN councilmatic_core_billdocument AS dat
+                ON (raw.bill_id = dat.bill_id
+                    AND raw.url = dat.url
+                    AND raw.document_type = dat.document_type)
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_billdocument SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_billdocument AS raw
+              JOIN change_billdocument AS change
+                ON (raw.bill_id = change.bill_id
+                    AND raw.url = change.url
+                    AND raw.document_type = change.document_type)
+            ) AS s
+            WHERE councilmatic_core_billdocument.bill_id = s.bill_id
+              AND councilmatic_core_billdocument.url = s.url
+              AND councilmatic_core_billdocument.document_type = s.document_type
+        '''.format(set_values=set_values, 
+                   fields=fields)
+
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_billdocument')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed bill documents'.format(change_count)))
+
+
     ########################
     ###                  ###
     ### ADD NEW ENTITIES ###

@@ -531,8 +531,8 @@ class ActionRelatedEntity(models.Model):
         'Action', related_name='related_entities', db_column='action_id', null=True)
     entity_type = models.CharField(max_length=100)
     entity_name = models.CharField(max_length=255)
-    organization_ocd_id = models.CharField(max_length=100, blank=True)
-    person_ocd_id = models.CharField(max_length=100, blank=True)
+    organization_ocd_id = models.CharField(max_length=100, blank=True, null=True)
+    person_ocd_id = models.CharField(max_length=100, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
@@ -714,13 +714,13 @@ class AgendaItemBill(models.Model):
 class Document(models.Model):
     note = models.TextField()
     url = models.TextField(blank=True)
-    full_text = models.TextField(blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    full_text = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        abstract = True
 
-
-class BillDocument(models.Model):
+class BillDocument(Document):
     bill = models.ForeignKey('Bill', related_name='documents')
-    document = models.ForeignKey('Document', related_name='bills')
     document_type = models.CharField(
         max_length=255, choices=bill_document_choices)
     updated_at = models.DateTimeField(auto_now=True)
@@ -731,10 +731,8 @@ class BillDocument(models.Model):
         self.document = override_relation(self.document)
 
 
-class EventDocument(models.Model):
+class EventDocument(Document):
     event = models.ForeignKey('Event', related_name='documents')
-    document = models.ForeignKey('Document', related_name='events')
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(EventDocument, self).__init__(*args, **kwargs)
