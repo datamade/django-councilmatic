@@ -85,11 +85,11 @@ class Command(BaseCommand):
         
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
         
-        self.organizations_folder = os.path.join(self.this_folder, 'organizations')
-        self.posts_folder = os.path.join(self.this_folder, 'posts')
-        self.bills_folder = os.path.join(self.this_folder, 'bills')
-        self.people_folder = os.path.join(self.this_folder, 'people')
-        self.events_folder = os.path.join(self.this_folder, 'events')
+        self.organizations_folder = os.path.join(self.this_folder, 'organizations', settings.APP_NAME)
+        self.posts_folder = os.path.join(self.this_folder, 'posts', settings.APP_NAME)
+        self.bills_folder = os.path.join(self.this_folder, 'bills', settings.APP_NAME)
+        self.people_folder = os.path.join(self.this_folder, 'people', settings.APP_NAME)
+        self.events_folder = os.path.join(self.this_folder, 'events', settings.APP_NAME)
 
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
@@ -120,16 +120,16 @@ class Command(BaseCommand):
             
             # self.insert_raw_bills(delete=options['delete'])
             # self.insert_raw_actions(delete=options['delete'])
-            
-            self.update_existing_bills()
-            self.update_existing_actions()
-            
-            self.add_new_bills()
-            self.add_new_actions()
+            # 
+            # self.update_existing_bills()
+            # self.update_existing_actions()
+            # 
+            # self.add_new_bills()
+            # self.add_new_actions()
             
             # self.insert_raw_action_related_entity(delete=options['delete'])
-            # self.insert_raw_documents(delete=options['delete'])
             # self.insert_raw_sponsorships(delete=options['delete'])
+            self.insert_raw_documents(delete=options['delete'])
             
 
             print("\ndone!", datetime.datetime.now())
@@ -874,12 +874,9 @@ class Command(BaseCommand):
                             for row in curs:
                                 person_id = row[0]
                     
-                    
-                    print(organization_id, person_id, action_id)
-
                     insert = (
-                        related_entity['name'],
                         related_entity['entity_type'],
+                        related_entity['name'],
                         organization_id,
                         person_id,
                         action_id,
@@ -901,13 +898,146 @@ class Command(BaseCommand):
             raw_count = curs.fetchone()[0]
     
         self.stdout.write(self.style.SUCCESS('Found {0} action related entities'.format(raw_count)))
-
-    def insert_raw_documents(self, delete=False):
-        pass
     
     def insert_raw_sponsorships(self, delete=False):
-        pass
+        
+        self.remake_raw('sponsorship', delete=delete)
+        
+        with connection.cursor() as curs:
+            curs.execute('''
+                ALTER TABLE raw_sponsorship 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+            
+            curs.execute(''' 
+                CREATE TABLE raw_sponsorship_temp AS (
+                    SELECT * FROM councilmatic_core_sponsorship
+                ) WITH NO DATA
+            ''')
+        
+            curs.execute('''
+                ALTER TABLE raw_sponsorship_temp 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_sponsorship_temp (
+                classification,
+                is_primary,
+                bill_id,
+                person_id
+            ) VALUES {}
+            '''
+        
+        with connection.cursor() as curs:
+            for bill_json in os.listdir(self.bills_folder):
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+                
+                for sponsorship in bill_info['sponsorships']:
+                    
+                    insert = (
+                        sponsorship['classification'],
+                        sponsorship['primary'],
+                        bill_info['id'],
+                        sponsorship['entity_id'],
+                    )
+                    
+                    inserts.append(insert)
+                    
+                    if len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+                        
+                        inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+        
+        # Temproary measure to make sure we can actually update things.
+        with connection.cursor() as curs:
+            curs.execute(''' 
+                INSERT INTO raw_sponsorship 
+                  SELECT DISTINCT ON (classification, is_primary, bill_id, person_id)
+                  *
+                  FROM raw_sponsorship_temp
+            ''')
+
+            curs.execute('select count(*) from raw_sponsorship')
+            raw_count = curs.fetchone()[0]
     
+        self.stdout.write(self.style.SUCCESS('Found {0} sponsorships'.format(raw_count)))
+
+
+    def insert_raw_documents(self, delete=False):
+        
+        self.remake_raw('document', delete=delete)
+        
+        with connection.cursor() as curs:
+            curs.execute('''
+                ALTER TABLE raw_document 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+            
+            curs.execute('''
+                ALTER TABLE raw_document 
+                ADD COLUMN bill_id VARCHAR
+            ''')
+            
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_document (
+                note,
+                url, 
+                bill_id
+            ) VALUES {}
+            '''
+        
+        with connection.cursor() as curs:
+            for bill_json in os.listdir(self.bills_folder):
+                
+                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+                
+                for document in bill_info['documents']:
+
+                    insert = (
+                        document['note'],
+                        document['links'][0]['url'],
+                        bill_info['id'],
+                    )
+
+                    inserts.append(insert)
+                    
+                    if len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+
+                        inserts = []
+
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+        
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_document (
+                note,
+                url, 
+                bill_id
+            ) VALUES {}
+            '''
+        
+        read_cursor = connection.cursor()
+        
+        with connection.cursor() as curs:
+            
+
+
     ################################
     ###                          ###
     ### UPDATE EXISTING ENTITIES ###
