@@ -691,23 +691,13 @@ class EventAgendaItem(models.Model):
     event = models.ForeignKey('Event', related_name='agenda_items')
     order = models.IntegerField()
     description = models.TextField()
+    bill = models.ForeignKey('Bill', related_name='related_agenda_items', null=True)
+    note = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(EventAgendaItem, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
-
-
-class AgendaItemBill(models.Model):
-    agenda_item = models.ForeignKey(
-        'EventAgendaItem', related_name='related_bills')
-    bill = models.ForeignKey('Bill', related_name='related_agenda_items')
-    note = models.CharField(max_length=255)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __init__(self, *args, **kwargs):
-        super(AgendaItemBill, self).__init__(*args, **kwargs)
-        self.agenda_item = override_relation(self.agenda_item)
         self.bill = override_relation(self.bill)
 
 

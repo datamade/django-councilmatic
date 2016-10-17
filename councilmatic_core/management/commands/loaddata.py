@@ -13,7 +13,7 @@ from django.core.management.base import BaseCommand
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.utils.dateparse import parse_datetime, parse_date
-from django.utils.text import slugify
+from django.utils.text import slugify, Truncator
 from django.db.utils import IntegrityError, DataError
 from django.db.models import Max
 from django.db import connection
@@ -21,7 +21,7 @@ from django.db import connection
 from councilmatic_core.models import Person, Bill, Organization, Action, ActionRelatedEntity, \
     Post, Membership, Sponsorship, LegislativeSession, \
     Document, BillDocument, Event, EventParticipant, EventDocument, \
-    EventAgendaItem, AgendaItemBill
+    EventAgendaItem
 
 for configuration in ['OCD_JURISDICTION_ID',
                       'HEADSHOT_PATH',
@@ -96,92 +96,124 @@ class Command(BaseCommand):
 
         if options['endpoint'] == 'organizations':
             
-            if not options['import_only']:
-                self.grab_organizations()
-            
-            self.insert_raw_organizations(delete=options['delete'])
-            self.insert_raw_posts(delete=options['delete'])
-            
-            self.update_existing_organizations()
-            self.update_existing_posts()
-            
+            self.organization_etl(import_only=options['import_only'], 
+                                  delete=options['delete'])
 
-            self.add_new_organizations()
-            self.add_new_posts()
-
+            print("\ndone!", datetime.datetime.now())
+        
+        elif options['endpoint'] == 'people':
+            
+            self.people_etl(import_only=options['import_only'],
+                            delete=options['delete'])
+            
             print("\ndone!", datetime.datetime.now())
 
         elif options['endpoint'] == 'bills':
             
-            self.create_legislative_sessions()
-
-            if not options['import_only']:
-                self.grab_bills()
-            
-            # self.insert_raw_bills(delete=options['delete'])
-            # self.insert_raw_actions(delete=options['delete'])
-            # 
-            # self.update_existing_bills()
-            # self.update_existing_actions()
-            # 
-            # self.add_new_bills()
-            # self.add_new_actions()
-            
-            # self.insert_raw_action_related_entity(delete=options['delete'])
-            # self.insert_raw_sponsorships(delete=options['delete'])
-            # self.insert_raw_billdocuments(delete=options['delete'])
-            
-            self.update_existing_action_related_entity()
-            self.update_existing_sponsorships()
-            self.update_existing_billdocuments()
-            
+            self.bill_etl(import_only=options['import_only'], 
+                          delete=options['delete'])
 
             print("\ndone!", datetime.datetime.now())
 
-        elif options['endpoint'] == 'people':
-            if not options['import_only']:
-                self.grab_people()
-                print("\ndone!", datetime.datetime.now())
-            
-            self.insert_raw_people(delete=options['delete'])
-            self.insert_raw_memberships(delete=options['delete'])
-            
-            self.update_existing_people()
-            self.update_existing_memberships()
-            
-            self.add_new_people()
-            self.add_new_memberships()
-
         elif options['endpoint'] == 'events':
-            self.grab_events(delete=options['delete'])
+            
+            self.event_etl(import_only=options['import_only'],
+                           delete=options['delete'])
+
             print("\ndone!", datetime.datetime.now())
 
         else:
             print("\n** loading all data types! **\n")
             
-            if not options['import_only']:
-                self.grab_organizations()
-                self.grab_people()
-                self.grab_bills(delete=options['delete'])
-                self.grab_events(delete=options['delete'])
+            self.organization_etl(import_only=options['import_only'],
+                                  delete=options['delete'])
             
-            self.insert_raw_organizations(delete=options['delete'])
-            self.insert_raw_posts(delete=options['delete'])
-            self.insert_raw_people(delete=options['delete'])
-            self.insert_raw_memberships(delete=options['delete'])
+            self.people_etl(import_only=options['import_only'],
+                                  delete=options['delete'])
             
-            self.update_existing_organizations()
-            self.update_existing_posts()
-            self.update_existing_people()
-            self.update_existing_memberships()
+            self.bill_etl(import_only=options['import_only'],
+                                  delete=options['delete'])
             
-            self.add_new_organizations()
-            self.add_new_posts()
-            self.add_new_people()
-            self.add_new_memberships()
+            self.event_etl(import_only=options['import_only'],
+                           delete=options['delete'])
+            
 
             print("\ndone!", datetime.datetime.now())
+
+    def organization_etl(self, import_only=False, delete=False):
+        if not import_only:
+            self.grab_organizations()
+        
+        self.insert_raw_organizations(delete=delete)
+        self.insert_raw_posts(delete=delete)
+        
+        self.update_existing_organizations()
+        self.update_existing_posts()
+        
+
+        self.add_new_organizations()
+        self.add_new_posts()
     
+    def people_etl(self, import_only=False, delete=False):
+        if not import_only:
+            self.grab_people()
+        
+        self.insert_raw_people(delete=delete)
+        self.insert_raw_memberships(delete=delete)
+        
+        self.update_existing_people()
+        self.update_existing_memberships()
+        
+        self.add_new_people()
+        self.add_new_memberships()
+    
+    def bill_etl(self, import_only=False, delete=False):
+        self.create_legislative_sessions()
+
+        if not import_only:
+            self.grab_bills()
+        
+        self.insert_raw_bills(delete=delete)
+        self.insert_raw_actions(delete=delete)
+        
+        self.update_existing_bills()
+        self.update_existing_actions()
+        
+        self.add_new_bills()
+        self.add_new_actions()
+        
+        self.insert_raw_action_related_entity(delete=delete)
+        self.insert_raw_sponsorships(delete=delete)
+        self.insert_raw_billdocuments(delete=delete)
+        
+        self.update_existing_action_related_entity()
+        self.update_existing_sponsorships()
+        self.update_existing_billdocuments()
+        
+        self.add_new_action_related_entity()
+        self.add_new_sponsorships()
+        self.add_new_billdocuments()
+    
+    def event_etl(self, import_only=False, delete=False):
+        
+        if not import_only:
+            self.grab_events()
+
+        self.insert_raw_events(delete=delete)
+        self.insert_raw_eventparticipants(delete=delete)
+        self.insert_raw_eventdocuments(delete=delete)
+        self.insert_raw_event_agenda_items(delete=delete)
+
+        self.update_existing_events()
+        self.update_existing_eventparticipants()
+        self.update_existing_eventdocuments()
+        self.update_existing_event_agenda_items()
+
+        self.add_new_events()
+        self.add_new_eventparticipants()
+        self.add_new_eventdocuments()
+        self.add_new_event_agenda_items()
+
     #########################
     ###                   ###
     ### DOWNLOAD FROM OCD ###
@@ -191,15 +223,9 @@ class Command(BaseCommand):
     def grab_organizations(self):
         print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
         
-        try:
-            os.mkdir(os.path.join(self.organizations_folder))
-        except OSError:
-            pass
         
-        try:
-            os.mkdir(os.path.join(self.posts_folder))
-        except OSError:
-            pass
+        os.makedirs(self.organizations_folder, exist_ok=True)
+        os.makedirs(self.posts_folder, exist_ok=True)
 
         # first grab city council root
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
@@ -265,10 +291,7 @@ class Command(BaseCommand):
 
         print("\n\nLOADING PEOPLE", datetime.datetime.now())
         
-        try:
-            os.mkdir(os.path.join(self.people_folder))
-        except OSError:
-            pass
+        os.makedirs(self.people_folder, exist_ok=True)
         
         for organization_json in os.listdir(self.organizations_folder):
             
@@ -316,10 +339,7 @@ class Command(BaseCommand):
 
         print("\n\nLOADING BILLS", datetime.datetime.now())
         
-        try:
-            os.mkdir(self.bills_folder)
-        except OSError:
-            pass
+        os.makedirs(self.bills_folder, exist_ok=True)
 
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
             query_params = {'from_organization__id': settings.OCD_CITY_COUNCIL_ID}
@@ -362,7 +382,61 @@ class Command(BaseCommand):
                 
                 with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
                     f.write(json.dumps(bill_json))
+    
+    def grab_events(self):
 
+        # print("\n\nLOADING EVENTS", datetime.datetime.now())
+        # if delete:
+        #     with psycopg2.connect(**self.db_conn_kwargs) as conn:
+        #         with conn.cursor() as curs:
+        #             curs.execute('TRUNCATE councilmatic_core_event CASCADE')
+        #             curs.execute(
+        #                 'TRUNCATE councilmatic_core_eventparticipant CASCADE')
+        #             curs.execute(
+        #                 'TRUNCATE councilmatic_core_eventdocument CASCADE')
+        #             curs.execute(
+        #                 'TRUNCATE councilmatic_core_eventagendaitem CASCADE')
+        #             curs.execute(
+        #                 'TRUNCATE councilmatic_core_agendaitembill CASCADE')
+        #     print(
+        #         "deleted all events, participants, documents, agenda items, agenda item bill references")
+
+        # this grabs a paginated listing of all events within a jurisdiction
+        
+        os.makedirs(self.events_folder, exist_ok=True)
+        
+        events_url = '{0}/events/'.format(base_url)
+
+        params = {'jurisdiction_id': settings.OCD_JURISDICTION_ID}
+        
+        r = requests.get(events_url, params=params)
+        page_json = json.loads(r.text)
+
+        for i in range(page_json['meta']['max_page']):
+            
+            params['page'] = str(i + 1)
+            r = requests.get(events_url, params=params)
+            page_json = json.loads(r.text)
+
+            for event in page_json['results']:
+                
+                ocd_uuid = event['id'].split('/')[-1]
+                event_filename = '{}.json'.format(ocd_uuid)
+                
+                event_url = base_url + '/' + event['id'] + '/'
+                r = requests.get(event_url)
+
+                if r.status_code == 200:
+                    page_json = json.loads(r.text)
+                
+                    with open(os.path.join(self.events_folder, event_filename), 'w') as f:
+                        f.write(json.dumps(page_json))
+                else:
+                    print("\n\n" + "*" * 60)
+                    print("SKIPPING EVENT %s" % event['id'])
+                    print("cannot retrieve event data")
+                    print("*" * 60 + "\n")
+        
     ###########################
     ###                     ###
     ### INSERT RAW ENTITIES ###
@@ -386,20 +460,25 @@ class Command(BaseCommand):
                 ) WITH NO DATA
             '''.format(entity_type))
 
-    def setup_raw(self, entity_type, delete=False):
+    def setup_raw(self, 
+                  entity_type, 
+                  delete=False, 
+                  pk_cols=['ocd_id'],
+                  updated_at=True):
         
         self.remake_raw(entity_type, delete=delete)
 
         with connection.cursor() as curs:
             
             curs.execute('''
-                ALTER TABLE raw_{} ADD PRIMARY KEY (ocd_id)
-            '''.format(entity_type))
+                ALTER TABLE raw_{0} ADD PRIMARY KEY ({1})
+            '''.format(entity_type, ','.join(pk_cols)))
             
-            curs.execute('''
-                ALTER TABLE raw_{} 
-                ALTER COLUMN updated_at SET DEFAULT NOW()
-            '''.format(entity_type))
+            if updated_at:
+                curs.execute('''
+                    ALTER TABLE raw_{} 
+                    ALTER COLUMN updated_at SET DEFAULT NOW()
+                '''.format(entity_type))
     
     def create_legislative_sessions(self):
         session_ids = []
@@ -575,15 +654,17 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Found {0} people'.format(raw_count)))
     
     def insert_raw_memberships(self, delete=False):
-
-        self.remake_raw('membership', delete=delete)
         
-        with connection.cursor() as curs:
-            
-            curs.execute('''
-                ALTER TABLE raw_membership 
-                ALTER COLUMN updated_at SET DEFAULT NOW()
-            ''')
+        pk_cols = [
+           'start_date',
+           'end_date',
+           'organization_id',
+           'person_id',
+           'post_id'
+        ]
+
+        self.setup_raw('membership', delete=delete, pk_cols=pk_cols)
+        
 
         inserts = []
 
@@ -665,7 +746,8 @@ class Command(BaseCommand):
         with connection.cursor() as curs:
             for bill_json in os.listdir(self.bills_folder):
                 
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+                with open(os.path.join(self.bills_folder, bill_json)) as f:
+                    bill_info = json.loads(f.read())
                 
                 source_url = None
                 for source in bill_info['sources']:
@@ -742,14 +824,10 @@ class Command(BaseCommand):
     
     def insert_raw_actions(self, delete=False):
         
-        self.remake_raw('action', delete=delete)
-        
-        with connection.cursor() as curs:
-            curs.execute('''
-                ALTER TABLE raw_action 
-                ALTER COLUMN updated_at SET DEFAULT NOW()
-            ''')
+        pk_cols = ['bill_id', '"order"']
 
+        self.setup_raw('action', delete=delete, pk_cols=pk_cols)
+        
         inserts = []
         
         insert_fmt = ''' 
@@ -766,7 +844,8 @@ class Command(BaseCommand):
         with connection.cursor() as curs:
             for bill_json in os.listdir(self.bills_folder):
                 
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
+                with open(os.path.join(self.bills_folder, bill_json)) as f:
+                    bill_info = json.loads(f.read())
 
                 for order, action in enumerate(bill_info['actions']):
                     
@@ -839,8 +918,9 @@ class Command(BaseCommand):
                 ocd_uuid = bill_id.split('/')[-1]
                 bill_filename = '{}.json'.format(ocd_uuid)
                 
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_filename)))
-                
+                with open(os.path.join(self.bills_folder, bill_filename)) as f:
+                    bill_info = json.loads(f.read())
+                    
                 action = bill_info['actions'][order]
 
                 for related_entity in action['related_entities']:
@@ -911,6 +991,10 @@ class Command(BaseCommand):
             curs.execute('''
                 ALTER TABLE raw_sponsorship 
                 ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+            
+            curs.execute(''' 
+                DROP TABLE IF EXISTS raw_sponsorship_temp
             ''')
             
             curs.execute(''' 
@@ -1039,7 +1123,241 @@ class Command(BaseCommand):
             raw_count = curs.fetchone()[0]
     
         self.stdout.write(self.style.SUCCESS('Found {0} bill attachments and versions'.format(raw_count)))
+    
+    def insert_raw_events(self, delete=False):
+        self.setup_raw('event', delete=delete)
+        
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_event (
+                ocd_id,
+                ocd_created_at,
+                ocd_updated_at,
+                name,
+                description,
+                classification,
+                start_time,
+                end_time,
+                all_day,
+                status,
+                location_name,
+                location_url,
+                source_url, 
+                source_note,
+                slug
+            ) VALUES {}
+            '''
+        
+        with connection.cursor() as curs:
+            for event_json in os.listdir(self.events_folder):
+                
+                with open(os.path.join(self.events_folder, event_json)) as f:
+                    event_info = json.loads(f.read())
+                
+                ocd_id = event_info['id']
+                
+                truncator = Truncator(event_info['name'])
+                ocd_part = ocd_id.rsplit('-', 1)[1]
+                slug = '{0}-{1}'.format(slugify(truncator.words(5)), ocd_part)
 
+                insert = (
+                    ocd_id,
+                    event_info['created_at'],
+                    event_info['updated_at'],
+                    event_info['name'],
+                    event_info['description'],
+                    event_info['classification'],
+                    parse_datetime(event_info['start_time']),
+                    parse_datetime(event_info['end_time']) if event_info['end_time'] else None,
+                    event_info['all_day'],
+                    event_info['status'],
+                    event_info['location']['name'],
+                    event_info['location']['url'],
+                    event_info['sources'][0]['url'],
+                    event_info['sources'][0]['note'],
+                    slug
+                )
+                
+                inserts.append(insert)
+                
+                if inserts and len(inserts) % 10000 == 0:
+                    template = ','.join(['%s'] * len(inserts))
+                    curs.execute(insert_fmt.format(template), inserts)
+                    
+                    inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_event')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} events'.format(raw_count)))
+
+    def insert_raw_eventparticipants(self, delete=False):
+        pk_cols = ['event_id', 'entity_name', 'entity_type']
+
+        self.setup_raw('eventparticipant', 
+                       delete=delete, 
+                       pk_cols=pk_cols)
+
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_eventparticipant (
+                note,
+                entity_name,
+                entity_type,
+                event_id
+            ) VALUES {}
+            '''
+        
+        with connection.cursor() as curs:
+            for event_json in os.listdir(self.events_folder):
+                
+                with open(os.path.join(self.events_folder, event_json)) as f:
+                    event_info = json.loads(f.read())
+                
+                for participant in event_info['participants']:
+                    
+                    insert = (
+                        participant['note'],
+                        participant['entity_name'],
+                        participant['entity_type'],
+                        event_info['id'],
+                    )
+
+                    inserts.append(insert)
+                    if inserts and len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+                        
+                        inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_eventparticipant')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} event participants'.format(raw_count)))
+
+    def insert_raw_eventdocuments(self, delete=False):
+        pk_cols = ['event_id', 'url']
+
+        self.setup_raw('eventdocument', 
+                       delete=delete, 
+                       pk_cols=pk_cols,
+                       updated_at=False)
+
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_eventdocument (
+                event_id,
+                note,
+                url
+            ) VALUES {}
+            '''
+        
+        with connection.cursor() as curs:
+            for event_json in os.listdir(self.events_folder):
+                
+                with open(os.path.join(self.events_folder, event_json)) as f:
+                    event_info = json.loads(f.read())
+                
+                for document in event_info['documents']:
+                    
+                    insert = (
+                        event_info['id'],
+                        document['note'],
+                        document['links'][0]['url'],
+                    )
+
+                    inserts.append(insert)
+                    if inserts and len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+                        
+                        inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+            
+            curs.execute('select count(*) from raw_eventdocument')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} event documents'.format(raw_count)))
+    
+    def insert_raw_event_agenda_items(self, delete=False):
+        pk_cols = ['event_id', '"order"']
+
+        self.setup_raw('eventagendaitem', 
+                       delete=delete, 
+                       pk_cols=pk_cols)
+        
+        inserts = []
+        
+        insert_fmt = ''' 
+            INSERT INTO raw_eventagendaitem (
+                "order",
+                description,
+                event_id,
+                bill_id,
+                note
+            ) VALUES {}
+            '''
+        
+        with connection.cursor() as curs:
+            for event_json in os.listdir(self.events_folder):
+                
+                with open(os.path.join(self.events_folder, event_json)) as f:
+                    event_info = json.loads(f.read())
+                
+                for item in event_info['agenda']:
+                    
+                    bill_id = None
+                    note = None
+
+                    try:
+                        related_entity = item['related_entities'][0]
+                        
+                        # Only capture related entities when they are bills
+
+                        if related_entity['entity_type'] == 'bill':
+                            bill_id = related_entity['entity_id']
+                            note = related_entity['note']
+                    
+                    except IndexError:
+                        pass
+
+                    insert = (
+                        item['order'],
+                        item['description'],
+                        event_info['id'],
+                        bill_id,
+                        note,
+                    )
+
+                    inserts.append(insert)
+                    if inserts and len(inserts) % 10000 == 0:
+                        template = ','.join(['%s'] * len(inserts))
+                        curs.execute(insert_fmt.format(template), inserts)
+                        
+                        inserts = []
+            
+            if inserts:
+                template = ','.join(['%s'] * len(inserts))
+                curs.execute(insert_fmt.format(template), inserts)
+
+            curs.execute('select count(*) from raw_eventagendaitem')
+            raw_count = curs.fetchone()[0]
+    
+        self.stdout.write(self.style.SUCCESS('Found {0} event event agenda items'.format(raw_count)))
 
     ################################
     ###                          ###
@@ -1169,8 +1487,8 @@ class Command(BaseCommand):
                     organization_id VARCHAR,
                     person_id VARCHAR,
                     post_id VARCHAR,
-                    start_date,
-                    end_date
+                    start_date DATE,
+                    end_date DATE
                 )
             ''')
         
@@ -1478,7 +1796,7 @@ class Command(BaseCommand):
                 raw.bill_id,
                 raw.url,
                 raw.document_type
-              FROM raw_bill_document AS raw
+              FROM raw_billdocument AS raw
               JOIN councilmatic_core_billdocument AS dat
                 ON (raw.bill_id = dat.bill_id
                     AND raw.url = dat.url
@@ -1514,6 +1832,206 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Found {0} changed bill documents'.format(change_count)))
 
+    def update_existing_events(self):
+        cols = [
+            'ocd_id',
+            'ocd_created_at',
+            'ocd_updated_at',
+            'name',
+            'description',
+            'classification',
+            'start_time',
+            'end_time',
+            'all_day',
+            'status',
+            'location_name',
+            'location_url',
+            'source_url', 
+            'source_note',
+            'slug',
+        ]
+        self.update_entity_type('event', cols=cols)
+    
+    def update_existing_eventparticipants(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_eventparticipant')
+            curs.execute(''' 
+                CREATE TABLE change_eventparticipant (
+                    event_id VARCHAR,
+                    entity_name VARCHAR,
+                    entity_type VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'event_id',
+            'entity_type',
+            'entity_name',
+            'note',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
+        
+        find_changes = ''' 
+            INSERT INTO change_eventparticipant
+              SELECT 
+                raw.event_id,
+                raw.entity_type,
+                raw.entity_name
+              FROM raw_eventparticipant AS raw
+              JOIN councilmatic_core_eventparticipant AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.entity_type = dat.entity_type
+                    AND raw.entity_name = dat.entity_name)
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_eventparticipant SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_eventparticipant AS raw
+              JOIN change_eventparticipant AS change
+                ON (raw.event_id = change.event_id
+                    AND raw.entity_type = change.entity_type
+                    AND raw.entity_name = change.entity_name)
+            ) AS s
+            WHERE councilmatic_core_eventparticipant.event_id = s.event_id
+              AND councilmatic_core_eventparticipant.entity_type = s.entity_type
+              AND councilmatic_core_eventparticipant.entity_name = s.entity_name
+        '''.format(set_values=set_values, 
+                   fields=fields)
+
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_eventparticipant')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed event participants'.format(change_count)))
+    
+    def update_existing_eventdocuments(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_eventdocument')
+            curs.execute(''' 
+                CREATE TABLE change_eventdocument (
+                    event_id VARCHAR,
+                    url VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'event_id',
+            'url',
+            'full_text',
+            'note'
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, [])
+        
+        find_changes = ''' 
+            INSERT INTO change_eventdocument
+              SELECT 
+                raw.event_id,
+                raw.url
+              FROM raw_eventdocument AS raw
+              JOIN councilmatic_core_eventdocument AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.url = dat.url)
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_eventdocument SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_eventdocument AS raw
+              JOIN change_eventdocument AS change
+                ON (raw.event_id = change.event_id
+                    AND raw.url = change.url)
+            ) AS s
+            WHERE councilmatic_core_eventdocument.event_id = s.event_id
+              AND councilmatic_core_eventdocument.url = s.url
+        '''.format(set_values=set_values, 
+                   fields=fields)
+
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_eventdocument')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed event documents'.format(change_count)))
+    
+    def update_existing_event_agenda_items(self):
+        pk_cols = ['event_id', '"order"']
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS change_eventagendaitem')
+            curs.execute(''' 
+                CREATE TABLE change_eventagendaitem (
+                    event_id VARCHAR,
+                    "order" INTEGER
+                )
+            ''')
+        
+        cols = [
+            'order',
+            'description',
+            'event_id',
+            'bill_id',
+            'note',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
+        
+        find_changes = ''' 
+            INSERT INTO change_eventagendaitem
+              SELECT 
+                raw.event_id,
+                raw."order"
+              FROM raw_eventagendaitem AS raw
+              JOIN councilmatic_core_eventagendaitem AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw."order" = dat."order")
+              WHERE {}
+        '''.format(where_clause)
+        
+        update_dat = ''' 
+            UPDATE councilmatic_core_eventagendaitem SET
+              {set_values}
+            FROM (
+              SELECT 
+                {fields}
+              FROM raw_eventagendaitem AS raw
+              JOIN change_eventagendaitem AS change
+                ON (raw.event_id = change.event_id
+                    AND raw."order" = change."order")
+            ) AS s
+            WHERE councilmatic_core_eventagendaitem.event_id = s.event_id
+              AND councilmatic_core_eventagendaitem."order" = s."order"
+        '''.format(set_values=set_values, 
+                   fields=fields)
+
+        with connection.cursor() as curs:
+            curs.execute(find_changes)
+            curs.execute('select count(*) from change_eventagendaitem')
+            change_count = curs.fetchone()[0]
+
+        with connection.cursor() as curs:
+            curs.execute(update_dat)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} changed event agenda items'.format(change_count)))
 
     ########################
     ###                  ###
@@ -1613,7 +2131,9 @@ class Command(BaseCommand):
                 CREATE TABLE new_membership (
                     organization_id VARCHAR,
                     person_id VARCHAR,
-                    post_id VARCHAR
+                    post_id VARCHAR,
+                    start_date DATE,
+                    end_date DATE
                 )
             ''')
         
@@ -1622,12 +2142,16 @@ class Command(BaseCommand):
               SELECT 
                 raw.organization_id,
                 raw.person_id,
-                raw.post_id
+                raw.post_id,
+                raw.start_date,
+                raw.end_date
               FROM raw_membership AS raw
               LEFT JOIN councilmatic_core_membership AS dat
                 ON (raw.organization_id = dat.organization_id
                     AND raw.person_id = dat.person_id
-                    AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, ''))
+                    AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, '')
+                    AND COALESCE(raw.start_date, '') = COALESCE(dat.start_date, '')
+                    AND COALESCE(raw.end_date, '') = COALESCE(dat.end_date, ''))
               WHERE dat.organization_id IS NULL
                 AND dat.person_id IS NULL
                 AND dat.post_id IS NULL
@@ -1661,7 +2185,9 @@ class Command(BaseCommand):
               JOIN new_membership AS new
                 ON (raw.organization_id = new.organization_id
                     AND raw.person_id = new.person_id
-                    AND COALESCE(raw.post_id, '') = COALESCE(new.post_id, ''))
+                    AND COALESCE(raw.post_id, '') = COALESCE(new.post_id, '')
+                    AND COALESCE(raw.start_date, '') = COALESCE(new.start_date, '')
+                    AND COALESCE(raw.end_date, '') = COALESCE(new.end_date, ''))
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
@@ -1752,278 +2278,390 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Found {0} new action'.format(new_count)))
     
-    def load_bill_sponsorship(self, sponsor_json, bill):
-
-        # if the sponsor is a city council member, it has alread been loaded in
-        # grab_people
-        if sponsor_json['entity_id'] and sponsor_json['entity_type'] == 'person':
-            sponsor = Person.objects.filter(
-                ocd_id=sponsor_json['entity_id']).first()
-        # otherwise, it is probably the mayor, or city clerk, or an org
-        # in which case, we may have to make a person
-        # non city council members will not have an ocd id or slug - just name
-        # (we might want to handle mayor differently?)
-        else:
-            sponsor, created = Person.objects.get_or_create(
-                ocd_id=None,
-                name=sponsor_json['entity_name'],
-                headshot='',
-                source_url='',
-                source_note='',
-                website_url='',
-                email='',
-                slug=None,
-            )
-
-        if sponsor:
-            obj, created = Sponsorship.objects.get_or_create(
-                _bill=bill,
-                _person=sponsor,
-                classification=sponsor_json['classification'],
-                is_primary=sponsor_json['primary'],
-            )
-        else:
-            # TEMPORARY - remove this when mayor/clerk stuff is fixed
-            print("**SPONSOR MISSING FROM PEOPLE**")
-            print(sponsor_json)
-            print(bill.ocd_id)
-
-    def load_bill_attachment(self, document_json, bill):
-
-        doc_obj, created = Document.objects.get_or_create(
-            note=document_json['note'],
-            url=document_json['links'][0]['url'],
-        )
-
-        obj, created = BillDocument.objects.get_or_create(
-            bill=bill,
-            document=doc_obj,
-            document_type='A',
-        )
-
-    def load_bill_version(self, document_json, bill):
-
-        doc_obj, created = Document.objects.get_or_create(
-            note=document_json['note'],
-            url=document_json['links'][0]['url'],
-        )
-
-        obj, created = BillDocument.objects.get_or_create(
-            bill=bill,
-            document=doc_obj,
-            document_type='V',
-        )
-
-
-    def grab_events(self, delete=False):
-
-        print("\n\nLOADING EVENTS", datetime.datetime.now())
-        if delete:
-            with psycopg2.connect(**self.db_conn_kwargs) as conn:
-                with conn.cursor() as curs:
-                    curs.execute('TRUNCATE councilmatic_core_event CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_eventparticipant CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_eventdocument CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_eventagendaitem CASCADE')
-                    curs.execute(
-                        'TRUNCATE councilmatic_core_agendaitembill CASCADE')
-            print(
-                "deleted all events, participants, documents, agenda items, agenda item bill references")
-
-        # this grabs a paginated listing of all events within a jurisdiction
-        events_url = base_url + '/events/?jurisdiction_id=' + settings.OCD_JURISDICTION_ID
-        r = requests.get(events_url)
-        page_json = json.loads(r.text)
-
-        for i in range(page_json['meta']['max_page']):
-
-            r = requests.get(events_url + '&page=' + str(i + 1))
-            page_json = json.loads(r.text)
-
-            for result in page_json['results']:
-                self.grab_event(result['id'])
-
-    def grab_event(self, event_ocd_id):
-
-        event_url = base_url + '/' + event_ocd_id + '/'
-        r = requests.get(event_url)
-
-        if r.status_code == 200:
-            page_json = json.loads(r.text)
-
-            try:
-                legistar_id = re.findall(
-                    'ID=(.*)&GUID', page_json['sources'][0]['url'])[0]
-            except IndexError:
-                print("\n\n" + "-" * 60)
-                print("WARNING: MISSING SOURCE %s" % event_ocd_id)
-                print("event has no source")
-                print("-" * 60 + "\n")
-                legistar_id = event_ocd_id
-
-            event_fields = {
-                'ocd_id': event_ocd_id,
-                'ocd_created_at': page_json['created_at'],
-                'ocd_updated_at': page_json['updated_at'],
-                'name': page_json['name'],
-                'description': page_json['description'],
-                'classification': page_json['classification'],
-                'start_time': parse_datetime(page_json['start_time']),
-                'end_time': parse_datetime(page_json['end_time']) if page_json['end_time'] else None,
-                'all_day': page_json['all_day'],
-                'status': page_json['status'],
-                'location_name': page_json['location']['name'],
-                'location_url': page_json['location']['url'],
-                'source_url': page_json['sources'][0]['url'],
-                'source_note': page_json['sources'][0]['note'],
-            }
-
-            updated = False
-            created = False
-
-            # look for existing event
-            try:
-                event_obj = Event.objects.get(ocd_id=event_ocd_id)
-                # check if it has been updated on api
-                # TO-DO: fix date comparison to handle timezone naive times
-                # from api
-                if event_obj.ocd_updated_at.isoformat() != page_json['updated_at']:
-
-                    event_obj.ocd_created_at = page_json['created_at']
-                    event_obj.ocd_updated_at = page_json['updated_at']
-                    event_obj.name = page_json['name']
-                    event_obj.description = page_json['description']
-                    event_obj.classification = page_json['classification']
-                    event_obj.start_time = parse_datetime(
-                        page_json['start_time'])
-                    event_obj.end_time = parse_datetime(page_json['end_time']) if page_json[
-                        'end_time'] else None
-                    event_obj.all_day = page_json['all_day']
-                    event_obj.status = page_json['status']
-                    event_obj.location_name = page_json['location']['name']
-                    event_obj.location_url = page_json['location']['url']
-                    event_obj.source_url = page_json['sources'][0]['url']
-                    event_obj.source_note = page_json['sources'][0]['note']
-
-                    event_obj.save()
-                    updated = True
-
-                    if DEBUG:
-                        print('\u270E', end=' ', flush=True)
-
-            # except if it doesn't exist, we need to make it
-            except Event.DoesNotExist:
-                try:
-                    event_fields['slug'] = legistar_id
-                    event_obj, created = Event.objects.get_or_create(
-                        **event_fields)
-
-                except IntegrityError:
-                    event_fields['slug'] = event_ocd_id
-                    event_obj, created = Event.objects.get_or_create(
-                        **event_fields)
-                    print("\n\n" + "-" * 60)
-                    print("WARNING: SLUG ALREADY EXISTS FOR %s" % event_ocd_id)
-                    print("legistar id (what slug should be): %s" % legistar_id)
-                    print("using ocd id as slug instead")
-                    print("-" * 60 + "\n")
-
-                # if created and DEBUG:
-                #     print('   adding event: %s' % event_ocd_id)
-                if created and DEBUG:
-                    print('\u263A', end=' ', flush=True)
-                    print(event_obj.ocd_id)
-
-            if created or updated:
-
-                if updated:
-                    # delete existing participants, documents, agenda items
-                    event_obj.participants.all().delete()
-                    event_obj.documents.all().delete()
-                    event_obj.agenda_items.all().delete()
-
-                for participant_json in page_json['participants']:
-                    obj, created = EventParticipant.objects.get_or_create(
-                        event=event_obj,
-                        note=participant_json['note'],
-                        entity_name=participant_json['entity_name'],
-                        entity_type=participant_json['entity_type']
-                    )
-                    # if created and DEBUG:
-                    #     print('      adding participant: %s' %obj.entity_name)
-
-                for document_json in page_json['documents']:
-                    self.load_eventdocument(document_json, event_obj)
-
-                for agenda_item_json in page_json['agenda']:
-                    self.load_eventagendaitem(agenda_item_json, event_obj)
-
-        else:
-            print("\n\n" + "*" * 60)
-            print("SKIPPING EVENT %s" % event_ocd_id)
-            print("cannot retrieve event data")
-            print("*" * 60 + "\n")
-
-    def load_eventagendaitem(self, agenda_item_json, event):
-
-        agendaitem_obj, created = EventAgendaItem.objects.get_or_create(
-            event=event,
-            order=agenda_item_json['order'],
-            description=agenda_item_json['description'],
-        )
-
-        # if created and DEBUG:
-        #     print('      adding agenda item: %s' %agendaitem_obj.order)
-
-        if agenda_item_json['related_entities']:
-            related_entity_json = agenda_item_json['related_entities'][0]
-            clean_bill_identifier = re.sub(
-                ' 0', ' ', related_entity_json['entity_name'])
-            related_bill = Bill.objects.filter(
-                identifier=clean_bill_identifier).first()
-
-            if related_bill:
-                obj, created = AgendaItemBill.objects.get_or_create(
-                    agenda_item=agendaitem_obj,
-                    bill=related_bill,
-                    note=related_entity_json['note'],
-                )
-
-            # if created and DEBUG:
-            #     print('         adding related bill: %s' %related_bill.identifier)
-
-    def load_eventdocument(self, document_json, event):
-        
-        try:
-            doc_obj, created = Document.objects.get_or_create(
-                note=document_json['note'],
-                url=document_json['links'][0]['url']
-            )
-        except Document.MultipleObjectsReturned:
-            documents = Document.objects.filter(
-                note=document_json['note'],
-                url=document_json['links'][0]['url']
-            )
-
-            for document in documents[1:]:
-                document.delete()
+    def add_new_action_related_entity(self):
+        with connection.cursor() as curs:
             
-            doc_obj = Document.objects.get(
-                note=document_json['note'],
-                url=document_json['links'][0]['url']
+            curs.execute('DROP TABLE IF EXISTS new_actionrelatedentity')
+            curs.execute(''' 
+                CREATE TABLE new_actionrelatedentity (
+                    organization_ocd_id VARCHAR,
+                    person_ocd_id VARCHAR,
+                    action_id INTEGER
+                )
+            ''')
+        
+        cols = [
+            'entity_type',
+            'entity_name',
+            'organization_ocd_id',
+            'person_ocd_id',
+            'action_id',
+        ]
+        
+        find_new = ''' 
+            INSERT INTO new_actionrelatedentity
+              SELECT 
+                raw.organization_ocd_id,
+                raw.person_ocd_id,
+                raw.action_id
+              FROM raw_actionrelatedentity AS raw
+              LEFT JOIN councilmatic_core_actionrelatedentity AS dat
+                ON (COALESCE(raw.organization_ocd_id, '') = COALESCE(dat.organization_ocd_id, '')
+                    AND COALESCE(raw.person_ocd_id, '') = COALESCE(dat.person_ocd_id, '')
+                    AND raw.action_id = dat.action_id)
+              WHERE (dat.organization_ocd_id IS NULL
+                     OR dat.person_ocd_id IS NULL)
+                     AND dat.action_id IS NULL
+        '''
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_actionrelatedentity')
+            new_count = curs.fetchone()[0]
+        
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_actionrelatedentity (
+              {insert_fields}, updated_at
             )
-            created = False
+              SELECT {select_fields}, updated_at
+              FROM raw_actionrelatedentity AS raw
+              JOIN new_actionrelatedentity AS new
+                ON (COALESCE(raw.organization_ocd_id, '') = COALESCE(new.organization_ocd_id, '')
+                    AND COALESCE(raw.person_ocd_id, '') = COALESCE(new.person_ocd_id, '')
+                    AND raw.action_id = new.action_id)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
 
-        obj, created = EventDocument.objects.get_or_create(
-            event=event,
-            document=doc_obj,
-        )
+        self.stdout.write(self.style.SUCCESS('Found {0} new action related entities'.format(new_count)))
 
-        # if created and DEBUG:
-        #     print('      adding document: %s' % doc_obj.note)
+    def add_new_sponsorships(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS new_sponsorship')
+            curs.execute(''' 
+                CREATE TABLE new_sponsorship (
+                    classification VARCHAR,
+                    is_primary BOOLEAN,
+                    bill_id VARCHAR,
+                    person_id VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'classification',
+            'is_primary',
+            'bill_id',
+            'person_id',
+        ]
+        
+        find_new = ''' 
+            INSERT INTO new_sponsorship
+              SELECT 
+                raw.classification,
+                raw.is_primary,
+                raw.bill_id,
+                raw.person_id
+              FROM raw_sponsorship AS raw
+              LEFT JOIN councilmatic_core_sponsorship AS dat
+                ON (raw.classification = dat.classification
+                    AND raw.is_primary = dat.is_primary
+                    AND raw.bill_id = dat.bill_id
+                    AND raw.person_id = dat.person_id)
+              WHERE dat.classification IS NULL
+                    AND dat.is_primary IS NULL
+                    AND dat.bill_id IS NULL
+                    AND dat.person_id IS NULL
+        '''
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_sponsorship')
+            new_count = curs.fetchone()[0]
+        
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_sponsorship (
+              {insert_fields}, updated_at
+            )
+              SELECT {select_fields}, updated_at
+              FROM raw_sponsorship AS raw
+              JOIN new_sponsorship AS new
+                ON (raw.classification = new.classification
+                    AND raw.is_primary = new.is_primary
+                    AND raw.bill_id = new.bill_id
+                    AND raw.person_id = new.person_id)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new sponsorships'.format(new_count)))
+
+    def add_new_billdocuments(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS new_billdocument')
+            curs.execute(''' 
+                CREATE TABLE new_billdocument (
+                    bill_id VARCHAR,
+                    url VARCHAR,
+                    document_type VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'bill_id',
+            'url',
+            'document_type',
+            'note',
+        ]
+        
+        find_new = ''' 
+            INSERT INTO new_billdocument
+              SELECT 
+                raw.bill_id,
+                raw.url,
+                raw.document_type
+              FROM raw_billdocument AS raw
+              LEFT JOIN councilmatic_core_billdocument AS dat
+                ON (raw.bill_id = dat.bill_id
+                    AND raw.url = dat.url
+                    AND raw.document_type = dat.document_type)
+              WHERE dat.bill_id IS NULL
+                    AND dat.url IS NULL
+                    AND dat.document_type IS NULL
+        '''
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_billdocument')
+            new_count = curs.fetchone()[0]
+        
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_billdocument (
+              {insert_fields}, updated_at
+            )
+              SELECT {select_fields}, updated_at
+              FROM raw_billdocument AS raw
+              JOIN new_billdocument AS new
+                ON (raw.bill_id = new.bill_id
+                    AND raw.url = new.url
+                    AND raw.document_type = new.document_type)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new bill documents'.format(new_count)))
+    
+    def add_new_events(self):
+        cols = [
+            'ocd_id',
+            'ocd_created_at',
+            'ocd_updated_at',
+            'name',
+            'description',
+            'classification',
+            'start_time',
+            'end_time',
+            'all_day',
+            'status',
+            'location_name',
+            'location_url',
+            'source_url', 
+            'source_note',
+            'slug',
+        ]
+        
+        self.add_entity_type('event', cols=cols)
+    
+    def add_new_eventparticipants(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS new_eventparticipant')
+            curs.execute(''' 
+                CREATE TABLE new_eventparticipant (
+                    event_id VARCHAR,
+                    entity_type VARCHAR,
+                    entity_name VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'event_id',
+            'entity_type',
+            'entity_name',
+            'note',
+        ]
+        
+        find_new = ''' 
+            INSERT INTO new_eventparticipant
+              SELECT 
+                raw.event_id,
+                raw.entity_type,
+                raw.entity_name
+              FROM raw_eventparticipant AS raw
+              LEFT JOIN councilmatic_core_eventparticipant AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.entity_type = dat.entity_type
+                    AND raw.entity_name = dat.entity_name)
+              WHERE dat.event_id IS NULL
+                    AND dat.entity_type IS NULL
+                    AND dat.entity_name IS NULL
+        '''
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_eventparticipant')
+            new_count = curs.fetchone()[0]
+        
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_eventparticipant (
+              {insert_fields}, updated_at
+            )
+              SELECT {select_fields}, updated_at
+              FROM raw_eventparticipant AS raw
+              JOIN new_eventparticipant AS new
+                ON (raw.event_id = new.event_id
+                    AND raw.entity_type = new.entity_type
+                    AND raw.entity_name = new.entity_name)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new event participants'.format(new_count)))
+
+    def add_new_eventdocuments(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS new_eventdocument')
+            curs.execute(''' 
+                CREATE TABLE new_eventdocument (
+                    event_id VARCHAR,
+                    url VARCHAR
+                )
+            ''')
+        
+        cols = [
+            'event_id',
+            'url',
+            'full_text',
+            'note'
+        ]
+        
+        find_new = ''' 
+            INSERT INTO new_eventdocument
+              SELECT 
+                raw.event_id,
+                raw.url
+              FROM raw_eventdocument AS raw
+              LEFT JOIN councilmatic_core_eventdocument AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.url = dat.url)
+              WHERE dat.event_id IS NULL
+                    AND dat.url IS NULL
+        '''
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_eventdocument')
+            new_count = curs.fetchone()[0]
+        
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_eventdocument (
+              {insert_fields}
+            )
+              SELECT {select_fields}
+              FROM raw_eventdocument AS raw
+              JOIN new_eventdocument AS new
+                ON (raw.event_id = new.event_id
+                    AND raw.url = new.url)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new event documents'.format(new_count)))
+
+    def add_new_event_agenda_items(self):
+        with connection.cursor() as curs:
+            
+            curs.execute('DROP TABLE IF EXISTS new_eventagendaitem')
+            curs.execute(''' 
+                CREATE TABLE new_eventagendaitem (
+                    event_id VARCHAR,
+                    "order" INTEGER
+                )
+            ''')
+        
+        cols = [
+            'order',
+            'description',
+            'event_id',
+            'bill_id',
+            'note',
+        ]
+        
+        find_new = ''' 
+            INSERT INTO new_eventagendaitem
+              SELECT 
+                raw.event_id,
+                raw."order"
+              FROM raw_eventagendaitem AS raw
+              LEFT JOIN councilmatic_core_eventagendaitem AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw."order" = dat."order")
+              WHERE dat.event_id IS NULL
+                    AND dat."order" IS NULL
+        '''
+
+        with connection.cursor() as curs:
+            curs.execute(find_new)
+            curs.execute('select count(*) from new_eventagendaitem')
+            new_count = curs.fetchone()[0]
+        
+        insert_fields = ', '.join('"{}"'.format(c) for c in cols)
+        select_fields = ', '.join('raw."{}"'.format(c) for c in cols)
+
+        insert_new = ''' 
+            INSERT INTO councilmatic_core_eventagendaitem (
+              {insert_fields}, updated_at
+            )
+              SELECT {select_fields}, updated_at
+              FROM raw_eventagendaitem AS raw
+              JOIN new_eventagendaitem AS new
+                ON (raw.event_id = new.event_id
+                    AND raw."order" = new."order")
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+        
+        with connection.cursor() as curs:
+            curs.execute(insert_new)
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new event agenda items'.format(new_count)))
+
     
     def populate_council_district_shapes(self):
 
