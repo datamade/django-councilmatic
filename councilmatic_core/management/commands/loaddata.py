@@ -1,3 +1,5 @@
+# -*- coding=utf-8 -*-
+
 import json
 import re
 import datetime
@@ -6,6 +8,7 @@ import os
 import requests
 import pytz
 import psycopg2
+import sqlalchemy as sa
 
 from dateutil import parser as date_parser
 
@@ -16,7 +19,6 @@ from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.text import slugify, Truncator
 from django.db.utils import IntegrityError, DataError
 from django.db.models import Max
-from django.db import connection
 
 from councilmatic_core.models import Person, Bill, Organization, Action, ActionRelatedEntity, \
     Post, Membership, Sponsorship, LegislativeSession, \
@@ -38,6 +40,12 @@ if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
+DB_CONN = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'
+
+engine = sa.create_engine(DB_CONN.format(**settings.DATABASES['default']),
+                          convert_unicode=True,
+                          server_side_cursors=True)
+
 if hasattr(settings, 'OCDAPI_BASE_URL'):
     base_url = settings.OCDAPI_BASE_URL
 else:
@@ -57,7 +65,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--endpoint', help="a specific endpoint to load data from")
+            '--endpoints', 
+            help="a specific endpoint to load data from",
+            default='organizations,people,bills,events')
 
         parser.add_argument('--delete',
                             action='store_true',
@@ -71,17 +81,15 @@ class Command(BaseCommand):
                             action='store_true',
                             default=False,
                             help='Load already downloaded OCD data')
+        
+        parser.add_argument('--download_only',
+                            action='store_true',
+                            default=False,
+                            help='Only download OCD data')
     
     def handle(self, *args, **options):
         
-        db_conn = settings.DATABASES['default']
-        self.db_conn_kwargs = {
-            'database': db_conn['NAME'],
-            'user': db_conn['USER'],
-            'password': db_conn['PASSWORD'],
-            'host': db_conn['HOST'],
-            'port': db_conn['PORT'],
-        }
+        self.connection = engine.connect()
         
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
         
@@ -90,129 +98,146 @@ class Command(BaseCommand):
         self.bills_folder = os.path.join(self.this_folder, 'bills', settings.APP_NAME)
         self.people_folder = os.path.join(self.this_folder, 'people', settings.APP_NAME)
         self.events_folder = os.path.join(self.this_folder, 'events', settings.APP_NAME)
-
+        
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
-
-        if options['endpoint'] == 'organizations':
-            
-            self.organization_etl(import_only=options['import_only'], 
-                                  delete=options['delete'])
-
-            print("\ndone!", datetime.datetime.now())
         
-        elif options['endpoint'] == 'people':
+        endpoints = options['endpoints'].split(',')
+        
+        for endpoint in endpoints:
             
-            self.people_etl(import_only=options['import_only'],
-                            delete=options['delete'])
-            
-            print("\ndone!", datetime.datetime.now())
+            if endpoint not in ['organizations', 'people', 'bills', 'events']:
 
-        elif options['endpoint'] == 'bills':
-            
-            self.bill_etl(import_only=options['import_only'], 
-                          delete=options['delete'])
+                self.stdout.write(self.style.ERROR('"{}" is not a valid endpoint'.format(endpoint)))
 
-            print("\ndone!", datetime.datetime.now())
+            else:
+                
+                download_only = options['download_only']
+                import_only = options['import_only']
+                
+                if not import_only and not download_only:
+                    download_only = True
+                    import_only = True
 
-        elif options['endpoint'] == 'events':
-            
-            self.event_etl(import_only=options['import_only'],
+                etl_method = getattr(self, '{}_etl'.format(endpoint))
+                etl_method(import_only=import_only,
+                           download_only=download_only,
                            delete=options['delete'])
+    
+    def log_message(self, message, fancy=False, style='SUCCESS', thing='\U0001f604 '):
+        message = '{0}  ({1})'.format(message, datetime.datetime.now().isoformat())
+        
+        if style == 'ERROR':
+            thing = '\U0001F635 '
 
-            print("\ndone!", datetime.datetime.now())
+        if fancy:
+            thing_count = len(message) + 2
+            message = '{0}\n  {1}  \n{0}'.format(thing * thing_count, message)
+        
+        style = getattr(self.style, style)
+        self.stdout.write(style(message))
 
-        else:
-            print("\n** loading all data types! **\n")
-            
-            self.organization_etl(import_only=options['import_only'],
-                                  delete=options['delete'])
-            
-            self.people_etl(import_only=options['import_only'],
-                                  delete=options['delete'])
-            
-            self.bill_etl(import_only=options['import_only'],
-                                  delete=options['delete'])
-            
-            self.event_etl(import_only=options['import_only'],
-                           delete=options['delete'])
-            
+    def organizations_etl(self, 
+                          import_only=True, 
+                          download_only=True, 
+                          delete=False):
 
-            print("\ndone!", datetime.datetime.now())
-
-    def organization_etl(self, import_only=False, delete=False):
-        if not import_only:
+        if download_only:
+            self.log_message('Downloading organizations ...', fancy=True, thing='\U0001F355 ')
             self.grab_organizations()
         
-        self.insert_raw_organizations(delete=delete)
-        self.insert_raw_posts(delete=delete)
-        
-        self.update_existing_organizations()
-        self.update_existing_posts()
-        
+        if import_only:
+            self.log_message('Importing organizations ...', fancy=True)
+            self.insert_raw_organizations(delete=delete)
+            self.insert_raw_posts(delete=delete)
+            
+            self.update_existing_organizations()
+            self.update_existing_posts()
 
-        self.add_new_organizations()
-        self.add_new_posts()
-    
-    def people_etl(self, import_only=False, delete=False):
-        if not import_only:
+            self.add_new_organizations()
+            self.add_new_posts()
+        
+        self.log_message('Organizations Complete!', fancy=True)
+
+    def people_etl(self, 
+                   import_only=False, 
+                   download_only=False, 
+                   delete=False):
+
+        if download_only:
             self.grab_people()
         
-        self.insert_raw_people(delete=delete)
-        self.insert_raw_memberships(delete=delete)
+        if import_only:
+            self.insert_raw_people(delete=delete)
+            self.insert_raw_memberships(delete=delete)
+            
+            self.update_existing_people()
+            self.update_existing_memberships()
+            
+            self.add_new_people()
+            self.add_new_memberships()
         
-        self.update_existing_people()
-        self.update_existing_memberships()
+        self.log_message('People Complete!', fancy=True)
         
-        self.add_new_people()
-        self.add_new_memberships()
-    
-    def bill_etl(self, import_only=False, delete=False):
+    def bills_etl(self, 
+                  import_only=False, 
+                  download_only=False,
+                  delete=False):
+
         self.create_legislative_sessions()
 
-        if not import_only:
+        if download_only:
             self.grab_bills()
         
-        self.insert_raw_bills(delete=delete)
-        self.insert_raw_actions(delete=delete)
+        if import_only:
+            self.insert_raw_bills(delete=delete)
+            self.insert_raw_actions(delete=delete)
+            
+            self.update_existing_bills()
+            self.update_existing_actions()
+            
+            self.add_new_bills()
+            self.add_new_actions()
+            
+            self.insert_raw_action_related_entity(delete=delete)
+            self.insert_raw_sponsorships(delete=delete)
+            self.insert_raw_billdocuments(delete=delete)
+            
+            self.update_existing_action_related_entity()
+            self.update_existing_sponsorships()
+            self.update_existing_billdocuments()
+            
+            self.add_new_action_related_entity()
+            self.add_new_sponsorships()
+            self.add_new_billdocuments()
         
-        self.update_existing_bills()
-        self.update_existing_actions()
-        
-        self.add_new_bills()
-        self.add_new_actions()
-        
-        self.insert_raw_action_related_entity(delete=delete)
-        self.insert_raw_sponsorships(delete=delete)
-        self.insert_raw_billdocuments(delete=delete)
-        
-        self.update_existing_action_related_entity()
-        self.update_existing_sponsorships()
-        self.update_existing_billdocuments()
-        
-        self.add_new_action_related_entity()
-        self.add_new_sponsorships()
-        self.add_new_billdocuments()
+        self.log_message('Bills Complete!', fancy=True)
     
-    def event_etl(self, import_only=False, delete=False):
+    def events_etl(self, 
+                   import_only=False, 
+                   download_only=False,
+                   delete=False):
         
-        if not import_only:
+        if download_only:
             self.grab_events()
+        
+        if import_only:
+            self.insert_raw_events(delete=delete)
+            self.insert_raw_eventparticipants(delete=delete)
+            self.insert_raw_eventdocuments(delete=delete)
+            self.insert_raw_event_agenda_items(delete=delete)
 
-        self.insert_raw_events(delete=delete)
-        self.insert_raw_eventparticipants(delete=delete)
-        self.insert_raw_eventdocuments(delete=delete)
-        self.insert_raw_event_agenda_items(delete=delete)
+            self.update_existing_events()
+            self.update_existing_eventparticipants()
+            self.update_existing_eventdocuments()
+            self.update_existing_event_agenda_items()
 
-        self.update_existing_events()
-        self.update_existing_eventparticipants()
-        self.update_existing_eventdocuments()
-        self.update_existing_event_agenda_items()
-
-        self.add_new_events()
-        self.add_new_eventparticipants()
-        self.add_new_eventdocuments()
-        self.add_new_event_agenda_items()
+            self.add_new_events()
+            self.add_new_eventparticipants()
+            self.add_new_eventdocuments()
+            self.add_new_event_agenda_items()
+        
+        self.log_message('Events Complete!', fancy=True)
 
     #########################
     ###                   ###
@@ -221,8 +246,6 @@ class Command(BaseCommand):
     #########################
 
     def grab_organizations(self):
-        print("\n\nLOADING ORGANIZATIONS", datetime.datetime.now())
-        
         
         os.makedirs(self.organizations_folder, exist_ok=True)
         os.makedirs(self.posts_folder, exist_ok=True)
@@ -239,7 +262,9 @@ class Command(BaseCommand):
             settings.OCD_JURISDICTION_ID
         r = requests.get(orgs_url)
         page_json = json.loads(r.text)
-
+        
+        org_counter = 0
+        post_counter = 0
         for i in range(page_json['meta']['max_page']):
 
             r = requests.get(orgs_url + '&page=' + str(i + 1))
@@ -247,7 +272,14 @@ class Command(BaseCommand):
 
             for result in page_json['results']:
 
-                self.grab_organization_posts({'id': result['id']})
+                post_count = self.grab_organization_posts({'id': result['id']})
+                
+                post_counter += post_count
+
+            org_counter += len(page_json['results'])
+
+        self.log_message('Downloaded {0} organizations and {1} posts'.format(org_counter, post_counter), fancy=True)
+
 
         # update relevant posts with shapes
         if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
@@ -285,14 +317,16 @@ class Command(BaseCommand):
 
         for child in page_json['children']:
             self.grab_organization_posts({'id': child['id']})
-    
+        
+        return len(page_json['posts'] + page_json['children'])
+
     def grab_people(self):
         # find people associated with existing organizations & bills
 
-        print("\n\nLOADING PEOPLE", datetime.datetime.now())
-        
         os.makedirs(self.people_folder, exist_ok=True)
         
+        
+        counter = 0
         for organization_json in os.listdir(self.organizations_folder):
             
             org_info = json.load(open(os.path.join(self.organizations_folder, organization_json)))
@@ -305,7 +339,11 @@ class Command(BaseCommand):
                 
                 with open(os.path.join(self.people_folder, person_filename), 'w') as f:
                     f.write(json.dumps(person_json))
-    
+                
+                counter += 1
+
+        self.log_message('Downloaded {} people'.format(counter), fancy=True)
+
     def grab_person_memberships(self, person_id):
         # this grabs a person and all their memberships
         
@@ -337,8 +375,6 @@ class Command(BaseCommand):
     
     def grab_bills(self):
 
-        print("\n\nLOADING BILLS", datetime.datetime.now())
-        
         os.makedirs(self.bills_folder, exist_ok=True)
 
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
@@ -355,16 +391,17 @@ class Command(BaseCommand):
                 max_updated = datetime.datetime(1900, 1, 1)
         else:
             max_updated = self.update_since
-
+        
         query_params['sort'] = 'updated_at'
         query_params['updated_at__gte'] = max_updated.isoformat()
-
-        print('grabbing bills since', query_params['updated_at__gte'])
+        
+        self.log_message('Getting bills since {}'.format(query_params['updated_at__gte']), style='NOTICE')
 
         search_url = '{}/bills/'.format(base_url)
         search_results = requests.get(search_url, params=query_params)
         page_json = search_results.json()
-
+        
+        counter = 0
         for page_num in range(page_json['meta']['max_page']):
 
             query_params['page'] = int(page_num) + 1
@@ -382,27 +419,16 @@ class Command(BaseCommand):
                 
                 with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
                     f.write(json.dumps(bill_json))
+
+                counter += 1
+
+                if counter % 1000 == 0:
+                    self.log_message('Downloaded {} bills'.format(counter), style='NOTICE')
+
+        self.log_message('Downloaded {} bills'.format(counter), fancy=True)
     
     def grab_events(self):
 
-        # print("\n\nLOADING EVENTS", datetime.datetime.now())
-        # if delete:
-        #     with psycopg2.connect(**self.db_conn_kwargs) as conn:
-        #         with conn.cursor() as curs:
-        #             curs.execute('TRUNCATE councilmatic_core_event CASCADE')
-        #             curs.execute(
-        #                 'TRUNCATE councilmatic_core_eventparticipant CASCADE')
-        #             curs.execute(
-        #                 'TRUNCATE councilmatic_core_eventdocument CASCADE')
-        #             curs.execute(
-        #                 'TRUNCATE councilmatic_core_eventagendaitem CASCADE')
-        #             curs.execute(
-        #                 'TRUNCATE councilmatic_core_agendaitembill CASCADE')
-        #     print(
-        #         "deleted all events, participants, documents, agenda items, agenda item bill references")
-
-        # this grabs a paginated listing of all events within a jurisdiction
-        
         os.makedirs(self.events_folder, exist_ok=True)
         
         events_url = '{0}/events/'.format(base_url)
@@ -411,7 +437,8 @@ class Command(BaseCommand):
         
         r = requests.get(events_url, params=params)
         page_json = json.loads(r.text)
-
+        
+        counter = 0
         for i in range(page_json['meta']['max_page']):
             
             params['page'] = str(i + 1)
@@ -431,11 +458,15 @@ class Command(BaseCommand):
                 
                     with open(os.path.join(self.events_folder, event_filename), 'w') as f:
                         f.write(json.dumps(page_json))
+                    
+                    counter += 1
+
+                    if counter % 1000 == 0:
+                        self.log_message('Downloaded {} events'.format(counter))
                 else:
-                    print("\n\n" + "*" * 60)
-                    print("SKIPPING EVENT %s" % event['id'])
-                    print("cannot retrieve event data")
-                    print("*" * 60 + "\n")
+                    self.log_message('Skipping event {} (cannot retrieve event data)'.format(event['id']), style='ERROR')
+        
+        self.log_message('Downloaded {} events'.format(counter), fancy=True)
         
     ###########################
     ###                     ###
@@ -444,21 +475,20 @@ class Command(BaseCommand):
     ###########################
     
     def remake_raw(self, entity_type, delete=False):
-        with connection.cursor() as curs:
             
-            if delete:
-                curs.execute(
-                    'TRUNCATE councilmatic_core_{} CASCADE'.format(entity_type))
-                
-                print("deleted all {}".format(entity_type))
+        if delete:
+            self.executeTransaction(
+                'TRUNCATE councilmatic_core_{} CASCADE'.format(entity_type))
             
-            curs.execute('DROP TABLE IF EXISTS raw_{}'.format(entity_type))
-            
-            curs.execute(''' 
-                CREATE TABLE raw_{0} AS (
-                  SELECT * FROM councilmatic_core_{0}
-                ) WITH NO DATA
-            '''.format(entity_type))
+            print("deleted all {}".format(entity_type))
+        
+        self.executeTransaction('DROP TABLE IF EXISTS raw_{}'.format(entity_type))
+        
+        self.executeTransaction(''' 
+            CREATE TABLE raw_{0} AS (
+              SELECT * FROM councilmatic_core_{0}
+            ) WITH NO DATA
+        '''.format(entity_type))
 
     def setup_raw(self, 
                   entity_type, 
@@ -468,17 +498,16 @@ class Command(BaseCommand):
         
         self.remake_raw(entity_type, delete=delete)
 
-        with connection.cursor() as curs:
-            
-            curs.execute('''
+        if pk_cols:
+            self.executeTransaction('''
                 ALTER TABLE raw_{0} ADD PRIMARY KEY ({1})
             '''.format(entity_type, ','.join(pk_cols)))
-            
-            if updated_at:
-                curs.execute('''
-                    ALTER TABLE raw_{} 
-                    ALTER COLUMN updated_at SET DEFAULT NOW()
-                '''.format(entity_type))
+        
+        if updated_at:
+            self.executeTransaction('''
+                ALTER TABLE raw_{} 
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            '''.format(entity_type))
     
     def create_legislative_sessions(self):
         session_ids = []
@@ -509,7 +538,7 @@ class Command(BaseCommand):
 
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_organization (
                 ocd_id,
                 name,
@@ -517,44 +546,49 @@ class Command(BaseCommand):
                 source_url,
                 slug,
                 parent_id
-            ) VALUES {}
+            ) VALUES (
+                :ocd_id,
+                :name,
+                :classification,
+                :source_url,
+                :slug,
+                :parent_id
+            )
             '''
 
-        with connection.cursor() as curs:
-            for organization_json in os.listdir(self.organizations_folder):
-                
-                org_info = json.load(open(os.path.join(self.organizations_folder, organization_json)))
-                
-                source_url = None 
-                if org_info['sources']:
-                    source_url = org_info['sources'][0]['url']
-                
-                parent_ocd_id = None
-                if org_info['parent']:
-                    parent_ocd_id = org_info['parent']['id']
-                
-                ocd_part = org_info['id'].rsplit('-', 1)[1]
-                slug = '{0}-{1}'.format(slugify(org_info['name']),ocd_part)
-
-                insert = (
-                    org_info['id'],
-                    org_info['name'],
-                    org_info['classification'],
-                    source_url,
-                    slug,
-                    parent_ocd_id,
-                )
-                
-                inserts.append(insert)
-
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+        for organization_json in os.listdir(self.organizations_folder):
             
-            curs.execute('select count(*) from raw_organization')
-            raw_count = curs.fetchone()[0]
+            with open(os.path.join(self.organizations_folder, organization_json)) as f:
+                org_info = json.loads(f.read())
+            
+            source_url = None 
+            if org_info['sources']:
+                source_url = org_info['sources'][0]['url']
+            
+            parent_ocd_id = None
+            if org_info['parent']:
+                parent_ocd_id = org_info['parent']['id']
+            
+            ocd_part = org_info['id'].rsplit('-', 1)[1]
+            slug = '{0}-{1}'.format(slugify(org_info['name']),ocd_part)
+        
+            insert = {
+                'ocd_id': org_info['id'],
+                'name': org_info['name'],
+                'classification': org_info['classification'],
+                'source_url': source_url,
+                'slug': slug,
+                'parent_id': parent_ocd_id,
+            }
+            
+            inserts.append(insert)
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+                
+        raw_count = self.connection.execute('select count(*) from raw_organization').first().count
     
-        self.stdout.write(self.style.SUCCESS('Found {0} organizations'.format(raw_count)))
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw organizations\n'.format(raw_count)))
 
     def insert_raw_posts(self, delete=False):
         
@@ -562,39 +596,43 @@ class Command(BaseCommand):
         
         inserts = []
 
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_post (
                 ocd_id,
                 label,
                 role,
                 organization_id,
                 division_ocd_id
-            ) VALUES {}
+            ) VALUES (
+                :ocd_id,
+                :label,
+                :role,
+                :organization_id,
+                :division_ocd_id
+            )
         '''
 
-        with connection.cursor() as curs:
-            for post_json in os.listdir(self.posts_folder):
-                
-                post_info = json.load(open(os.path.join(self.posts_folder, post_json)))
-                
-                insert = (
-                    post_info['id'],
-                    post_info['label'],
-                    post_info['role'],
-                    post_info['org_ocd_id'],
-                    post_info['division_id'],
-                )
-                
-                inserts.append(insert)
-
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-
-            curs.execute('select count(*) from raw_post')
-            raw_count = curs.fetchone()[0]
+        for post_json in os.listdir(self.posts_folder):
+            
+            with open(os.path.join(self.posts_folder, post_json)) as f:
+                post_info = json.loads(f.read())
+            
+            insert = {
+                'ocd_id': post_info['id'],
+                'label': post_info['label'],
+                'role': post_info['role'],
+                'organization_id': post_info['org_ocd_id'],
+                'division_ocd_id': post_info['division_id'],
+            }
+            
+            inserts.append(insert)
         
-        self.stdout.write(self.style.SUCCESS('Found {0} posts'.format(raw_count)))
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+             
+        raw_count = self.connection.execute('select count(*) from raw_post').first().count
+        
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw posts\n'.format(raw_count)))
     
     def insert_raw_people(self, delete=False):
 
@@ -602,7 +640,7 @@ class Command(BaseCommand):
 
         inserts = []
 
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_person (
                 ocd_id,
                 name,
@@ -612,63 +650,62 @@ class Command(BaseCommand):
                 website_url,
                 email,
                 slug
-            ) VALUES {}
+            ) VALUES (
+                :ocd_id,
+                :name,
+                :headshot,
+                :source_url,
+                :source_note,
+                :website_url,
+                :email,
+                :slug
+            )
         '''
 
-        with connection.cursor() as curs:
-            for person_json in os.listdir(self.people_folder):
-                
-                person_info = json.load(open(os.path.join(self.people_folder, person_json)))
-                
-                source_url = None 
-                if person_info['sources']:
-                    source_url = person_info['sources'][0]['url']
-                
-                source_note = None 
-                if person_info['sources']:
-                    source_note = person_info['sources'][0]['note']
-                
-                ocd_part = person_info['id'].rsplit('-', 1)[1]
-                slug = '{0}-{1}'.format(slugify(person_info['name']),ocd_part)
-                
-                insert = (
-                    person_info['id'],
-                    person_info['name'],
-                    person_info['image'],
-                    source_url,
-                    source_note,
-                    person_info['website_url'],
-                    person_info['email'],
-                    slug
-                )
-                
-                inserts.append(insert)
+        for person_json in os.listdir(self.people_folder):
+            
+            with open(os.path.join(self.people_folder, person_json)) as f:
+                person_info = json.loads(f.read())
+            
+            source_url = None 
+            if person_info['sources']:
+                source_url = person_info['sources'][0]['url']
+            
+            source_note = None 
+            if person_info['sources']:
+                source_note = person_info['sources'][0]['note']
+            
+            ocd_part = person_info['id'].rsplit('-', 1)[1]
+            slug = '{0}-{1}'.format(slugify(person_info['name']),ocd_part)
+            
+            insert = {
+                'ocd_id': person_info['id'],
+                'name': person_info['name'],
+                'headshot': person_info['image'],
+                'source_url': source_url,
+                'source_note': source_note,
+                'website_url': person_info['website_url'],
+                'email': person_info['email'],
+                'slug': slug,
+            }
+            
+            inserts.append(insert)
 
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
 
-            curs.execute('select count(*) from raw_person')
-            raw_count = curs.fetchone()[0]
+        raw_count = self.connection.execute('select count(*) from raw_person').first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} people'.format(raw_count)))
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw people\n'.format(raw_count)))
     
     def insert_raw_memberships(self, delete=False):
         
-        pk_cols = [
-           'start_date',
-           'end_date',
-           'organization_id',
-           'person_id',
-           'post_id'
-        ]
-
-        self.setup_raw('membership', delete=delete, pk_cols=pk_cols)
+        self.setup_raw('membership', delete=delete, pk_cols=[])
         
 
         inserts = []
 
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_membership (
                 label,
                 role,
@@ -677,44 +714,50 @@ class Command(BaseCommand):
                 organization_id,
                 person_id,
                 post_id
-            ) VALUES {}
+            ) VALUES (
+                :label,
+                :role,
+                :start_date,
+                :end_date,
+                :organization_id,
+                :person_id,
+                :post_id
+            )
         '''
 
-        with connection.cursor() as curs:
-            for person_json in os.listdir(self.people_folder):
+        for person_json in os.listdir(self.people_folder):
+            
+            with open(os.path.join(self.people_folder, person_json)) as f:
+                person_info = json.loads(f.read())
+
+            for membership_json in person_info['memberships']:
                 
-                person_info = json.load(open(os.path.join(self.people_folder, person_json)))
+                end_date = parse_date(membership_json['end_date'])
+                
+                start_date = parse_date(membership_json['start_date'])
+                
+                post_id = None
+                if membership_json['post']:
+                    post_id = membership_json['post']['id']
 
-                for membership_json in person_info['memberships']:
-                    
-                    end_date = parse_date(membership_json['end_date'])
-                    
-                    start_date = parse_date(membership_json['start_date'])
-                    
-                    post_id = None
-                    if membership_json['post']:
-                        post_id = membership_json['post']['id']
+                insert = {
+                    'label': membership_json['label'],
+                    'role': membership_json['role'],
+                    'start_date': start_date,
+                    'end_date': end_date,
+                    'organization_id': membership_json['organization']['id'],
+                    'person_id': person_info['id'],
+                    'post_id': post_id,
+                }
+                
+                inserts.append(insert)
 
-                    insert = (
-                        membership_json['label'],
-                        membership_json['role'],
-                        start_date,
-                        end_date,
-                        membership_json['organization']['id'],
-                        person_info['id'],
-                        post_id,
-                    )
-                    
-                    inserts.append(insert)
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
 
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-
-            curs.execute('select count(*) from raw_membership')
-            raw_count = curs.fetchone()[0]
+        raw_count = self.connection.execute('select count(*) from raw_membership').first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} memberships'.format(raw_count)))
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw memberships\n'.format(raw_count)))
     
     def insert_raw_bills(self, delete=False):
         
@@ -722,7 +765,7 @@ class Command(BaseCommand):
         
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_bill (
                 ocd_id,
                 ocd_created_at,
@@ -740,87 +783,106 @@ class Command(BaseCommand):
                 bill_type,
                 subject,
                 slug
-            ) VALUES {}
+            ) VALUES (
+                :ocd_id,
+                :ocd_created_at,
+                :ocd_updated_at,
+                :description,
+                :identifier,
+                :classification,
+                :source_url,
+                :source_note,
+                :from_organization_id,
+                :full_text,
+                :ocr_full_text,
+                :abstract,
+                :legislative_session_id,
+                :bill_type,
+                :subject,
+                :slug
+            )
             '''
+        
+        counter = 0
 
-        with connection.cursor() as curs:
-            for bill_json in os.listdir(self.bills_folder):
-                
-                with open(os.path.join(self.bills_folder, bill_json)) as f:
-                    bill_info = json.loads(f.read())
-                
-                source_url = None
-                for source in bill_info['sources']:
-                    if source['note'] == 'web':
-                        source_url = source['url']
-                
-                full_text = None
-                if 'full_text' in bill_info['extras']:
-                    full_text = bill_info['extras']['full_text']
-                
-                ocr_full_text = None
-                if 'ocr_full_text' in bill_info['extras']:
-                    ocr_full_text = bill_info['extras']['ocr_full_text']
-                
-                elif 'plain_text' in bill_info['extras']:
-                    ocr_full_text = bill_info['extras']['plain_text']
-                
-                abstract = None
-                if bill_info['abstracts']:
-                    abstract = bill_info['abstracts'][0]['abstract']
-                
-                if bill_info['extras'].get('local_classification'):
-                    bill_type = bill_info['extras']['local_classification']
-
-                elif len(bill_info['classification']) == 1:
-                    bill_type = bill_info['classification'][0]
-
-                else:
-                    raise Exception(bill_info['classification'])
-                
-                subject = None
-                if 'subject' in bill_info and bill_info['subject']:
-                    subject = bill_info['subject'][0]
-                
-
-                ocd_part = bill_info['id'].rsplit('-', 1)[1]
-                slug = '{0}-{1}'.format(slugify(bill_info['identifier']),ocd_part)
-
-                insert = (
-                    bill_info['id'],
-                    bill_info['created_at'],
-                    bill_info['updated_at'],
-                    bill_info['title'],
-                    bill_info['identifier'],
-                    bill_info['classification'][0],
-                    source_url,
-                    bill_info['sources'][0]['note'],
-                    bill_info['from_organization']['id'],
-                    full_text,
-                    ocr_full_text,
-                    abstract,
-                    bill_info['legislative_session']['identifier'],
-                    bill_type,
-                    subject,
-                    slug,
-                )
-                
-                inserts.append(insert)
-
-                if inserts and len(inserts) % 10000 == 0:
-                    template = ','.join(['%s'] * len(inserts))
-                    curs.execute(insert_fmt.format(template), inserts)
-                    
-                    inserts = []
+        for bill_json in os.listdir(self.bills_folder):
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+            with open(os.path.join(self.bills_folder, bill_json)) as f:
+                bill_info = json.loads(f.read())
             
-            curs.execute('select count(*) from raw_bill')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} bill'.format(raw_count)))
+            source_url = None
+            for source in bill_info['sources']:
+                if source['note'] == 'web':
+                    source_url = source['url']
+            
+            full_text = None
+            if 'full_text' in bill_info['extras']:
+                full_text = bill_info['extras']['full_text']
+            
+            ocr_full_text = None
+            if 'ocr_full_text' in bill_info['extras']:
+                ocr_full_text = bill_info['extras']['ocr_full_text']
+            
+            elif 'plain_text' in bill_info['extras']:
+                ocr_full_text = bill_info['extras']['plain_text']
+            
+            abstract = None
+            if bill_info['abstracts']:
+                abstract = bill_info['abstracts'][0]['abstract']
+            
+            if bill_info['extras'].get('local_classification'):
+                bill_type = bill_info['extras']['local_classification']
+
+            elif len(bill_info['classification']) == 1:
+                bill_type = bill_info['classification'][0]
+
+            else:
+                raise Exception(bill_info['classification'])
+            
+            subject = None
+            if 'subject' in bill_info and bill_info['subject']:
+                subject = bill_info['subject'][0]
+            
+
+            ocd_part = bill_info['id'].rsplit('-', 1)[1]
+            slug = '{0}-{1}'.format(slugify(bill_info['identifier']),ocd_part)
+
+            insert = {
+                'ocd_id': bill_info['id'],
+                'ocd_created_at': bill_info['created_at'],
+                'ocd_updated_at': bill_info['updated_at'],
+                'description': bill_info['title'],
+                'identifier': bill_info['identifier'],
+                'classification': bill_info['classification'][0],
+                'source_url': source_url,
+                'source_note': bill_info['sources'][0]['note'],
+                'from_organization_id': bill_info['from_organization']['id'],
+                'full_text': full_text,
+                'ocr_full_text': ocr_full_text,
+                'abstract': abstract,
+                'legislative_session_id': bill_info['legislative_session']['identifier'],
+                'bill_type': bill_type,
+                'subject': subject,
+                'slug': slug,
+            }
+            
+            inserts.append(insert)
+
+            if inserts and len(inserts) % 10000 == 0:
+                self.executeTransaction(sa.text(insert_query), *inserts)
+                
+                counter += 10000
+                self.stdout.write('Inserted {} raw bills'.format(counter))
+
+                inserts = []
+        
+        if inserts:
+
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            
+            counter += len(inserts)
+        
+        self.stdout.write(self.style.SUCCESS('Inserted a total of {} raw bills\n'.format(counter)))
     
     def insert_raw_actions(self, delete=False):
         
@@ -830,7 +892,7 @@ class Command(BaseCommand):
         
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_action (
                 date,
                 classification,
@@ -838,298 +900,319 @@ class Command(BaseCommand):
                 organization_id,
                 bill_id,
                 "order"
-            ) VALUES {}
+            ) VALUES (
+                :date,
+                :classification,
+                :description,
+                :organization_id,
+                :bill_id,
+                :order
+            )
             '''
+        
+        counter = 0
+        for bill_json in os.listdir(self.bills_folder):
+            
+            with open(os.path.join(self.bills_folder, bill_json)) as f:
+                bill_info = json.loads(f.read())
 
-        with connection.cursor() as curs:
-            for bill_json in os.listdir(self.bills_folder):
+            for order, action in enumerate(bill_info['actions']):
                 
-                with open(os.path.join(self.bills_folder, bill_json)) as f:
-                    bill_info = json.loads(f.read())
+                classification = None
+                if action['classification']:
+                    classification = action['classification'][0]
+                
+                action_date = app_timezone.localize(date_parser.parse(action['date']))
+                
+                insert = {
+                    'date': action_date,
+                    'classification': classification,
+                    'description': action['description'],
+                    'organization_id': action['organization']['id'],
+                    'bill_id': bill_info['id'],
+                    'order': order
+                }
+                
+                inserts.append(insert)
+                
+                if inserts and len(inserts) % 10000 == 0:
+                    self.executeTransaction(sa.text(insert_query), *inserts)
+                    
+                    counter += 10000
 
-                for order, action in enumerate(bill_info['actions']):
-                    
-                    classification = None
-                    if action['classification']:
-                        classification = action['classification'][0]
-                    
-                    action_date = app_timezone.localize(date_parser.parse(action['date']))
-                    
-                    insert = (
-                        action_date,
-                        classification,
-                        action['description'],
-                        action['organization']['id'],
-                        bill_info['id'],
-                        order
-                    )
-                    
-                    inserts.append(insert)
-                    
-                    if inserts and len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-                        
-                        inserts = []
+                    self.stdout.write('Inserted {0} actions'.format(counter))
+
+                    inserts = []
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-            
-            curs.execute('select count(*) from raw_action')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} actions'.format(raw_count)))
+            counter += len(inserts)
+        
+        self.stdout.write(self.style.SUCCESS('Inserted {0} actions\n'.format(counter)))
+        
     
     def insert_raw_action_related_entity(self, delete=False):
 
         self.remake_raw('actionrelatedentity', delete=delete)
         
-        with connection.cursor() as curs:
-            curs.execute('''
-                ALTER TABLE raw_actionrelatedentity 
-                ALTER COLUMN updated_at SET DEFAULT NOW()
-            ''')
+        self.executeTransaction('''
+            ALTER TABLE raw_actionrelatedentity 
+            ALTER COLUMN updated_at SET DEFAULT NOW()
+        ''')
 
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_actionrelatedentity (
                 entity_type,
                 entity_name,
                 organization_ocd_id,
                 person_ocd_id,
                 action_id
-            ) VALUES {}
+            ) VALUES (
+                :entity_type,
+                :entity_name,
+                :organization_ocd_id,
+                :person_ocd_id,
+                :action_id
+            )
             '''
         
-        read_cursor = connection.cursor()
-
-        with connection.cursor() as curs:
-
-            read_cursor.execute(''' 
-                SELECT id, bill_id, "order" FROM councilmatic_core_action
-            ''')
-
-            for action in read_cursor:
-                
-                action_id, bill_id, order = action
-
-                ocd_uuid = bill_id.split('/')[-1]
-                bill_filename = '{}.json'.format(ocd_uuid)
-                
-                with open(os.path.join(self.bills_folder, bill_filename)) as f:
-                    bill_info = json.loads(f.read())
-                    
-                action = bill_info['actions'][order]
-
-                for related_entity in action['related_entities']:
-                    
-                    person_id = None
-                    organization_id = None
-
-                    if related_entity['entity_type'] == 'organization':
-
-                        organization_id = related_entity['organization_id']
-                        
-                        if not organization_id:
-                            curs.execute(""" 
-                                SELECT ocd_id 
-                                FROM councilmatic_core_organization
-                                WHERE name = %s
-                                LIMIT 1
-                            """, [related_entity['name']])
-                            
-                            for row in curs:
-                                organization_id = row[0]
-                    
-                    elif related_entity['entity_type'] == 'person':
-
-                        person_id = related_entity['person_id']
-                        
-                        if not person_id:
-                            curs.execute(""" 
-                                SELECT ocd_id 
-                                FROM councilmatic_core_person
-                                WHERE name = %s
-                                LIMIT 1
-                            """, [related_entity['name']])
-
-                            for row in curs:
-                                person_id = row[0]
-                    
-                    insert = (
-                        related_entity['entity_type'],
-                        related_entity['name'],
-                        organization_id,
-                        person_id,
-                        action_id,
-                    )
-                    
-                    inserts.append(insert)
-                    
-                    if inserts and len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-                        
-                        inserts = []
+        read_connection = engine.connect()
+        actions = read_connection.execute(''' 
+            SELECT id, bill_id, "order" FROM councilmatic_core_action
+        ''')
+        
+        counter = 0
+        for action in actions:
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+            action_id, bill_id, order = action
+
+            ocd_uuid = bill_id.split('/')[-1]
+            bill_filename = '{}.json'.format(ocd_uuid)
             
-            curs.execute('select count(*) from raw_actionrelatedentity')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} action related entities'.format(raw_count)))
+            with open(os.path.join(self.bills_folder, bill_filename)) as f:
+                bill_info = json.loads(f.read())
+                
+            action = bill_info['actions'][order]
+
+            for related_entity in action['related_entities']:
+                
+                person_id = None
+                organization_id = None
+
+                if related_entity['entity_type'] == 'organization':
+
+                    organization_id = related_entity['organization_id']
+                    
+                    if not organization_id:
+                        org_id = self.connection.execute(sa.text(""" 
+                            SELECT ocd_id 
+                            FROM councilmatic_core_organization
+                            WHERE name = :name
+                            LIMIT 1
+                        """), name=related_entity['name']).first()
+                        
+                        if org_id:
+                            organization_id = org_id.ocd_id
+                
+                elif related_entity['entity_type'] == 'person':
+
+                    person_id = related_entity['person_id']
+                    
+                    if not person_id:
+                        person_id = self.connection.execute(sa.text(""" 
+                            SELECT ocd_id 
+                            FROM councilmatic_core_person
+                            WHERE name = :name
+                            LIMIT 1
+                        """), name=related_entity['name']).first()
+
+                        if person_id:
+                            person_id = person_id.ocd_id
+                
+                insert = {
+                    'entity_type': related_entity['entity_type'],
+                    'entity_name': related_entity['name'],
+                    'organization_ocd_id': organization_id,
+                    'person_ocd_id': person_id,
+                    'action_id': action_id,
+                }
+                
+                inserts.append(insert)
+                
+                if inserts and len(inserts) % 10000 == 0:
+                    self.executeTransaction(sa.text(insert_query), *inserts)
+                    
+                    counter += 10000
+                    self.stdout.write('Inserted {0} action related entities'.format(counter))
+
+                    inserts = []
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            
+            counter += len(inserts)
+        
+        self.stdout.write(self.style.SUCCESS('Inserted {0} action related entities\n'.format(counter)))
+        
     
     def insert_raw_sponsorships(self, delete=False):
         
         self.remake_raw('sponsorship', delete=delete)
         
-        with connection.cursor() as curs:
-            curs.execute('''
+        self.executeTransaction('''
                 ALTER TABLE raw_sponsorship 
                 ALTER COLUMN updated_at SET DEFAULT NOW()
             ''')
             
-            curs.execute(''' 
+        self.executeTransaction(''' 
                 DROP TABLE IF EXISTS raw_sponsorship_temp
             ''')
             
-            curs.execute(''' 
+        self.executeTransaction(''' 
                 CREATE TABLE raw_sponsorship_temp AS (
                     SELECT * FROM councilmatic_core_sponsorship
                 ) WITH NO DATA
             ''')
         
-            curs.execute('''
+        self.executeTransaction('''
                 ALTER TABLE raw_sponsorship_temp 
                 ALTER COLUMN updated_at SET DEFAULT NOW()
             ''')
 
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_sponsorship_temp (
                 classification,
                 is_primary,
                 bill_id,
                 person_id
-            ) VALUES {}
+            ) VALUES (
+                :classification,
+                :is_primary,
+                :bill_id,
+                :person_id
+            )
             '''
         
-        with connection.cursor() as curs:
-            for bill_json in os.listdir(self.bills_folder):
-                
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
-                
-                for sponsorship in bill_info['sponsorships']:
-                    
-                    insert = (
-                        sponsorship['classification'],
-                        sponsorship['primary'],
-                        bill_info['id'],
-                        sponsorship['entity_id'],
-                    )
-                    
-                    inserts.append(insert)
-                    
-                    if inserts and len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-                        
-                        inserts = []
+        counter = 0
+        for bill_json in os.listdir(self.bills_folder):
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+            with open(os.path.join(self.bills_folder, bill_json)) as f:
+                bill_info = json.loads(f.read())
+            
+            for sponsorship in bill_info['sponsorships']:
+                
+                insert = {
+                    'classification': sponsorship['classification'],
+                    'is_primary': sponsorship['primary'],
+                    'bill_id': bill_info['id'],
+                    'person_id': sponsorship['entity_id'],
+                }
+                
+                inserts.append(insert)
+                
+                if inserts and len(inserts) % 10000 == 0:
+                    self.executeTransaction(sa.text(insert_query), *inserts)
+                    
+                    counter += 10000
+                    self.stdout.write('Inserted {0} raw sponsorships'.format(counter))
+
+                    inserts = []
         
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            
         # Temproary measure to make sure we can actually update things.
-        with connection.cursor() as curs:
-            curs.execute(''' 
+        self.executeTransaction(''' 
                 INSERT INTO raw_sponsorship 
                   SELECT DISTINCT ON (classification, is_primary, bill_id, person_id)
                   *
                   FROM raw_sponsorship_temp
             ''')
-
-            curs.execute('select count(*) from raw_sponsorship')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} sponsorships'.format(raw_count)))
+        
+        raw_count = self.connection.execute('select count(*) from raw_sponsorship').first().count
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw sponsorships\n'.format(raw_count)))
 
     def insert_raw_billdocuments(self, delete=False):
         
         self.remake_raw('billdocument', delete=delete)
         
-        with connection.cursor() as curs:
-            curs.execute('''
+        self.executeTransaction('''
                 ALTER TABLE raw_billdocument 
                 ALTER COLUMN updated_at SET DEFAULT NOW()
             ''')
             
         inserts = []
 
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_billdocument (
                 note,
                 url, 
                 bill_id,
                 document_type
-            ) VALUES {}
+            ) VALUES (
+                :note,
+                :url, 
+                :bill_id,
+                :document_type
+            )
         '''
         
-        count = 0
-        with connection.cursor() as curs:
-            for bill_json in os.listdir(self.bills_folder):
-                
-                bill_info = json.load(open(os.path.join(self.bills_folder, bill_json)))
-                
-                for document in bill_info['documents']:
-
-                    insert = (
-                        document['note'],
-                        document['links'][0]['url'],
-                        bill_info['id'],
-                        'A',
-                    )
-                    
-                    inserts.append(insert)
-
-                for document in bill_info['versions']:
-
-                    insert = (
-                        document['note'],
-                        document['links'][0]['url'],
-                        bill_info['id'],
-                        'V',
-                    )
-
-                    inserts.append(insert)
-
-                if inserts and len(inserts) % 10000 == 0:
-                    template = ','.join(['%s'] * len(inserts))
-                    curs.execute(insert_fmt.format(template), inserts)
-                    
-                    inserts = []
+        counter = 0
+        for bill_json in os.listdir(self.bills_folder):
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+            with open(os.path.join(self.bills_folder, bill_json)) as f:
+                bill_info = json.loads(f.read())
+            
+            for document in bill_info['documents']:
+
+                insert = {
+                    'note': document['note'],
+                    'url': document['links'][0]['url'],
+                    'bill_id': bill_info['id'],
+                    'document_type': 'A',
+                }
                 
-            curs = connection.cursor()
-            curs.execute('select count(*) from raw_billdocument')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} bill attachments and versions'.format(raw_count)))
+                inserts.append(insert)
+
+            for document in bill_info['versions']:
+
+                insert = {
+                    'note': document['note'],
+                    'url': document['links'][0]['url'],
+                    'bill_id': bill_info['id'],
+                    'document_type': 'V',
+                }
+
+                inserts.append(insert)
+
+            if inserts and len(inserts) % 10000 == 0:
+                self.executeTransaction(sa.text(insert_query), *inserts)
+                
+                counter += 10000
+                
+                self.stdout.write('Inserted {0} raw bill attachments and versions'.format(counter))
+
+                inserts = []
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            
+            counter += len(inserts)
+            
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw bill attachments and versions\n'.format(counter)))
+            
     
     def insert_raw_events(self, delete=False):
         self.setup_raw('event', delete=delete)
         
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_event (
                 ocd_id,
                 ocd_created_at,
@@ -1146,55 +1229,73 @@ class Command(BaseCommand):
                 source_url, 
                 source_note,
                 slug
-            ) VALUES {}
-            '''
+            ) VALUES (
+                :ocd_id,
+                :ocd_created_at,
+                :ocd_updated_at,
+                :name,
+                :description,
+                :classification,
+                :start_time,
+                :end_time,
+                :all_day,
+                :status,
+                :location_name,
+                :location_url,
+                :source_url, 
+                :source_note,
+                :slug
+            )
+        '''
         
-        with connection.cursor() as curs:
-            for event_json in os.listdir(self.events_folder):
-                
-                with open(os.path.join(self.events_folder, event_json)) as f:
-                    event_info = json.loads(f.read())
-                
-                ocd_id = event_info['id']
-                
-                truncator = Truncator(event_info['name'])
-                ocd_part = ocd_id.rsplit('-', 1)[1]
-                slug = '{0}-{1}'.format(slugify(truncator.words(5)), ocd_part)
+        counter = 0
 
-                insert = (
-                    ocd_id,
-                    event_info['created_at'],
-                    event_info['updated_at'],
-                    event_info['name'],
-                    event_info['description'],
-                    event_info['classification'],
-                    parse_datetime(event_info['start_time']),
-                    parse_datetime(event_info['end_time']) if event_info['end_time'] else None,
-                    event_info['all_day'],
-                    event_info['status'],
-                    event_info['location']['name'],
-                    event_info['location']['url'],
-                    event_info['sources'][0]['url'],
-                    event_info['sources'][0]['note'],
-                    slug
-                )
-                
-                inserts.append(insert)
-                
-                if inserts and len(inserts) % 10000 == 0:
-                    template = ','.join(['%s'] * len(inserts))
-                    curs.execute(insert_fmt.format(template), inserts)
-                    
-                    inserts = []
+        for event_json in os.listdir(self.events_folder):
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
             
-            curs.execute('select count(*) from raw_event')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} events'.format(raw_count)))
+            ocd_id = event_info['id']
+            
+            truncator = Truncator(event_info['name'])
+            ocd_part = ocd_id.rsplit('-', 1)[1]
+            slug = '{0}-{1}'.format(slugify(truncator.words(5)), ocd_part)
+
+            insert = {
+                'ocd_id': ocd_id,
+                'ocd_created_at': event_info['created_at'],
+                'ocd_updated_at': event_info['updated_at'],
+                'name': event_info['name'],
+                'description': event_info['description'],
+                'classification': event_info['classification'],
+                'start_time': parse_datetime(event_info['start_time']),
+                'end_time': parse_datetime(event_info['end_time']) if event_info['end_time'] else None,
+                'all_day': event_info['all_day'],
+                'status': event_info['status'],
+                'location_name': event_info['location']['name'],
+                'location_url': event_info['location']['url'],
+                'source_url': event_info['sources'][0]['url'],
+                'source_note': event_info['sources'][0]['note'],
+                'slug': slug,
+            }
+            
+            inserts.append(insert)
+            
+            if inserts and len(inserts) % 10000 == 0:
+                self.executeTransaction(sa.text(insert_query), *inserts)
+                
+                counter += 10000
+                
+                self.stdout.write('Inserted {0} raw events'.format(counter))
+
+                inserts = []
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            
+            counter += len(inserts)
+
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw events\n'.format(counter)))
 
     def insert_raw_eventparticipants(self, delete=False):
         pk_cols = ['event_id', 'entity_name', 'entity_type']
@@ -1205,45 +1306,51 @@ class Command(BaseCommand):
 
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_eventparticipant (
                 note,
                 entity_name,
                 entity_type,
                 event_id
-            ) VALUES {}
+            ) VALUES (
+                :note,
+                :entity_name,
+                :entity_type,
+                :event_id
+            )
             '''
         
-        with connection.cursor() as curs:
-            for event_json in os.listdir(self.events_folder):
+        counter = 0
+        for event_json in os.listdir(self.events_folder):
+            
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
+            
+            for participant in event_info['participants']:
                 
-                with open(os.path.join(self.events_folder, event_json)) as f:
-                    event_info = json.loads(f.read())
-                
-                for participant in event_info['participants']:
-                    
-                    insert = (
-                        participant['note'],
-                        participant['entity_name'],
-                        participant['entity_type'],
-                        event_info['id'],
-                    )
+                insert = {
+                    'note': participant['note'],
+                    'entity_name': participant['entity_name'],
+                    'entity_type': participant['entity_type'],
+                    'event_id': event_info['id'],
+                }
 
-                    inserts.append(insert)
-                    if inserts and len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-                        
-                        inserts = []
-            
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-            
-            curs.execute('select count(*) from raw_eventparticipant')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} event participants'.format(raw_count)))
+                inserts.append(insert)
+                
+                if inserts and len(inserts) % 10000 == 0:
+                    self.executeTransaction(sa.text(insert_query), *inserts)
+                    
+                    counter += 10000
+
+                    self.stdout.write('Inserted {} raw event participants'.format(counter))
+
+                    inserts = []
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            counter += len(inserts)
+        
+        self.stdout.write(self.style.SUCCESS('Inserted {0} event participants\n'.format(counter)))
 
     def insert_raw_eventdocuments(self, delete=False):
         pk_cols = ['event_id', 'url']
@@ -1255,43 +1362,49 @@ class Command(BaseCommand):
 
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_eventdocument (
                 event_id,
                 note,
                 url
-            ) VALUES {}
+            ) VALUES (
+                :event_id,
+                :note,
+                :url
+            )
             '''
         
-        with connection.cursor() as curs:
-            for event_json in os.listdir(self.events_folder):
+        counter = 0
+        for event_json in os.listdir(self.events_folder):
+            
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
+            
+            for document in event_info['documents']:
                 
-                with open(os.path.join(self.events_folder, event_json)) as f:
-                    event_info = json.loads(f.read())
-                
-                for document in event_info['documents']:
-                    
-                    insert = (
-                        event_info['id'],
-                        document['note'],
-                        document['links'][0]['url'],
-                    )
+                insert = {
+                    'event_id': event_info['id'],
+                    'note': document['note'],
+                    'url': document['links'][0]['url'],
+                }
 
-                    inserts.append(insert)
-                    if inserts and len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-                        
-                        inserts = []
+                inserts.append(insert)
+                
+                if inserts and len(inserts) % 10000 == 0:
+                    self.executeTransaction(sa.text(insert_query), *inserts)
+                    
+                    counter += 10000
+
+                    self.stdout.write('Inserted {} raw event documents'.format(counter))
+
+                    inserts = []
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
-            
-            curs.execute('select count(*) from raw_eventdocument')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} event documents'.format(raw_count)))
+            counter += len(inserts)
+
+        self.stdout.write(self.style.SUCCESS('Inserted {0} event documents\n'.format(counter)))
     
     def insert_raw_event_agenda_items(self, delete=False):
         pk_cols = ['event_id', '"order"']
@@ -1302,62 +1415,71 @@ class Command(BaseCommand):
         
         inserts = []
         
-        insert_fmt = ''' 
+        insert_query = ''' 
             INSERT INTO raw_eventagendaitem (
                 "order",
                 description,
                 event_id,
                 bill_id,
                 note
-            ) VALUES {}
+            ) VALUES (
+                :order,
+                :description,
+                :event_id,
+                :bill_id,
+                :note
+            
+            )
             '''
         
-        with connection.cursor() as curs:
-            for event_json in os.listdir(self.events_folder):
-                
-                with open(os.path.join(self.events_folder, event_json)) as f:
-                    event_info = json.loads(f.read())
-                
-                for item in event_info['agenda']:
-                    
-                    bill_id = None
-                    note = None
+        counter = 0
 
-                    try:
-                        related_entity = item['related_entities'][0]
-                        
-                        # Only capture related entities when they are bills
-
-                        if related_entity['entity_type'] == 'bill':
-                            bill_id = related_entity['entity_id']
-                            note = related_entity['note']
-                    
-                    except IndexError:
-                        pass
-
-                    insert = (
-                        item['order'],
-                        item['description'],
-                        event_info['id'],
-                        bill_id,
-                        note,
-                    )
-
-                    inserts.append(insert)
-                    if inserts and len(inserts) % 10000 == 0:
-                        template = ','.join(['%s'] * len(inserts))
-                        curs.execute(insert_fmt.format(template), inserts)
-                        
-                        inserts = []
+        for event_json in os.listdir(self.events_folder):
             
-            if inserts:
-                template = ','.join(['%s'] * len(inserts))
-                curs.execute(insert_fmt.format(template), inserts)
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
+            
+            for item in event_info['agenda']:
+                
+                bill_id = None
+                note = None
 
-            curs.execute('select count(*) from raw_eventagendaitem')
-            raw_count = curs.fetchone()[0]
-    
-        self.stdout.write(self.style.SUCCESS('Found {0} event event agenda items'.format(raw_count)))
+                try:
+                    related_entity = item['related_entities'][0]
+                    
+                    # Only capture related entities when they are bills
+
+                    if related_entity['entity_type'] == 'bill':
+                        bill_id = related_entity['entity_id']
+                        note = related_entity['note']
+                
+                except IndexError:
+                    pass
+
+                insert = {
+                    'order': item['order'],
+                    'description': item['description'],
+                    'event_id': event_info['id'],
+                    'bill_id': bill_id,
+                    'note': note,
+                }
+
+                inserts.append(insert)
+                if inserts and len(inserts) % 10000 == 0:
+                    self.executeTransaction(sa.text(insert_query), *inserts)
+                    
+                    counter += 10000
+                    
+                    self.stdout.write('Inserted {} raw event agenda items'.format(counter))
+
+                    inserts = []
+        
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            
+            counter += len(inserts)
+
+        self.stdout.write(self.style.SUCCESS('Inserted {0} raw event agenda items\n'.format(counter)))
 
     ################################
     ###                          ###
@@ -1366,15 +1488,14 @@ class Command(BaseCommand):
     ################################
     
     def setup_update(self, entity_type):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_{}'.format(entity_type))
-            curs.execute(''' 
-                CREATE TABLE change_{} (
-                    ocd_id VARCHAR,
-                    PRIMARY KEY (ocd_id)
-                )
-            '''.format(entity_type))
+        self.executeTransaction('DROP TABLE IF EXISTS change_{}'.format(entity_type))
+        
+        self.executeTransaction(''' 
+            CREATE TABLE change_{} (
+                ocd_id VARCHAR,
+                PRIMARY KEY (ocd_id)
+            )
+        '''.format(entity_type))
     
     def get_update_parts(self, cols, extra_cols):
         wheres = []
@@ -1429,15 +1550,12 @@ class Command(BaseCommand):
                    fields=fields,
                    entity_type=entity_type)
         
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_{}'.format(entity_type))
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+        
+        change_count = self.connection.execute('select count(*) from change_{}'.format(entity_type)).first().count
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
-
-        self.stdout.write(self.style.SUCCESS('Found {0} changed {1}'.format(change_count, entity_type)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed {1}\n'.format(change_count, entity_type)))
 
     def update_existing_organizations(self):
 
@@ -1479,18 +1597,16 @@ class Command(BaseCommand):
 
     def update_existing_memberships(self):
         
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_membership')
-            curs.execute(''' 
-                CREATE TABLE change_membership (
-                    organization_id VARCHAR,
-                    person_id VARCHAR,
-                    post_id VARCHAR,
-                    start_date DATE,
-                    end_date DATE
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_membership')
+        self.executeTransaction(''' 
+            CREATE TABLE change_membership (
+                organization_id VARCHAR,
+                person_id VARCHAR,
+                post_id VARCHAR,
+                start_date DATE,
+                end_date DATE
+            )
+        ''')
         
         cols = [
            'label',
@@ -1510,15 +1626,15 @@ class Command(BaseCommand):
                 raw.organization_id,
                 raw.person_id,
                 raw.post_id,
-                raw_start_date,
+                raw.start_date,
                 raw.end_date
               FROM raw_membership AS raw
               JOIN councilmatic_core_membership AS dat
                 ON (raw.organization_id = dat.organization_id
                     AND raw.person_id = dat.person_id
                     AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, '')
-                    AND COALESCE(raw.start_date, '') = COALESCE(dat.start_date, '')
-                    AND COALESCE(raw.end_date, '') = COALESCE(dat.end_date, ''))
+                    AND COALESCE(raw.start_date, '1900-01-01') = COALESCE(dat.start_date, '1900-01-01')
+                    AND COALESCE(raw.end_date, NOW()) = COALESCE(dat.end_date, NOW()))
               WHERE {}
         '''.format(where_clause)
         
@@ -1533,26 +1649,23 @@ class Command(BaseCommand):
                 ON (raw.organization_id = change.organization_id
                     AND raw.person_id = change.person_id
                     AND COALESCE(raw.post_id, '') = COALESCE(change.post_id, '')
-                    AND COALESCE(raw.start_date, '') = COALESCE(change.start_date, '')
-                    AND COALESCE(raw.end_date, '') = COALESCE(change.end_date, ''))
+                    AND COALESCE(raw.start_date, '1900-01-01') = COALESCE(change.start_date, '1900-01-01')
+                    AND COALESCE(raw.end_date, NOW()) = COALESCE(change.end_date, NOW()))
             ) AS s
             WHERE councilmatic_core_membership.organization_id = s.organization_id
               AND councilmatic_core_membership.person_id = s.person_id
               AND COALESCE(councilmatic_core_membership.post_id, '') = COALESCE(s.post_id, '')
-              AND COALESCE(councilmatic_core_membership.start_date, '') = COALESCE(s.start_date, '')
-              AND COALESCE(councilmatic_core_membership.end_date, '') = COALESCE(s.end_date, '')
+              AND COALESCE(councilmatic_core_membership.start_date, '1900-01-01') = COALESCE(s.start_date, '1900-01-01')
+              AND COALESCE(councilmatic_core_membership.end_date, NOW()) = COALESCE(s.end_date, NOW())
         '''.format(set_values=set_values, 
                    fields=fields)
         
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_membership')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+            
+        change_count = self.connection.execute('select count(*) from change_membership').first().count
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
-
-        self.stdout.write(self.style.SUCCESS('Found {0} changed membership'.format(change_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed membership\n'.format(change_count)))
     
     def update_existing_bills(self):
         cols = [
@@ -1578,15 +1691,13 @@ class Command(BaseCommand):
     
     def update_existing_actions(self):
         
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_action')
-            curs.execute(''' 
-                CREATE TABLE change_action (
-                    bill_id VARCHAR,
-                    "order" INTEGER
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_action')
+        self.executeTransaction(''' 
+            CREATE TABLE change_action (
+                bill_id VARCHAR,
+                "order" INTEGER
+            )
+        ''')
         
         cols = [
             'date',
@@ -1627,27 +1738,22 @@ class Command(BaseCommand):
         '''.format(set_values=set_values, 
                    fields=fields)
         
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_action')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
+        self.executeTransaction(update_dat)
+        change_count = self.connection.execute('select count(*) from change_action').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed action'.format(change_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed action\n'.format(change_count)))
     
     def update_existing_action_related_entity(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_actionrelatedentity')
-            curs.execute(''' 
-                CREATE TABLE change_actionrelatedentity (
-                    organization_ocd_id VARCHAR,
-                    person_ocd_id VARCHAR,
-                    action_id INTEGER
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_actionrelatedentity')
+        self.executeTransaction(''' 
+            CREATE TABLE change_actionrelatedentity (
+                organization_ocd_id VARCHAR,
+                person_ocd_id VARCHAR,
+                action_id INTEGER
+            )
+        ''')
         
         cols = [
             'entity_type',
@@ -1691,28 +1797,23 @@ class Command(BaseCommand):
         '''.format(set_values=set_values, 
                    fields=fields)
 
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_actionrelatedentity')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+            
+        change_count = self.connection.execute('select count(*) from change_actionrelatedentity').first().count
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
-
-        self.stdout.write(self.style.SUCCESS('Found {0} changed action related entities'.format(change_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed action related entities\n'.format(change_count)))
 
     def update_existing_sponsorships(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_sponsorship')
-            curs.execute(''' 
-                CREATE TABLE change_sponsorship (
-                    classification VARCHAR,
-                    is_primary BOOLEAN,
-                    bill_id VARCHAR,
-                    person_id VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_sponsorship')
+        self.executeTransaction(''' 
+            CREATE TABLE change_sponsorship (
+                classification VARCHAR,
+                is_primary BOOLEAN,
+                bill_id VARCHAR,
+                person_id VARCHAR
+            )
+        ''')
         
         cols = [
             'classification',
@@ -1759,27 +1860,23 @@ class Command(BaseCommand):
         '''.format(set_values=set_values, 
                    fields=fields)
 
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_sponsorship')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
+        self.executeTransaction(update_dat)
+            
+        change_count = self.connection.execute('select count(*) from change_sponsorship').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed sponsorships'.format(change_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed sponsorships\n'.format(change_count)))
 
     def update_existing_billdocuments(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_billdocument')
-            curs.execute(''' 
-                CREATE TABLE change_billdocument (
-                    bill_id VARCHAR,
-                    url VARCHAR,
-                    document_type VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_billdocument')
+        self.executeTransaction(''' 
+            CREATE TABLE change_billdocument (
+                bill_id VARCHAR,
+                url VARCHAR,
+                document_type VARCHAR
+            )
+        ''')
         
         cols = [
             'bill_id',
@@ -1822,15 +1919,13 @@ class Command(BaseCommand):
         '''.format(set_values=set_values, 
                    fields=fields)
 
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_billdocument')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
+        self.executeTransaction(update_dat)
+            
+        change_count = self.connection.execute('select count(*) from change_billdocument').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed bill documents'.format(change_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed bill documents\n'.format(change_count)))
 
     def update_existing_events(self):
         cols = [
@@ -1853,16 +1948,14 @@ class Command(BaseCommand):
         self.update_entity_type('event', cols=cols)
     
     def update_existing_eventparticipants(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_eventparticipant')
-            curs.execute(''' 
-                CREATE TABLE change_eventparticipant (
-                    event_id VARCHAR,
-                    entity_name VARCHAR,
-                    entity_type VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_eventparticipant')
+        self.executeTransaction(''' 
+            CREATE TABLE change_eventparticipant (
+                event_id VARCHAR,
+                entity_name VARCHAR,
+                entity_type VARCHAR
+            )
+        ''')
         
         cols = [
             'event_id',
@@ -1905,26 +1998,21 @@ class Command(BaseCommand):
         '''.format(set_values=set_values, 
                    fields=fields)
 
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_eventparticipant')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+            
+        self.connection.execute('select count(*) from change_eventparticipant').first().count
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
-
-        self.stdout.write(self.style.SUCCESS('Found {0} changed event participants'.format(change_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed event participants\n'.format(change_count)))
     
     def update_existing_eventdocuments(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_eventdocument')
-            curs.execute(''' 
-                CREATE TABLE change_eventdocument (
-                    event_id VARCHAR,
-                    url VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_eventdocument')
+        self.executeTransaction(''' 
+            CREATE TABLE change_eventdocument (
+                event_id VARCHAR,
+                url VARCHAR
+            )
+        ''')
         
         cols = [
             'event_id',
@@ -1963,27 +2051,21 @@ class Command(BaseCommand):
         '''.format(set_values=set_values, 
                    fields=fields)
 
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_eventdocument')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
-
-        self.stdout.write(self.style.SUCCESS('Found {0} changed event documents'.format(change_count)))
+        change_count = self.connection.execute('select count(*) from change_eventdocument').first().count
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} changed event documents\n'.format(change_count)))
     
     def update_existing_event_agenda_items(self):
-        pk_cols = ['event_id', '"order"']
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS change_eventagendaitem')
-            curs.execute(''' 
-                CREATE TABLE change_eventagendaitem (
-                    event_id VARCHAR,
-                    "order" INTEGER
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS change_eventagendaitem')
+        self.executeTransaction(''' 
+            CREATE TABLE change_eventagendaitem (
+                event_id VARCHAR,
+                "order" INTEGER
+            )
+        ''')
         
         cols = [
             'order',
@@ -2023,15 +2105,12 @@ class Command(BaseCommand):
         '''.format(set_values=set_values, 
                    fields=fields)
 
-        with connection.cursor() as curs:
-            curs.execute(find_changes)
-            curs.execute('select count(*) from change_eventagendaitem')
-            change_count = curs.fetchone()[0]
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+            
+        change_count = self.connection.execute('select count(*) from change_eventagendaitem').first().count
 
-        with connection.cursor() as curs:
-            curs.execute(update_dat)
-
-        self.stdout.write(self.style.SUCCESS('Found {0} changed event agenda items'.format(change_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} changed event agenda items\n'.format(change_count)))
 
     ########################
     ###                  ###
@@ -2040,15 +2119,13 @@ class Command(BaseCommand):
     ########################
 
     def add_entity_type(self, entity_type, cols=[], extra_cols=['updated_at']):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_{}'.format(entity_type))
-            curs.execute(''' 
-                CREATE TABLE new_{} (
-                    ocd_id VARCHAR,
-                    PRIMARY KEY (ocd_id)
-                )
-            '''.format(entity_type))
+        self.executeTransaction('DROP TABLE IF EXISTS new_{}'.format(entity_type))
+        self.executeTransaction(''' 
+            CREATE TABLE new_{} (
+                ocd_id VARCHAR,
+                PRIMARY KEY (ocd_id)
+            )
+        '''.format(entity_type))
         
         find_new = ''' 
             INSERT INTO new_{0}
@@ -2059,10 +2136,7 @@ class Command(BaseCommand):
               WHERE dat.ocd_id IS NULL
         '''.format(entity_type)
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_{}'.format(entity_type))
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         cols = cols + extra_cols
 
@@ -2081,10 +2155,11 @@ class Command(BaseCommand):
                    insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new {1}'.format(new_count, entity_type)))
+        new_count = self.connection.execute('select count(*) from new_{}'.format(entity_type)).first().count
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} new {1}\n'.format(new_count, entity_type)))
     
     def add_new_organizations(self):
         cols = [
@@ -2124,18 +2199,16 @@ class Command(BaseCommand):
         self.add_entity_type('person', cols=cols)
     
     def add_new_memberships(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_membership')
-            curs.execute(''' 
-                CREATE TABLE new_membership (
-                    organization_id VARCHAR,
-                    person_id VARCHAR,
-                    post_id VARCHAR,
-                    start_date DATE,
-                    end_date DATE
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_membership')
+        self.executeTransaction(''' 
+            CREATE TABLE new_membership (
+                organization_id VARCHAR,
+                person_id VARCHAR,
+                post_id VARCHAR,
+                start_date DATE,
+                end_date DATE
+            )
+        ''')
         
         find_new = ''' 
             INSERT INTO new_membership
@@ -2150,17 +2223,14 @@ class Command(BaseCommand):
                 ON (raw.organization_id = dat.organization_id
                     AND raw.person_id = dat.person_id
                     AND COALESCE(raw.post_id, '') = COALESCE(dat.post_id, '')
-                    AND COALESCE(raw.start_date, '') = COALESCE(dat.start_date, '')
-                    AND COALESCE(raw.end_date, '') = COALESCE(dat.end_date, ''))
+                    AND COALESCE(raw.start_date, '1900-01-01') = COALESCE(dat.start_date, '1900-01-01')
+                    AND COALESCE(raw.end_date, NOW()) = COALESCE(dat.end_date, NOW()))
               WHERE dat.organization_id IS NULL
                 AND dat.person_id IS NULL
                 AND dat.post_id IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_membership')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         cols = [
            'label',
@@ -2186,15 +2256,16 @@ class Command(BaseCommand):
                 ON (raw.organization_id = new.organization_id
                     AND raw.person_id = new.person_id
                     AND COALESCE(raw.post_id, '') = COALESCE(new.post_id, '')
-                    AND COALESCE(raw.start_date, '') = COALESCE(new.start_date, '')
-                    AND COALESCE(raw.end_date, '') = COALESCE(new.end_date, ''))
+                    AND COALESCE(raw.start_date, '1900-01-01') = COALESCE(new.start_date, '1900-01-01')
+                    AND COALESCE(raw.end_date, NOW()) = COALESCE(new.end_date, NOW()))
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new membership'.format(new_count)))
+        new_count = self.connection.execute('select count(*) from new_membership').first().count
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} new membership\n'.format(new_count)))
     
     def add_new_bills(self):
         cols = [
@@ -2220,15 +2291,13 @@ class Command(BaseCommand):
         self.add_entity_type('bill', cols=cols)
     
     def add_new_actions(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_action')
-            curs.execute(''' 
-                CREATE TABLE new_action (
-                    bill_id VARCHAR,
-                    "order" INTEGER
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_action')
+        self.executeTransaction(''' 
+            CREATE TABLE new_action (
+                bill_id VARCHAR,
+                "order" INTEGER
+            )
+        ''')
         
         find_new = ''' 
             INSERT INTO new_action
@@ -2243,10 +2312,7 @@ class Command(BaseCommand):
                 AND dat."order" IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_action')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         cols = [
             'date',
@@ -2273,22 +2339,21 @@ class Command(BaseCommand):
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new action'.format(new_count)))
+        new_count = self.connection.execute('select count(*) from new_action').first().count
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} new action\n'.format(new_count)))
     
     def add_new_action_related_entity(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_actionrelatedentity')
-            curs.execute(''' 
-                CREATE TABLE new_actionrelatedentity (
-                    organization_ocd_id VARCHAR,
-                    person_ocd_id VARCHAR,
-                    action_id INTEGER
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_actionrelatedentity')
+        self.executeTransaction(''' 
+            CREATE TABLE new_actionrelatedentity (
+                organization_ocd_id VARCHAR,
+                person_ocd_id VARCHAR,
+                action_id INTEGER
+            )
+        ''')
         
         cols = [
             'entity_type',
@@ -2314,10 +2379,7 @@ class Command(BaseCommand):
                      AND dat.action_id IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_actionrelatedentity')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         insert_fields = ', '.join(c for c in cols)
         select_fields = ', '.join('raw.{}'.format(c) for c in cols)
@@ -2335,23 +2397,22 @@ class Command(BaseCommand):
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new action related entities'.format(new_count)))
+        new_count = self.connection.execute('select count(*) from new_actionrelatedentity').first().count
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} new action related entities\n'.format(new_count)))
 
     def add_new_sponsorships(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_sponsorship')
-            curs.execute(''' 
-                CREATE TABLE new_sponsorship (
-                    classification VARCHAR,
-                    is_primary BOOLEAN,
-                    bill_id VARCHAR,
-                    person_id VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_sponsorship')
+        self.executeTransaction(''' 
+            CREATE TABLE new_sponsorship (
+                classification VARCHAR,
+                is_primary BOOLEAN,
+                bill_id VARCHAR,
+                person_id VARCHAR
+            )
+        ''')
         
         cols = [
             'classification',
@@ -2379,10 +2440,7 @@ class Command(BaseCommand):
                     AND dat.person_id IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_sponsorship')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         insert_fields = ', '.join(c for c in cols)
         select_fields = ', '.join('raw.{}'.format(c) for c in cols)
@@ -2401,22 +2459,21 @@ class Command(BaseCommand):
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new sponsorships'.format(new_count)))
+        new_count = self.connection.execute('select count(*) from new_sponsorship').first().count
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new sponsorships\n'.format(new_count)))
 
     def add_new_billdocuments(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_billdocument')
-            curs.execute(''' 
-                CREATE TABLE new_billdocument (
-                    bill_id VARCHAR,
-                    url VARCHAR,
-                    document_type VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_billdocument')
+        self.executeTransaction(''' 
+            CREATE TABLE new_billdocument (
+                bill_id VARCHAR,
+                url VARCHAR,
+                document_type VARCHAR
+            )
+        ''')
         
         cols = [
             'bill_id',
@@ -2441,10 +2498,7 @@ class Command(BaseCommand):
                     AND dat.document_type IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_billdocument')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         insert_fields = ', '.join(c for c in cols)
         select_fields = ', '.join('raw.{}'.format(c) for c in cols)
@@ -2462,10 +2516,11 @@ class Command(BaseCommand):
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new bill documents'.format(new_count)))
+        new_count = self.connection.execute('select count(*) from new_billdocument').first().count
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new bill documents\n'.format(new_count)))
     
     def add_new_events(self):
         cols = [
@@ -2489,16 +2544,14 @@ class Command(BaseCommand):
         self.add_entity_type('event', cols=cols)
     
     def add_new_eventparticipants(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_eventparticipant')
-            curs.execute(''' 
-                CREATE TABLE new_eventparticipant (
-                    event_id VARCHAR,
-                    entity_type VARCHAR,
-                    entity_name VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_eventparticipant')
+        self.executeTransaction(''' 
+            CREATE TABLE new_eventparticipant (
+                event_id VARCHAR,
+                entity_type VARCHAR,
+                entity_name VARCHAR
+            )
+        ''')
         
         cols = [
             'event_id',
@@ -2523,10 +2576,7 @@ class Command(BaseCommand):
                     AND dat.entity_name IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_eventparticipant')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         insert_fields = ', '.join(c for c in cols)
         select_fields = ', '.join('raw.{}'.format(c) for c in cols)
@@ -2544,21 +2594,20 @@ class Command(BaseCommand):
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new event participants'.format(new_count)))
+        new_count = self.connection.execute('select count(*) from new_eventparticipant').first().count
+        
+        self.stdout.write(self.style.SUCCESS('Found {0} new event participants\n'.format(new_count)))
 
     def add_new_eventdocuments(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_eventdocument')
-            curs.execute(''' 
-                CREATE TABLE new_eventdocument (
-                    event_id VARCHAR,
-                    url VARCHAR
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_eventdocument')
+        self.executeTransaction(''' 
+            CREATE TABLE new_eventdocument (
+                event_id VARCHAR,
+                url VARCHAR
+            )
+        ''')
         
         cols = [
             'event_id',
@@ -2580,10 +2629,7 @@ class Command(BaseCommand):
                     AND dat.url IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_eventdocument')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         insert_fields = ', '.join(c for c in cols)
         select_fields = ', '.join('raw.{}'.format(c) for c in cols)
@@ -2600,21 +2646,20 @@ class Command(BaseCommand):
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new event documents'.format(new_count)))
+        new_count = self.connection.execute('select count(*) from new_eventdocument').first().count
+
+        self.stdout.write(self.style.SUCCESS('Found {0} new event documents\n'.format(new_count)))
 
     def add_new_event_agenda_items(self):
-        with connection.cursor() as curs:
-            
-            curs.execute('DROP TABLE IF EXISTS new_eventagendaitem')
-            curs.execute(''' 
-                CREATE TABLE new_eventagendaitem (
-                    event_id VARCHAR,
-                    "order" INTEGER
-                )
-            ''')
+        self.executeTransaction('DROP TABLE IF EXISTS new_eventagendaitem')
+        self.executeTransaction(''' 
+            CREATE TABLE new_eventagendaitem (
+                event_id VARCHAR,
+                "order" INTEGER
+            )
+        ''')
         
         cols = [
             'order',
@@ -2637,10 +2682,7 @@ class Command(BaseCommand):
                     AND dat."order" IS NULL
         '''
 
-        with connection.cursor() as curs:
-            curs.execute(find_new)
-            curs.execute('select count(*) from new_eventagendaitem')
-            new_count = curs.fetchone()[0]
+        self.executeTransaction(find_new)
         
         insert_fields = ', '.join('"{}"'.format(c) for c in cols)
         select_fields = ', '.join('raw."{}"'.format(c) for c in cols)
@@ -2657,10 +2699,10 @@ class Command(BaseCommand):
         '''.format(insert_fields=insert_fields,
                    select_fields=select_fields)
         
-        with connection.cursor() as curs:
-            curs.execute(insert_new)
+        self.executeTransaction(insert_new)
+        new_count = self.connection.execute('select count(*) from new_eventagendaitem').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new event agenda items'.format(new_count)))
+        self.stdout.write(self.style.SUCCESS('Found {0} new event agenda items\n'.format(new_count)))
 
     
     def populate_council_district_shapes(self):
@@ -2688,3 +2730,20 @@ class Command(BaseCommand):
                 division_ocd_id_fragment = ':' + bndry_json['external_id']
                 Post.objects.filter(
                     division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
+
+    def executeTransaction(self, query, raise_exc=True, *args, **kwargs):
+        trans = self.connection.begin()
+
+        try:
+            self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+            if kwargs:
+                self.connection.execute(query, **kwargs)
+            else:
+                self.connection.execute(query, *args)
+            trans.commit()
+        except sa.exc.ProgrammingError as e:
+            # TODO: Make some kind of logger
+            # logger.error(e, exc_info=True)
+            trans.rollback()
+            if raise_exc:
+                raise e
