@@ -99,11 +99,11 @@ class Command(BaseCommand):
         self.downloads_folder = 'downloads'
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
 
-        self.organizations_folder = os.path.join(self.this_folder, 'organizations')
-        self.posts_folder = os.path.join(self.this_folder, 'posts')
-        self.bills_folder = os.path.join(self.this_folder, 'bills')
-        self.people_folder = os.path.join(self.this_folder, 'people')
-        self.events_folder = os.path.join(self.this_folder, 'events')
+        self.organizations_folder = os.path.join(self.downloads_folder, 'organizations')
+        self.posts_folder = os.path.join(self.downloads_folder, 'posts')
+        self.bills_folder = os.path.join(self.downloads_folder, 'bills')
+        self.people_folder = os.path.join(self.downloads_folder, 'people')
+        self.events_folder = os.path.join(self.downloads_folder, 'events')
         
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
@@ -984,7 +984,7 @@ class Command(BaseCommand):
             
             with open(os.path.join(self.bills_folder, bill_json)) as f:
                 bill_info = json.loads(f.read())
-
+            
             for order, action in enumerate(bill_info['actions']):
                 
                 classification = None
@@ -1065,12 +1065,12 @@ class Command(BaseCommand):
                 bill_info = json.loads(f.read())
                 
             action = bill_info['actions'][order]
-
+            
             for related_entity in action['related_entities']:
                 
                 person_id = None
                 organization_id = None
-
+                
                 if related_entity['entity_type'] == 'organization':
 
                     organization_id = related_entity['organization_id']
@@ -1175,14 +1175,19 @@ class Command(BaseCommand):
             
             for sponsorship in bill_info['sponsorships']:
                 
-                insert = {
-                    'classification': sponsorship['classification'],
-                    'is_primary': sponsorship['primary'],
-                    'bill_id': bill_info['id'],
-                    'person_id': sponsorship['entity_id'],
-                }
-                
-                inserts.append(insert)
+                # TODO: Sponsorships can also be organizations but we're
+                # waiting to see what that actually means
+
+                if sponsorship['entity_type'] == 'person':
+                    
+                    insert = {
+                        'classification': sponsorship['classification'],
+                        'is_primary': sponsorship['primary'],
+                        'bill_id': bill_info['id'],
+                        'person_id': sponsorship['entity_id'],
+                    }
+                    
+                    inserts.append(insert)
                 
                 if inserts and len(inserts) % 10000 == 0:
                     self.executeTransaction(sa.text(insert_query), *inserts)

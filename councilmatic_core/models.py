@@ -370,8 +370,8 @@ class Bill(models.Model):
 
     @property
     def unique_related_upcoming_events(self):
-        events = [r.agenda_item.event for r in self.related_agenda_items.filter(
-            agenda_item__event__start_time__gte=datetime.now()).all()]
+        events = [r.event for r in self.related_agenda_items.filter(
+            event__start_time__gte=datetime.now()).all()]
         return list(set(events))
 
 
@@ -718,7 +718,6 @@ class BillDocument(Document):
     def __init__(self, *args, **kwargs):
         super(BillDocument, self).__init__(*args, **kwargs)
         self.bill = override_relation(self.bill)
-        self.document = override_relation(self.document)
 
 
 class EventDocument(Document):
