@@ -546,8 +546,8 @@ class Post(models.Model):
     role = models.CharField(max_length=255)
     _organization = models.ForeignKey(
         'Organization', related_name='posts', db_column='organization_id', null=True)
-    division_ocd_id = models.CharField(max_length=255)
     shape = models.TextField(blank=True, null=True)
+    division_ocd_id = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
