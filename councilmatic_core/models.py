@@ -49,16 +49,19 @@ def override_relation(base_model):
 
     return overridden
 
+def get_uuid():
+    import uuid
+    return str(uuid.uuid4())
 
 class Person(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True, null=True)
+    ocd_id = models.CharField(max_length=100, unique=True, default=get_uuid, primary_key=True)
     name = models.CharField(max_length=100)
-    headshot = models.CharField(max_length=255, blank=True)
-    source_url = models.CharField(max_length=255, blank=True)
-    source_note = models.CharField(max_length=255, blank=True)
-    website_url = models.CharField(max_length=255, blank=True)
-    email = models.CharField(max_length=255, blank=True)
-    slug = models.CharField(max_length=255, unique=True, null=True)
+    headshot = models.CharField(max_length=255, blank=True, null=True)
+    source_url = models.CharField(max_length=255, blank=True, null=True)
+    source_note = models.CharField(max_length=255, blank=True, null=True)
+    website_url = models.CharField(max_length=255, blank=True, null=True)
+    email = models.CharField(max_length=255, blank=True, null=True)
+    slug = models.CharField(max_length=255, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -144,7 +147,7 @@ class Person(models.Model):
 
 
 class Bill(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     ocd_created_at = models.DateTimeField(default=None)
     ocd_updated_at = models.DateTimeField(default=None)
     description = models.TextField()
@@ -153,16 +156,16 @@ class Bill(models.Model):
     classification = models.CharField(max_length=100)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
-    subject = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=255, blank=True, null=True)
 
     _from_organization = models.ForeignKey('Organization',
                                            related_name='bills',
                                            null=True,
                                            db_column='from_organization_id')
 
-    full_text = models.TextField(blank=True)
-    ocr_full_text = models.TextField(blank=True)
-    abstract = models.TextField(blank=True)
+    full_text = models.TextField(blank=True, null=True)
+    ocr_full_text = models.TextField(blank=True, null=True)
+    abstract = models.TextField(blank=True, null=True)
     last_action_date = models.DateTimeField(default=None, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -373,12 +376,12 @@ class Bill(models.Model):
 
 
 class Organization(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     name = models.CharField(max_length=255)
     classification = models.CharField(max_length=255, null=True)
     _parent = models.ForeignKey(
         'self', related_name='children', null=True, db_column='parent_id')
-    source_url = models.CharField(max_length=255, blank=True)
+    source_url = models.CharField(max_length=255, blank=True, null=True)
     slug = models.CharField(max_length=255, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -451,7 +454,7 @@ class Organization(models.Model):
 
 class Action(models.Model):
     date = models.DateTimeField(default=None)
-    classification = models.CharField(max_length=100)
+    classification = models.CharField(max_length=100, null=True)
     description = models.TextField(blank=True)
 
     _organization = models.ForeignKey('Organization',
@@ -528,8 +531,8 @@ class ActionRelatedEntity(models.Model):
         'Action', related_name='related_entities', db_column='action_id', null=True)
     entity_type = models.CharField(max_length=100)
     entity_name = models.CharField(max_length=255)
-    organization_ocd_id = models.CharField(max_length=100, blank=True)
-    person_ocd_id = models.CharField(max_length=100, blank=True)
+    organization_ocd_id = models.CharField(max_length=100, blank=True, null=True)
+    person_ocd_id = models.CharField(max_length=100, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
@@ -538,13 +541,13 @@ class ActionRelatedEntity(models.Model):
 
 
 class Post(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     label = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
     _organization = models.ForeignKey(
         'Organization', related_name='posts', db_column='organization_id', null=True)
+    shape = models.TextField(blank=True, null=True)
     division_ocd_id = models.CharField(max_length=255, null=True)
-    shape = models.TextField(blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
@@ -612,7 +615,7 @@ class Sponsorship(models.Model):
 
 
 class Event(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     ocd_created_at = models.DateTimeField(default=None)
     ocd_updated_at = models.DateTimeField(default=None)
     name = models.CharField(max_length=255)
@@ -688,36 +691,26 @@ class EventAgendaItem(models.Model):
     event = models.ForeignKey('Event', related_name='agenda_items')
     order = models.IntegerField()
     description = models.TextField()
+    bill = models.ForeignKey('Bill', related_name='related_agenda_items', null=True)
+    note = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(EventAgendaItem, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
-
-
-class AgendaItemBill(models.Model):
-    agenda_item = models.ForeignKey(
-        'EventAgendaItem', related_name='related_bills')
-    bill = models.ForeignKey('Bill', related_name='related_agenda_items')
-    note = models.CharField(max_length=255)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __init__(self, *args, **kwargs):
-        super(AgendaItemBill, self).__init__(*args, **kwargs)
-        self.agenda_item = override_relation(self.agenda_item)
         self.bill = override_relation(self.bill)
 
 
 class Document(models.Model):
     note = models.TextField()
     url = models.TextField(blank=True)
-    full_text = models.TextField(blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    full_text = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        abstract = True
 
-
-class BillDocument(models.Model):
+class BillDocument(Document):
     bill = models.ForeignKey('Bill', related_name='documents')
-    document = models.ForeignKey('Document', related_name='bills')
     document_type = models.CharField(
         max_length=255, choices=bill_document_choices)
     updated_at = models.DateTimeField(auto_now=True)
@@ -728,10 +721,8 @@ class BillDocument(models.Model):
         self.document = override_relation(self.document)
 
 
-class EventDocument(models.Model):
+class EventDocument(Document):
     event = models.ForeignKey('Event', related_name='documents')
-    document = models.ForeignKey('Document', related_name='events')
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(EventDocument, self).__init__(*args, **kwargs)
@@ -740,7 +731,7 @@ class EventDocument(models.Model):
 
 
 class LegislativeSession(models.Model):
-    identifier = models.CharField(max_length=255)
+    identifier = models.CharField(max_length=255, primary_key=True)
     jurisdiction_ocd_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     updated_at = models.DateTimeField(auto_now=True)
