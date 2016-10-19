@@ -4,11 +4,14 @@ import json
 import re
 import datetime
 import os
+import sys
 
 import requests
 import pytz
 import psycopg2
 import sqlalchemy as sa
+
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from dateutil import parser as date_parser
 
@@ -24,6 +27,8 @@ from councilmatic_core.models import Person, Bill, Organization, Action, ActionR
     Post, Membership, Sponsorship, LegislativeSession, \
     Document, BillDocument, Event, EventParticipant, EventDocument, \
     EventAgendaItem
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 for configuration in ['OCD_JURISDICTION_ID',
                       'HEADSHOT_PATH',
@@ -108,7 +113,7 @@ class Command(BaseCommand):
             
             if endpoint not in ['organizations', 'people', 'bills', 'events']:
 
-                self.stdout.write(self.style.ERROR('"{}" is not a valid endpoint'.format(endpoint)))
+                self.log_message('"{}" is not a valid endpoint'.format(endpoint), style='ERROR')
 
             else:
                 
@@ -124,18 +129,33 @@ class Command(BaseCommand):
                            download_only=download_only,
                            delete=options['delete'])
     
-    def log_message(self, message, fancy=False, style='SUCCESS', thing='\U0001f604 '):
-        message = '{0}  ({1})'.format(message, datetime.datetime.now().isoformat())
+    def log_message(self, 
+                    message, 
+                    fancy=False, 
+                    style='HTTP_SUCCESS', 
+                    art_file=None,
+                    center=False,
+                    timestamp=True):
         
-        if style == 'ERROR':
-            thing = '\U0001F635 '
-
-        if fancy:
+        if timestamp:
+            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            message = '{0} {1}'.format(now, message)
+        
+        if len(message) < 70 and center:
+            padding = (70 - len(message)) / 2
+            message = '{0}{1}{0}'.format(' ' * int(padding), message)
+        
+        if fancy and not art_file:
             thing_count = len(message) + 2
-            message = '{0}\n  {1}  \n{0}'.format(thing * thing_count, message)
+
+            message = '\n{0}\n  {1}  \n{0}'.format('-' * 70, message)
         
+        elif art_file:
+            art = open(os.path.join(self.this_folder, 'art', art_file)).read()
+            message = '\n{0} \n {1}'.format(art, message)
+
         style = getattr(self.style, style)
-        self.stdout.write(style(message))
+        self.stdout.write(style('{}\n'.format(message)))
 
     def organizations_etl(self, 
                           import_only=True, 
@@ -143,11 +163,17 @@ class Command(BaseCommand):
                           delete=False):
 
         if download_only:
-            self.log_message('Downloading organizations ...', fancy=True, thing='\U0001F355 ')
+            self.log_message('Downloading organizations ...', 
+                             center=True, 
+                             art_file='organizations.txt')
+
             self.grab_organizations()
         
         if import_only:
-            self.log_message('Importing organizations ...', fancy=True)
+            self.log_message('Importing organizations ...', 
+                             center=True,
+                             art_file='organizations.txt')
+
             self.insert_raw_organizations(delete=delete)
             self.insert_raw_posts(delete=delete)
             
@@ -157,7 +183,10 @@ class Command(BaseCommand):
             self.add_new_organizations()
             self.add_new_posts()
         
-        self.log_message('Organizations Complete!', fancy=True)
+        self.log_message('Organizations Complete!', 
+                         fancy=True, 
+                         center=True,
+                         style='SUCCESS')
 
     def people_etl(self, 
                    import_only=False, 
@@ -165,9 +194,18 @@ class Command(BaseCommand):
                    delete=False):
 
         if download_only:
+            self.log_message('Downloading people ...', 
+                             center=True, 
+                             art_file='people.txt')
+            
             self.grab_people()
         
         if import_only:
+            
+            self.log_message('Importing people ...', 
+                             center=True, 
+                             art_file='people.txt')
+
             self.insert_raw_people(delete=delete)
             self.insert_raw_memberships(delete=delete)
             
@@ -177,7 +215,10 @@ class Command(BaseCommand):
             self.add_new_people()
             self.add_new_memberships()
         
-        self.log_message('People Complete!', fancy=True)
+        self.log_message('People Complete!', 
+                         fancy=True,
+                         center=True,
+                         style='SUCCESS')
         
     def bills_etl(self, 
                   import_only=False, 
@@ -187,9 +228,15 @@ class Command(BaseCommand):
         self.create_legislative_sessions()
 
         if download_only:
+            self.log_message('Downloading bills ...', 
+                             center=True, 
+                             art_file='bills.txt')
             self.grab_bills()
         
         if import_only:
+            self.log_message('Importing bills ...', 
+                             center=True, 
+                             art_file='bills.txt')
             self.insert_raw_bills(delete=delete)
             self.insert_raw_actions(delete=delete)
             
@@ -211,7 +258,7 @@ class Command(BaseCommand):
             self.add_new_sponsorships()
             self.add_new_billdocuments()
         
-        self.log_message('Bills Complete!', fancy=True)
+        self.log_message('Bills Complete!', fancy=True, style='SUCCESS', center=True)
     
     def events_etl(self, 
                    import_only=False, 
@@ -219,9 +266,15 @@ class Command(BaseCommand):
                    delete=False):
         
         if download_only:
+            self.log_message('Downloading events ...', 
+                             center=True, 
+                             fancy=True)
             self.grab_events()
         
         if import_only:
+            self.log_message('Importing events ...', 
+                             center=True, 
+                             fancy=True)
             self.insert_raw_events(delete=delete)
             self.insert_raw_eventparticipants(delete=delete)
             self.insert_raw_eventdocuments(delete=delete)
@@ -237,7 +290,7 @@ class Command(BaseCommand):
             self.add_new_eventdocuments()
             self.add_new_event_agenda_items()
         
-        self.log_message('Events Complete!', fancy=True)
+        self.log_message('Events Complete!', fancy=True, style='SUCCESS', center=True)
 
     #########################
     ###                   ###
@@ -265,21 +318,25 @@ class Command(BaseCommand):
         
         org_counter = 0
         post_counter = 0
+
         for i in range(page_json['meta']['max_page']):
 
             r = requests.get(orgs_url + '&page=' + str(i + 1))
             page_json = json.loads(r.text)
+            
+            org_counter += len(page_json['results'])
 
             for result in page_json['results']:
 
                 post_count = self.grab_organization_posts({'id': result['id']})
                 
                 post_counter += post_count
-
-            org_counter += len(page_json['results'])
-
-        self.log_message('Downloaded {0} organizations and {1} posts'.format(org_counter, post_counter), fancy=True)
-
+                
+                print('.', end='')
+                sys.stdout.flush()
+        
+        print('\n')
+        self.log_message('Downloaded {0} orgs and {1} posts'.format(org_counter, post_counter))
 
         # update relevant posts with shapes
         if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
@@ -340,9 +397,12 @@ class Command(BaseCommand):
                 with open(os.path.join(self.people_folder, person_filename), 'w') as f:
                     f.write(json.dumps(person_json))
                 
+                print('.', end='')
+                sys.stdout.flush()
+                
                 counter += 1
 
-        self.log_message('Downloaded {} people'.format(counter), fancy=True)
+        self.log_message('Downloaded {} people and memeberships'.format(counter), fancy=True)
 
     def grab_person_memberships(self, person_id):
         # this grabs a person and all their memberships
@@ -421,9 +481,13 @@ class Command(BaseCommand):
                     f.write(json.dumps(bill_json))
 
                 counter += 1
+                
+                print('.', end='')
+                sys.stdout.flush()
 
                 if counter % 1000 == 0:
-                    self.log_message('Downloaded {} bills'.format(counter), style='NOTICE')
+                    print('\n')
+                    self.log_message('Downloaded {} bills'.format(counter))
 
         self.log_message('Downloaded {} bills'.format(counter), fancy=True)
     
@@ -461,7 +525,11 @@ class Command(BaseCommand):
                     
                     counter += 1
 
+                    print('.', end='')
+                    sys.stdout.flush()
+                    
                     if counter % 1000 == 0:
+                        print('\n')
                         self.log_message('Downloaded {} events'.format(counter))
                 else:
                     self.log_message('Skipping event {} (cannot retrieve event data)'.format(event['id']), style='ERROR')
@@ -588,7 +656,7 @@ class Command(BaseCommand):
                 
         raw_count = self.connection.execute('select count(*) from raw_organization').first().count
     
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw organizations\n'.format(raw_count)))
+        self.log_message('Inserted {0} raw organizations'.format(raw_count), style='SUCCESS')
 
     def insert_raw_posts(self, delete=False):
         
@@ -632,7 +700,7 @@ class Command(BaseCommand):
              
         raw_count = self.connection.execute('select count(*) from raw_post').first().count
         
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw posts\n'.format(raw_count)))
+        self.log_message('Inserted {0} raw posts'.format(raw_count), style='SUCCESS')
     
     def insert_raw_people(self, delete=False):
 
@@ -696,7 +764,7 @@ class Command(BaseCommand):
 
         raw_count = self.connection.execute('select count(*) from raw_person').first().count
         
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw people\n'.format(raw_count)))
+        self.log_message('Inserted {0} raw people\n'.format(raw_count), style='SUCCESS')
     
     def insert_raw_memberships(self, delete=False):
         
@@ -757,7 +825,7 @@ class Command(BaseCommand):
 
         raw_count = self.connection.execute('select count(*) from raw_membership').first().count
         
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw memberships\n'.format(raw_count)))
+        self.log_message('Inserted {0} raw memberships\n'.format(raw_count), style='SUCCESS')
     
     def insert_raw_bills(self, delete=False):
         
@@ -872,7 +940,7 @@ class Command(BaseCommand):
                 self.executeTransaction(sa.text(insert_query), *inserts)
                 
                 counter += 10000
-                self.stdout.write('Inserted {} raw bills'.format(counter))
+                self.log_message('Inserted {} raw bills'.format(counter))
 
                 inserts = []
         
@@ -882,7 +950,7 @@ class Command(BaseCommand):
             
             counter += len(inserts)
         
-        self.stdout.write(self.style.SUCCESS('Inserted a total of {} raw bills\n'.format(counter)))
+        self.log_message('Inserted a total of {} raw bills\n'.format(counter), style='SUCCESS')
     
     def insert_raw_actions(self, delete=False):
         
@@ -940,7 +1008,7 @@ class Command(BaseCommand):
                     
                     counter += 10000
 
-                    self.stdout.write('Inserted {0} actions'.format(counter))
+                    self.log_message('Inserted {0} actions'.format(counter))
 
                     inserts = []
         
@@ -949,7 +1017,7 @@ class Command(BaseCommand):
             
             counter += len(inserts)
         
-        self.stdout.write(self.style.SUCCESS('Inserted {0} actions\n'.format(counter)))
+        self.log_message('Inserted {0} actions\n'.format(counter), style='SUCCESS')
         
     
     def insert_raw_action_related_entity(self, delete=False):
@@ -1046,7 +1114,7 @@ class Command(BaseCommand):
                     self.executeTransaction(sa.text(insert_query), *inserts)
                     
                     counter += 10000
-                    self.stdout.write('Inserted {0} action related entities'.format(counter))
+                    self.log_message('Inserted {0} action related entities'.format(counter))
 
                     inserts = []
         
@@ -1055,7 +1123,7 @@ class Command(BaseCommand):
             
             counter += len(inserts)
         
-        self.stdout.write(self.style.SUCCESS('Inserted {0} action related entities\n'.format(counter)))
+        self.log_message('Inserted {0} action related entities\n'.format(counter), style='SUCCESS')
         
     
     def insert_raw_sponsorships(self, delete=False):
@@ -1119,7 +1187,7 @@ class Command(BaseCommand):
                     self.executeTransaction(sa.text(insert_query), *inserts)
                     
                     counter += 10000
-                    self.stdout.write('Inserted {0} raw sponsorships'.format(counter))
+                    self.log_message('Inserted {0} raw sponsorships'.format(counter))
 
                     inserts = []
         
@@ -1135,7 +1203,7 @@ class Command(BaseCommand):
             ''')
         
         raw_count = self.connection.execute('select count(*) from raw_sponsorship').first().count
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw sponsorships\n'.format(raw_count)))
+        self.log_message('Inserted {0} raw sponsorships\n'.format(raw_count), style='SUCCESS')
 
     def insert_raw_billdocuments(self, delete=False):
         
@@ -1195,7 +1263,7 @@ class Command(BaseCommand):
                 
                 counter += 10000
                 
-                self.stdout.write('Inserted {0} raw bill attachments and versions'.format(counter))
+                self.log_message('Inserted {0} raw bill attachments and versions'.format(counter))
 
                 inserts = []
         
@@ -1204,7 +1272,7 @@ class Command(BaseCommand):
             
             counter += len(inserts)
             
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw bill attachments and versions\n'.format(counter)))
+        self.log_message('Inserted {0} raw bill attachments and versions\n'.format(counter), style='SUCCESS')
             
     
     def insert_raw_events(self, delete=False):
@@ -1286,7 +1354,7 @@ class Command(BaseCommand):
                 
                 counter += 10000
                 
-                self.stdout.write('Inserted {0} raw events'.format(counter))
+                self.log_message('Inserted {0} raw events'.format(counter))
 
                 inserts = []
         
@@ -1295,7 +1363,7 @@ class Command(BaseCommand):
             
             counter += len(inserts)
 
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw events\n'.format(counter)))
+        self.log_message('Inserted {0} raw events\n'.format(counter), style='SUCCESS')
 
     def insert_raw_eventparticipants(self, delete=False):
         pk_cols = ['event_id', 'entity_name', 'entity_type']
@@ -1342,7 +1410,7 @@ class Command(BaseCommand):
                     
                     counter += 10000
 
-                    self.stdout.write('Inserted {} raw event participants'.format(counter))
+                    self.log_message('Inserted {} raw event participants'.format(counter))
 
                     inserts = []
         
@@ -1350,7 +1418,7 @@ class Command(BaseCommand):
             self.executeTransaction(sa.text(insert_query), *inserts)
             counter += len(inserts)
         
-        self.stdout.write(self.style.SUCCESS('Inserted {0} event participants\n'.format(counter)))
+        self.log_message('Inserted {0} event participants\n'.format(counter), style='SUCCESS')
 
     def insert_raw_eventdocuments(self, delete=False):
         pk_cols = ['event_id', 'url']
@@ -1395,7 +1463,7 @@ class Command(BaseCommand):
                     
                     counter += 10000
 
-                    self.stdout.write('Inserted {} raw event documents'.format(counter))
+                    self.log_message('Inserted {} raw event documents'.format(counter))
 
                     inserts = []
         
@@ -1404,7 +1472,7 @@ class Command(BaseCommand):
             
             counter += len(inserts)
 
-        self.stdout.write(self.style.SUCCESS('Inserted {0} event documents\n'.format(counter)))
+        self.log_message('Inserted {0} event documents\n'.format(counter), style='SUCCESS')
     
     def insert_raw_event_agenda_items(self, delete=False):
         pk_cols = ['event_id', '"order"']
@@ -1470,7 +1538,7 @@ class Command(BaseCommand):
                     
                     counter += 10000
                     
-                    self.stdout.write('Inserted {} raw event agenda items'.format(counter))
+                    self.log_message('Inserted {} raw event agenda items'.format(counter))
 
                     inserts = []
         
@@ -1479,7 +1547,7 @@ class Command(BaseCommand):
             
             counter += len(inserts)
 
-        self.stdout.write(self.style.SUCCESS('Inserted {0} raw event agenda items\n'.format(counter)))
+        self.log_message('Inserted {0} raw event agenda items\n'.format(counter), style='SUCCESS')
 
     ################################
     ###                          ###
@@ -1555,7 +1623,7 @@ class Command(BaseCommand):
         
         change_count = self.connection.execute('select count(*) from change_{}'.format(entity_type)).first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed {1}\n'.format(change_count, entity_type)))
+        self.log_message('Found {0} changed {1}'.format(change_count, entity_type), style='SUCCESS')
 
     def update_existing_organizations(self):
 
@@ -1665,7 +1733,7 @@ class Command(BaseCommand):
             
         change_count = self.connection.execute('select count(*) from change_membership').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed membership\n'.format(change_count)))
+        self.log_message('Found {0} changed membership'.format(change_count), style='SUCCESS')
     
     def update_existing_bills(self):
         cols = [
@@ -1743,7 +1811,7 @@ class Command(BaseCommand):
         self.executeTransaction(update_dat)
         change_count = self.connection.execute('select count(*) from change_action').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed action\n'.format(change_count)))
+        self.log_message('Found {0} changed action'.format(change_count), style='SUCCESS')
     
     def update_existing_action_related_entity(self):
         self.executeTransaction('DROP TABLE IF EXISTS change_actionrelatedentity')
@@ -1802,7 +1870,7 @@ class Command(BaseCommand):
             
         change_count = self.connection.execute('select count(*) from change_actionrelatedentity').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed action related entities\n'.format(change_count)))
+        self.log_message('Found {0} changed action related entities'.format(change_count), style='SUCCESS')
 
     def update_existing_sponsorships(self):
         self.executeTransaction('DROP TABLE IF EXISTS change_sponsorship')
@@ -1866,7 +1934,7 @@ class Command(BaseCommand):
             
         change_count = self.connection.execute('select count(*) from change_sponsorship').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed sponsorships\n'.format(change_count)))
+        self.log_message('Found {0} changed sponsorships'.format(change_count), style='SUCCESS')
 
     def update_existing_billdocuments(self):
         self.executeTransaction('DROP TABLE IF EXISTS change_billdocument')
@@ -1925,7 +1993,7 @@ class Command(BaseCommand):
             
         change_count = self.connection.execute('select count(*) from change_billdocument').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed bill documents\n'.format(change_count)))
+        self.log_message('Found {0} changed bill documents'.format(change_count), style='SUCCESS')
 
     def update_existing_events(self):
         cols = [
@@ -2001,9 +2069,9 @@ class Command(BaseCommand):
         self.executeTransaction(find_changes)
         self.executeTransaction(update_dat)
             
-        self.connection.execute('select count(*) from change_eventparticipant').first().count
+        change_count = self.connection.execute('select count(*) from change_eventparticipant').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed event participants\n'.format(change_count)))
+        self.log_message('Found {0} changed event participants'.format(change_count), style='SUCCESS')
     
     def update_existing_eventdocuments(self):
         self.executeTransaction('DROP TABLE IF EXISTS change_eventdocument')
@@ -2056,7 +2124,7 @@ class Command(BaseCommand):
 
         change_count = self.connection.execute('select count(*) from change_eventdocument').first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} changed event documents\n'.format(change_count)))
+        self.log_message('Found {0} changed event documents'.format(change_count), style='SUCCESS')
     
     def update_existing_event_agenda_items(self):
         self.executeTransaction('DROP TABLE IF EXISTS change_eventagendaitem')
@@ -2110,7 +2178,7 @@ class Command(BaseCommand):
             
         change_count = self.connection.execute('select count(*) from change_eventagendaitem').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} changed event agenda items\n'.format(change_count)))
+        self.log_message('Found {0} changed event agenda items'.format(change_count), style='SUCCESS')
 
     ########################
     ###                  ###
@@ -2159,7 +2227,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_{}'.format(entity_type)).first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} new {1}\n'.format(new_count, entity_type)))
+        self.log_message('Found {0} new {1}'.format(new_count, entity_type), style='SUCCESS')
     
     def add_new_organizations(self):
         cols = [
@@ -2265,7 +2333,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_membership').first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} new membership\n'.format(new_count)))
+        self.log_message('Found {0} new membership'.format(new_count), style='SUCCESS')
     
     def add_new_bills(self):
         cols = [
@@ -2343,7 +2411,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_action').first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} new action\n'.format(new_count)))
+        self.log_message('Found {0} new action'.format(new_count), style='SUCCESS')
     
     def add_new_action_related_entity(self):
         self.executeTransaction('DROP TABLE IF EXISTS new_actionrelatedentity')
@@ -2401,7 +2469,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_actionrelatedentity').first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} new action related entities\n'.format(new_count)))
+        self.log_message('Found {0} new action related entities'.format(new_count), style='SUCCESS')
 
     def add_new_sponsorships(self):
         self.executeTransaction('DROP TABLE IF EXISTS new_sponsorship')
@@ -2463,7 +2531,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_sponsorship').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new sponsorships\n'.format(new_count)))
+        self.log_message('Found {0} new sponsorships'.format(new_count), style='SUCCESS')
 
     def add_new_billdocuments(self):
         self.executeTransaction('DROP TABLE IF EXISTS new_billdocument')
@@ -2520,7 +2588,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_billdocument').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new bill documents\n'.format(new_count)))
+        self.log_message('Found {0} new bill documents'.format(new_count), style='SUCCESS')
     
     def add_new_events(self):
         cols = [
@@ -2598,7 +2666,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_eventparticipant').first().count
         
-        self.stdout.write(self.style.SUCCESS('Found {0} new event participants\n'.format(new_count)))
+        self.log_message('Found {0} new event participants'.format(new_count), style='SUCCESS')
 
     def add_new_eventdocuments(self):
         self.executeTransaction('DROP TABLE IF EXISTS new_eventdocument')
@@ -2650,7 +2718,7 @@ class Command(BaseCommand):
 
         new_count = self.connection.execute('select count(*) from new_eventdocument').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new event documents\n'.format(new_count)))
+        self.log_message('Found {0} new event documents'.format(new_count), style='SUCCESS')
 
     def add_new_event_agenda_items(self):
         self.executeTransaction('DROP TABLE IF EXISTS new_eventagendaitem')
@@ -2702,13 +2770,12 @@ class Command(BaseCommand):
         self.executeTransaction(insert_new)
         new_count = self.connection.execute('select count(*) from new_eventagendaitem').first().count
 
-        self.stdout.write(self.style.SUCCESS('Found {0} new event agenda items\n'.format(new_count)))
+        self.log_message('Found {0} new event agenda items'.format(new_count), style='SUCCESS')
 
     
     def populate_council_district_shapes(self):
-
-        print("\n\npopulating boundaries: %s" % settings.BOUNDARY_SET)
-
+        
+        self.log_message('Populating boundaries ...')
         # grab boundary listing
         bndry_set_url = bndry_base_url + '/boundaries/' + settings.BOUNDARY_SET
         r = requests.get(bndry_set_url + '/?limit=0')
@@ -2730,6 +2797,9 @@ class Command(BaseCommand):
                 division_ocd_id_fragment = ':' + bndry_json['external_id']
                 Post.objects.filter(
                     division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
+            
+            print('.', end='')
+            sys.stdout.flush()
 
     def executeTransaction(self, query, raise_exc=True, *args, **kwargs):
         trans = self.connection.begin()
