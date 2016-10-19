@@ -96,13 +96,14 @@ class Command(BaseCommand):
         
         self.connection = engine.connect()
         
+        self.downloads_folder = 'downloads'
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
-        
-        self.organizations_folder = os.path.join(self.this_folder, 'organizations', settings.APP_NAME)
-        self.posts_folder = os.path.join(self.this_folder, 'posts', settings.APP_NAME)
-        self.bills_folder = os.path.join(self.this_folder, 'bills', settings.APP_NAME)
-        self.people_folder = os.path.join(self.this_folder, 'people', settings.APP_NAME)
-        self.events_folder = os.path.join(self.this_folder, 'events', settings.APP_NAME)
+
+        self.organizations_folder = os.path.join(self.this_folder, 'organizations')
+        self.posts_folder = os.path.join(self.this_folder, 'posts')
+        self.bills_folder = os.path.join(self.this_folder, 'bills')
+        self.people_folder = os.path.join(self.this_folder, 'people')
+        self.events_folder = os.path.join(self.this_folder, 'events')
         
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
