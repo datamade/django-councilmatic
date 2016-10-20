@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-councilmatic',
-    version='0.6.2',
+    version='0.6.3',
     packages=['councilmatic_core'],
     include_package_data=True,
     license='MIT License',  # example license
@@ -21,6 +21,7 @@ setup(
     install_requires=['requests==2.7.0',
                       'pytz==2015.4',
                       'django-haystack==2.5.0',
+                      'Django<1.10',
                       'pysolr==3.3.3',
                       'python-dateutil==2.4.2',
                       'SQLAlchemy==1.1.2'],
