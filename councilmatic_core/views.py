@@ -247,6 +247,8 @@ class CommitteeDetailView(DetailView):
 
         committee = context['committee']
         context['memberships'] = committee.memberships.all()
+        
+        description = None
 
         if getattr(settings, 'COMMITTEE_DESCRIPTIONS', None):
             description = settings.COMMITTEE_DESCRIPTIONS.get(committee.slug)
@@ -254,11 +256,13 @@ class CommitteeDetailView(DetailView):
 
         seo = {}
         seo.update(settings.SITE_META)
+        
         if description:
             seo['site_desc'] = description
         else:
             seo['site_desc'] = "See what %s's %s has been up to!" % (
                 settings.CITY_COUNCIL_NAME, committee.name)
+        
         seo['title'] = '%s - %s' % (committee.name,
                                     settings.SITE_META['site_name'])
         context['seo'] = seo

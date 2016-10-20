@@ -726,7 +726,6 @@ class EventDocument(Document):
     def __init__(self, *args, **kwargs):
         super(EventDocument, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
-        self.document = override_relation(self.document)
 
 
 class LegislativeSession(models.Model):
