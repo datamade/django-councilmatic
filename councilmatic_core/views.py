@@ -1,3 +1,10 @@
+import re
+import json
+import itertools
+from operator import attrgetter
+import urllib
+from datetime import date, timedelta, datetime
+
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.views.generic import TemplateView, ListView, DetailView
@@ -6,17 +13,14 @@ from django.db.models import Max, Min
 from django.core.cache import cache
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
-from .models import Person, Bill, Organization, Event, Post
+from django.utils import timezone
+
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
-from datetime import date, timedelta, datetime
-import itertools
-from operator import attrgetter
-import urllib
 
 import pytz
-import re
-import json
+
+from .models import Person, Bill, Organization, Event, Post
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
@@ -107,8 +111,11 @@ class IndexView(TemplateView):
         recently_passed = []
         # go back in time at 10-day intervals til you find 3 passed bills
         for i in range(0, -100, -10):
-            begin = date.today() + timedelta(days=i)
-            end = date.today() + timedelta(days=i - 10)
+            
+            today = timezone.now()
+
+            begin = today + timedelta(days=i)
+            end = today + timedelta(days=i - 10)
 
             leg_in_range = self.bill_model.objects\
                 .exclude(last_action_date=None)\

@@ -1,10 +1,14 @@
-from django.db import models
 from datetime import datetime
-from django.core.exceptions import ImproperlyConfigured
-import pytz
-from django.conf import settings
 import inspect
 import importlib
+
+import pytz
+
+from django.db import models
+from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.utils import timezone
 
 if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
     raise ImproperlyConfigured(
@@ -122,7 +126,8 @@ class Person(models.Model):
     def link_html(self):
         # if person is a city council member
         if self.ocd_id and self.slug:
-            return '<a href="/person/' + self.slug + '/" title="More on ' + self.name + '">' + self.name + '</a>'
+            link_path = reverse('person', args=(self.slug,))
+            return '<a href="{0}" title="More on {1}">{1}</a>'.format(link_path, self.name)
         # otherwise, don't make a link
         else:
             return self.name
@@ -371,7 +376,7 @@ class Bill(models.Model):
     @property
     def unique_related_upcoming_events(self):
         events = [r.event for r in self.related_agenda_items.filter(
-            event__start_time__gte=datetime.now()).all()]
+            event__start_time__gte=timezone.now()).all()]
         return list(set(events))
 
 
@@ -420,7 +425,7 @@ class Organization(models.Model):
         # need to look up event participants by name
         events = Event.objects\
                     .filter(participants__entity_type='organization', participants__entity_name=self.name)\
-                    .filter(start_time__gt=datetime.now())\
+                    .filter(start_time__gt=timezone.now())\
                     .order_by('start_time')\
                     .all()
         return events
@@ -441,15 +446,20 @@ class Organization(models.Model):
 
     @property
     def link_html(self):
-        # make link to committee if committee
+        
+        link_fmt = '<a href="{0}">{1}</a>'
+        
         if self.classification == 'committee':
-            return '<a href="/committee/' + self.slug + '/">' + self.name + '</a>'
-        # link to the council members page if its the council
+            
+            link_path = reverse('committee', args=(self.slug,))
+            return link_fmt.format(link_path, self.name)
+        
         if self.classification == 'legislature':
-            return '<a href="/council-members/">' + self.name + '</a>'
-        # just return text if executive
-        else:
-            return self.name
+            
+            link_path = reverse('council_members')
+            return link_fmt.format(link_path, self.name)
+        
+        return self.name
 
 
 class Action(models.Model):
@@ -634,11 +644,11 @@ class Event(models.Model):
 
     @property
     def event_page_url(self):
-        return '/event/%s' % self.slug
+        return reverse('event_detail', args=(self.slug,))
 
     @property
     def link_html(self):
-        return '<a href="' + self.event_page_url + '/" title="View Event Details">' + self.name + '</a>'
+        return '<a href="{0}" title="View Event Details">{1}</a>'.format(self.event_page_url, self.name)
 
     @property
     def clean_agenda_items(self):
@@ -656,7 +666,7 @@ class Event(models.Model):
     def next_city_council_meeting(cls):
         if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
             return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                .filter(start_time__gt=datetime.now()).order_by('start_time').first()
+                .filter(start_time__gt=timezone.now()).order_by('start_time').first()
         else:
             return None
 
@@ -664,13 +674,13 @@ class Event(models.Model):
     def most_recent_past_city_council_meeting(cls):
         if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
             return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                .filter(start_time__lt=datetime.now()).order_by('-start_time').first()
+                .filter(start_time__lt=timezone.now()).order_by('-start_time').first()
         else:
             return None
 
     @classmethod
     def upcoming_committee_meetings(cls):
-        return cls.objects.filter(start_time__gt=datetime.now())\
+        return cls.objects.filter(start_time__gt=timezone.now())\
                   .exclude(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
                   .order_by('start_time').all()[:3]
 
