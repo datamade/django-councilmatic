@@ -93,11 +93,11 @@
 			{% with selected_facets=request.GET.selected_facets %}
 			{% if selected_facets %}
 			<a href="/search/rss/?q={{request.GET.q}}&selected_facets={{request.GET.selected_facets}}" title="RSS feed">
-			{% else %}	
+			{% else %}
 				<a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
 			{% endif %}
-			{% endwith %}		
-			<i class="fa fa-rss-square" aria-hidden="true"></i></a>			
+			{% endwith %}
+			<i class="fa fa-rss-square" aria-hidden="true"></i></a>
 		</h3>
             {% endif %}
 
@@ -134,9 +134,11 @@
                 </div>
             </div>
 
-            <p class="small text-muted condensed">
-                <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
-            </p>
+            {% if result.object.last_action_date %}
+                <p class="small text-muted condensed">
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                </p>
+            {% endif %}
 
             {% if result.object.primary_sponsor %}
                 <p class="small text-muted condensed">
