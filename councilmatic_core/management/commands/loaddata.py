@@ -2807,8 +2807,10 @@ class Command(BaseCommand):
             print('.', end='')
             sys.stdout.flush()
 
-    def executeTransaction(self, query, raise_exc=True, *args, **kwargs):
+    def executeTransaction(self, query, *args, **kwargs):
         trans = self.connection.begin()
+
+        raise_exc = kwargs.get('raise_exc', True)
 
         try:
             self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
