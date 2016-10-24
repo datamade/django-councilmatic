@@ -8,6 +8,7 @@ from django.db import models
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.core.urlresolvers import NoReverseMatch
 from django.utils import timezone
 
 if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
@@ -124,13 +125,18 @@ class Person(models.Model):
 
     @property
     def link_html(self):
-        # if person is a city council member
+
         if self.ocd_id and self.slug:
-            link_path = reverse('person', args=(self.slug,))
+            
+            try:
+                link_path = reverse('{}:person'.format(settings.APP_NAME), args=(self.slug,))
+            
+            except NoReverseMatch:
+                link_path = reverse('person', args=(self.slug,))
+            
             return '<a href="{0}" title="More on {1}">{1}</a>'.format(link_path, self.name)
-        # otherwise, don't make a link
-        else:
-            return self.name
+        
+        return self.name
 
     @property
     def primary_sponsorships(self):
@@ -448,15 +454,23 @@ class Organization(models.Model):
     def link_html(self):
         
         link_fmt = '<a href="{0}">{1}</a>'
-        
+
         if self.classification == 'committee':
             
-            link_path = reverse('committee', args=(self.slug,))
+            try:
+                link_path = reverse('{}:committee'.format(settings.APP_NAME), args=(self.slug,))
+            except NoReverseMatch:
+                link_path = reverse('committee', args=(self.slug,))
+            
             return link_fmt.format(link_path, self.name)
         
         if self.classification == 'legislature':
             
-            link_path = reverse('council_members')
+            try:
+                link_path = reverse('{}:council_members'.format(settings.APP_NAME))
+            except NoReverseMatch:
+                link_path = reverse('council_members')
+            
             return link_fmt.format(link_path, self.name)
         
         return self.name
@@ -644,7 +658,13 @@ class Event(models.Model):
 
     @property
     def event_page_url(self):
-        return reverse('event_detail', args=(self.slug,))
+        
+        try:
+            link = reverse('{}:event_detail'.format(settings.APP_NAME), args=(self.slug,))
+        except NoReverseMatch:
+            link = reverse('event_detail', args=(self.slug,))
+
+        return link
 
     @property
     def link_html(self):
