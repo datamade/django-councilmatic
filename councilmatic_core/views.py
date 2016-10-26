@@ -389,7 +389,7 @@ class PersonDetailView(DetailView):
 
         context['user_subscribed'] = False
         subscriptions = PersonSubscription.objects.all()
-        print(subscriptions)
+
         if self.request.user.is_authenticated():
             user = self.request.user
             context['user'] = user

@@ -143,9 +143,8 @@ def bill_unsubscribe(request, slug):
 @login_required(login_url='/login/')
 def person_subscribe(request, slug):
     # using the model PersonSubscription using the current user and the Person defined by slug
-    print(slug)
     person = Person.objects.get(slug=slug)
-    print(request.user)
+
     (person_subscription, created) = PersonSubscription.objects.get_or_create(user=request.user, person=person)
 
     return HttpResponse('person_subscribe()d')
