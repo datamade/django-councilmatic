@@ -30,19 +30,19 @@
             </div>
             <ul id="nav-items">
                 <li>
-                    <a href="/about/">About</a>
+                    <a href="{% url 'about' %}">About</a>
                 </li>
                 <li>
-                    <a href='/council-members/'>{{ CITY_VOCAB.COUNCIL_MEMBERS }}</a>
+                    <a href='{% url 'council_members' %}'>{{ CITY_VOCAB.COUNCIL_MEMBERS }}</a>
                 </li>
                 <li>
-                    <a href='/committees/'>Committees</a>
+                    <a href='{% url 'committees' %}'>Committees</a>
                 </li>
                 <li>
-                    <a href='/events/'>{{ CITY_VOCAB.EVENTS }}</a>
+                    <a href='{% url 'events' %}'>{{ CITY_VOCAB.EVENTS }}</a>
                 </li>
                 <li>
-                    <a href="/search/">Legislation</a>
+                    <a href="{% url 'search' %}">Legislation</a>
                 </li>
         {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
         <li>

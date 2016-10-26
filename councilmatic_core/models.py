@@ -1,10 +1,15 @@
-from django.db import models
 from datetime import datetime
-from django.core.exceptions import ImproperlyConfigured
-import pytz
-from django.conf import settings
 import inspect
 import importlib
+from django.utils import timezone
+
+import pytz
+
+from django.db import models
+from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.core.urlresolvers import NoReverseMatch
 from django.utils import timezone
 
 if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
@@ -50,16 +55,19 @@ def override_relation(base_model):
 
     return overridden
 
+def get_uuid():
+    import uuid
+    return str(uuid.uuid4())
 
 class Person(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True, null=True)
+    ocd_id = models.CharField(max_length=100, unique=True, default=get_uuid, primary_key=True)
     name = models.CharField(max_length=100)
-    headshot = models.CharField(max_length=255, blank=True)
-    source_url = models.CharField(max_length=255, blank=True)
-    source_note = models.CharField(max_length=255, blank=True)
-    website_url = models.CharField(max_length=255, blank=True)
-    email = models.CharField(max_length=255, blank=True)
-    slug = models.CharField(max_length=255, unique=True, null=True)
+    headshot = models.CharField(max_length=255, blank=True, null=True)
+    source_url = models.CharField(max_length=255, blank=True, null=True)
+    source_note = models.CharField(max_length=255, blank=True, null=True)
+    website_url = models.CharField(max_length=255, blank=True, null=True)
+    email = models.CharField(max_length=255, blank=True, null=True)
+    slug = models.CharField(max_length=255, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -118,12 +126,18 @@ class Person(models.Model):
 
     @property
     def link_html(self):
-        # if person is a city council member
+
         if self.ocd_id and self.slug:
-            return '<a href="/person/' + self.slug + '/" title="More on ' + self.name + '">' + self.name + '</a>'
-        # otherwise, don't make a link
-        else:
-            return self.name
+            
+            try:
+                link_path = reverse('{}:person'.format(settings.APP_NAME), args=(self.slug,))
+            
+            except NoReverseMatch:
+                link_path = reverse('person', args=(self.slug,))
+            
+            return '<a href="{0}" title="More on {1}">{1}</a>'.format(link_path, self.name)
+        
+        return self.name
 
     @property
     def primary_sponsorships(self):
@@ -134,18 +148,18 @@ class Person(models.Model):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
-            return None
+            return []
 
     @property
     def member_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
-            return None
+            return []
 
 
 class Bill(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     ocd_created_at = models.DateTimeField(default=None)
     ocd_updated_at = models.DateTimeField(default=None)
     description = models.TextField()
@@ -154,16 +168,16 @@ class Bill(models.Model):
     classification = models.CharField(max_length=100)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
-    subject = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=255, blank=True, null=True)
 
     _from_organization = models.ForeignKey('Organization',
                                            related_name='bills',
                                            null=True,
                                            db_column='from_organization_id')
 
-    full_text = models.TextField(blank=True)
-    ocr_full_text = models.TextField(blank=True)
-    abstract = models.TextField(blank=True)
+    full_text = models.TextField(blank=True, null=True)
+    ocr_full_text = models.TextField(blank=True, null=True)
+    abstract = models.TextField(blank=True, null=True)
     last_action_date = models.DateTimeField(default=None, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -221,7 +235,7 @@ class Bill(models.Model):
         """
         returns all actions ordered by date in descending order
         """
-        return self.actions.all().order_by('-order') if self.actions.all() else None
+        return self.actions.all().order_by('-order')
     
     @property
     def current_action(self):
@@ -280,7 +294,7 @@ class Bill(models.Model):
 
             return list(orgs)
         else:
-            return None
+            return []
 
     @property
     def topics(self):
@@ -289,7 +303,7 @@ class Bill(models.Model):
 
         override this in custom subclass for richer topic logic
         """
-        return None
+        return []
 
     @property
     def addresses(self):
@@ -374,12 +388,12 @@ class Bill(models.Model):
 
 
 class Organization(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     name = models.CharField(max_length=255)
     classification = models.CharField(max_length=255, null=True)
     _parent = models.ForeignKey(
         'self', related_name='children', null=True, db_column='parent_id')
-    source_url = models.CharField(max_length=255, blank=True)
+    source_url = models.CharField(max_length=255, blank=True, null=True)
     slug = models.CharField(max_length=255, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -401,7 +415,7 @@ class Organization(models.Model):
     def recent_activity(self):
         # setting arbitrary max of 300 b/c otherwise page will take forever to
         # load
-        return self.actions.order_by('-date', '-_bill__identifier', '-order')[:300] if self.actions.all() else None
+        return self.actions.order_by('-date', '-_bill__identifier', '-order')[:300]
 
     @property
     def recent_events(self):
@@ -428,31 +442,44 @@ class Organization(models.Model):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
-            return None
+            return []
 
     @property
     def non_chair_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
-            return None
+            return []
 
     @property
     def link_html(self):
-        # make link to committee if committee
+        
+        link_fmt = '<a href="{0}">{1}</a>'
+
         if self.classification == 'committee':
-            return '<a href="/committee/' + self.slug + '/">' + self.name + '</a>'
-        # link to the council members page if its the council
+            
+            try:
+                link_path = reverse('{}:committee'.format(settings.APP_NAME), args=(self.slug,))
+            except NoReverseMatch:
+                link_path = reverse('committee', args=(self.slug,))
+            
+            return link_fmt.format(link_path, self.name)
+        
         if self.classification == 'legislature':
-            return '<a href="/council-members/">' + self.name + '</a>'
-        # just return text if executive
-        else:
-            return self.name
+            
+            try:
+                link_path = reverse('{}:council_members'.format(settings.APP_NAME))
+            except NoReverseMatch:
+                link_path = reverse('council_members')
+            
+            return link_fmt.format(link_path, self.name)
+        
+        return self.name
 
 
 class Action(models.Model):
     date = models.DateTimeField(default=None)
-    classification = models.CharField(max_length=100)
+    classification = models.CharField(max_length=100, null=True)
     description = models.TextField(blank=True)
 
     _organization = models.ForeignKey('Organization',
@@ -529,8 +556,8 @@ class ActionRelatedEntity(models.Model):
         'Action', related_name='related_entities', db_column='action_id', null=True)
     entity_type = models.CharField(max_length=100)
     entity_name = models.CharField(max_length=255)
-    organization_ocd_id = models.CharField(max_length=100, blank=True)
-    person_ocd_id = models.CharField(max_length=100, blank=True)
+    organization_ocd_id = models.CharField(max_length=100, blank=True, null=True)
+    person_ocd_id = models.CharField(max_length=100, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
@@ -539,13 +566,13 @@ class ActionRelatedEntity(models.Model):
 
 
 class Post(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     label = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
     _organization = models.ForeignKey(
         'Organization', related_name='posts', db_column='organization_id', null=True)
-    division_ocd_id = models.CharField(max_length=255)
-    shape = models.TextField(blank=True)
+    shape = models.TextField(blank=True, null=True)
+    division_ocd_id = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
@@ -613,7 +640,7 @@ class Sponsorship(models.Model):
 
 
 class Event(models.Model):
-    ocd_id = models.CharField(max_length=100, unique=True)
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
     ocd_created_at = models.DateTimeField(default=None)
     ocd_updated_at = models.DateTimeField(default=None)
     name = models.CharField(max_length=255)
@@ -632,11 +659,17 @@ class Event(models.Model):
 
     @property
     def event_page_url(self):
-        return '/event/%s' % self.slug
+        
+        try:
+            link = reverse('{}:event_detail'.format(settings.APP_NAME), args=(self.slug,))
+        except NoReverseMatch:
+            link = reverse('event_detail', args=(self.slug,))
+
+        return link
 
     @property
     def link_html(self):
-        return '<a href="' + self.event_page_url + '/" title="View Event Details">' + self.name + '</a>'
+        return '<a href="{0}" title="View Event Details">{1}</a>'.format(self.event_page_url, self.name)
 
     @property
     def clean_agenda_items(self):
@@ -654,7 +687,7 @@ class Event(models.Model):
     def next_city_council_meeting(cls):
         if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
             return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                .filter(start_time__gt=datetime.now(app_timezone)).order_by('start_time').first()
+                .filter(start_time__gt=timezone.now()).order_by('start_time').first()
         else:
             return None
 
@@ -662,13 +695,13 @@ class Event(models.Model):
     def most_recent_past_city_council_meeting(cls):
         if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
             return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                .filter(start_time__lt=datetime.now(app_timezone)).order_by('-start_time').first()
+                .filter(start_time__lt=timezone.now()).order_by('-start_time').first()
         else:
             return None
 
     @classmethod
     def upcoming_committee_meetings(cls):
-        return cls.objects.filter(start_time__gt=datetime.now(app_timezone))\
+        return cls.objects.filter(start_time__gt=timezone.now())\
                   .exclude(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
                   .order_by('start_time').all()[:3]
 
@@ -689,36 +722,26 @@ class EventAgendaItem(models.Model):
     event = models.ForeignKey('Event', related_name='agenda_items')
     order = models.IntegerField()
     description = models.TextField()
+    bill = models.ForeignKey('Bill', related_name='related_agenda_items', null=True)
+    note = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(EventAgendaItem, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
-
-
-class AgendaItemBill(models.Model):
-    agenda_item = models.ForeignKey(
-        'EventAgendaItem', related_name='related_bills')
-    bill = models.ForeignKey('Bill', related_name='related_agenda_items')
-    note = models.CharField(max_length=255)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __init__(self, *args, **kwargs):
-        super(AgendaItemBill, self).__init__(*args, **kwargs)
-        self.agenda_item = override_relation(self.agenda_item)
         self.bill = override_relation(self.bill)
 
 
 class Document(models.Model):
     note = models.TextField()
     url = models.TextField(blank=True)
-    full_text = models.TextField(blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    full_text = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        abstract = True
 
-
-class BillDocument(models.Model):
+class BillDocument(Document):
     bill = models.ForeignKey('Bill', related_name='documents')
-    document = models.ForeignKey('Document', related_name='bills')
     document_type = models.CharField(
         max_length=255, choices=bill_document_choices)
     updated_at = models.DateTimeField(auto_now=True)
@@ -726,22 +749,18 @@ class BillDocument(models.Model):
     def __init__(self, *args, **kwargs):
         super(BillDocument, self).__init__(*args, **kwargs)
         self.bill = override_relation(self.bill)
-        self.document = override_relation(self.document)
 
 
-class EventDocument(models.Model):
+class EventDocument(Document):
     event = models.ForeignKey('Event', related_name='documents')
-    document = models.ForeignKey('Document', related_name='events')
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(EventDocument, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
-        self.document = override_relation(self.document)
 
 
 class LegislativeSession(models.Model):
-    identifier = models.CharField(max_length=255)
+    identifier = models.CharField(max_length=255, primary_key=True)
     jurisdiction_ocd_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     updated_at = models.DateTimeField(auto_now=True)

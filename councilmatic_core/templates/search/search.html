@@ -90,14 +90,14 @@
         <div class="col-sm-8">
             {% if query %}
                 <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
-            
+
             {% if selected_facets %}
             <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}"
             title="RSS feed">
-            {% else %}  
+            {% else %}
                 <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
             {% endif %}
-            
+
             <i class="fa fa-rss-square" aria-hidden="true"></i></a>
 
             {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
@@ -112,15 +112,13 @@
                 <!-- <small><a href="/search/unsubscribe/?q={{request.GET.q}}">[REMOVE ALERT]</a></small>
                 <small><a href="/search/subscribe/?q={{request.GET.q}}">[CREATE ALERT]</a></small> -->
                 {% endif %}
-            {% endif %}
 
-                
         </h3>
-                
-        
+
+
             {% endif %}
 
-        
+
         {% for result in page.object_list %}
 
             <!-- Legislation result -->
@@ -154,9 +152,11 @@
                 </div>
             </div>
 
-            <p class="small text-muted condensed">
-                <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
-            </p>
+            {% if result.object.last_action_date %}
+                <p class="small text-muted condensed">
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                </p>
+            {% endif %}
 
             {% if result.object.primary_sponsor %}
                 <p class="small text-muted condensed">
@@ -242,16 +242,16 @@
     $(document).ready(function() {
             $("#searchSubscribe").click(function() {
             if ($(this).hasClass('createSubscription')) {
-		posturl2 = "/search_check_subscription/"
-		facets2 = JSON.stringify({{selected_facets|safe}});
+        posturl2 = "/search_check_subscription/"
+        facets2 = JSON.stringify({{selected_facets|safe}});
                 stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
-			function(data, status) {
-				console.log("returned from post with data: ", data, "status:", status);
-			}).error(function() {
-				console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
-			}), 
+            function(data, status) {
+                console.log("returned from post with data: ", data, "status:", status);
+            }).error(function() {
+                console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
+            }),
 
-		posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
+        posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
                 facets =  JSON.stringify({{selected_facets|safe}});
                 $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
                     console.log("Error subscribing to  interest {{request.GET.q}} with {{selected_facets}}" );
@@ -273,11 +273,11 @@
                 alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
             }
         }
-    )});        
+    )});
     </script>
-    
 
-    
+
+
     <script>
         $(function() {
             // filters are collapsed be default b/c they are long
@@ -291,20 +291,20 @@
                     $(this).find('i').removeClass("fa-plus").addClass("fa-minus");
                 }
             });
-  	    var timestamp = Date.now();
-		
+        var timestamp = Date.now();
+
             var existing_q = decodeURIComponent("{{ q_filters }}").replace(/&amp;/g, '&').replace(/\+/g, ' ');
 
             $(".filter-value").click(function() {
                 var addtl_filter = $(this).attr('data');
 
                 if(existing_q){
-			window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
-			
+            window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
+
                 }
                 else{
-			window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
-			
+            window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
+
                 };
 
             });
@@ -319,7 +319,7 @@
                 });
 
                 window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
-		    
+
 
             });
 

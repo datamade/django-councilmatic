@@ -9,7 +9,7 @@ admin.autodiscover() # XXX necessary?
 
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
-    url(r'^about/$', views.AboutView.as_view(), name='abouts'),
+    url(r'^about/$', views.AboutView.as_view(), name='about'),
     url(r'^committees/$', views.CommitteesView.as_view(), name='committees'),
     url(r'^council-members/$', views.CouncilMembersView.as_view(),
         name='council_members'),

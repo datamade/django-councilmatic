@@ -11,7 +11,7 @@
                     {{ legislation.friendly_name }}
                     <small>
                             {{ legislation.inferred_status | inferred_status_label | safe }}
-                <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>               
+                <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     </small>
             {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
             <small>
@@ -44,6 +44,7 @@
         <div class="col-sm-8 no-pad-mobile">
             <br/>
 
+        {% block description %}
             {% if legislation.abstract %}
                 <p class="small text-muted">
                     <i>{{ legislation.description }} </i>
@@ -57,6 +58,7 @@
                     {{ legislation.description }}
                 </p>
             {% endif %}
+            {% endblock %}
 
             <p class="small">
                 <a href='{{legislation.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
@@ -195,7 +197,7 @@
                 <ul>
                     {% for doc in legislation.attachments %}
                         <li>
-                            <a href="{{doc.document.url}}" target="blank">{{ doc.document.note }}</a>
+                            <a href="{{doc.url}}" target="blank">{{ doc.note }}</a>
                         </li>
                     {% endfor %}
                 </ul>
@@ -276,12 +278,14 @@
 
     <script type="application/ld+json">
     {
-      "@context": "http://schema.org",
-      "@type": "CreativeWork",
-      "author": "{{ CITY_COUNCIL_NAME }}",
-      "name": "{{ legislation.friendly_name }}",
-      "alternateName": "{{ legislation.identifier }}",
-      "description": "{{ legislation.description }}"
+    "@context": "http://schema.org",
+    "@type": "CreativeWork",
+    "sourceOrganization": "{{ CITY_COUNCIL_NAME }}",
+    "name": "{{ legislation.friendly_name }}",
+    "alternateName": ["{{ legislation.identifier }}", "{{ legislation.identifier.split|join:'' }}"],
+    {% if actions %}"datePublished": "{{actions.0.date|date:'Y-m-d'}}", {% endif %}
+    "description": "{{ legislation.description }}",
+    "text": "{% firstof legislation.full_text legislation.ocr_full_text %}"
     }
     </script>
 
@@ -319,11 +323,11 @@
                 alert("ID #billSubscribe has neither createSubscription or removeSubscription class");
             }
         }
-    )});        
-     
+    )});
+
     </script>
-        
-    
+
+
     <script>
 
         $("#committee-actions").DataTable({
