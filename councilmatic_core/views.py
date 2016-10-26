@@ -22,7 +22,7 @@ import pytz
 
 from .models import Person, Bill, Organization, Event, Post
 
-from notifications.models import BillSearchSubscription
+from notifications.models import BillSearchSubscription, PersonSubscription
 
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
@@ -53,7 +53,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
             q_filters = urllib.parse.urlencode(url_params)
 
         extra['q_filters'] = q_filters
-        
+
         selected_facets = {}
         for val in self.request.GET.getlist("selected_facets"):
             if val:
@@ -70,7 +70,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
         }
 
         if (settings.USING_NOTIFICATIONS):
-            extra['user_subscribed'] = False            
+            extra['user_subscribed'] = False
             if self.request.user.is_authenticated():
                 user = self.request.user
                 extra['user'] = user
@@ -81,7 +81,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
                     bss = user.billsearchsubscriptions.get(user=user, search_term=search_term, search_facets__exact=selected_facets)
                     extra['user_subscribed'] = True
                 except BillSearchSubscription.DoesNotExist:
-                    extra['user_subscribed'] = False                
+                    extra['user_subscribed'] = False
 
         return extra
 
@@ -136,7 +136,7 @@ class IndexView(TemplateView):
         recently_passed = []
         # go back in time at 10-day intervals til you find 3 passed bills
         for i in range(0, -100, -10):
-            
+
             today = timezone.now()
 
             begin = today + timedelta(days=i)
@@ -253,7 +253,7 @@ class BillDetailView(DetailView):
                                     settings.SITE_META['site_name'])
         context['seo'] = seo
 
-        context['user_subscribed'] = False            
+        context['user_subscribed'] = False
         if self.request.user.is_authenticated():
             user = self.request.user
             context['user'] = user
@@ -263,7 +263,7 @@ class BillDetailView(DetailView):
                 if bill == bas.bill:
                     context['user_subscribed'] = True
                     break
-        
+
         return context
 
 
@@ -290,7 +290,7 @@ class CommitteeDetailView(DetailView):
 
         committee = context['committee']
         context['memberships'] = committee.memberships.all()
-        
+
         description = None
 
         if getattr(settings, 'COMMITTEE_DESCRIPTIONS', None):
@@ -299,13 +299,13 @@ class CommitteeDetailView(DetailView):
 
         seo = {}
         seo.update(settings.SITE_META)
-        
+
         if description:
             seo['site_desc'] = description
         else:
             seo['site_desc'] = "See what %s's %s has been up to!" % (
                 settings.CITY_COUNCIL_NAME, committee.name)
-        
+
         seo['title'] = '%s - %s' % (committee.name,
                                     settings.SITE_META['site_name'])
         context['seo'] = seo
@@ -322,7 +322,7 @@ class CommitteeDetailView(DetailView):
             for ces in user.committeeeventsubscriptions.all():
                 if committee == ces.committee:
                     context['user_subscribed_events'] = True
-        
+
         return context
 
 @method_decorator(xframe_options_exempt, name='dispatch')
@@ -387,11 +387,14 @@ class PersonDetailView(DetailView):
 
             context['map_geojson'] = json.dumps(map_geojson)
 
-        context['user_subscribed'] = False            
+        context['user_subscribed'] = False
+        subscriptions = PersonSubscription.objects.all()
+        print(subscriptions)
         if self.request.user.is_authenticated():
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
+
             for ps in user.personsubscriptions.all():
                 if person == ps.person:
                     context['user_subscribed'] = True
@@ -457,7 +460,7 @@ class EventsView(ListView):
             context['this_year'] = int(current_year)
             context['this_start_date']= datetime(year=int(current_year), month=int(current_month), day=1)
 
-        context['user_subscribed'] = False            
+        context['user_subscribed'] = False
         if self.request.user.is_authenticated():
             user = self.request.user
             context['user'] = user

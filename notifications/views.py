@@ -33,7 +33,7 @@ from django.core.cache import cache
 from django.forms import EmailField
 from django.core.mail import EmailMessage
 
-from django.contrib.auth.models import User # XXX TODO: migrate to custom User model https://docs.djangoproject.com/en/1.9/topics/auth/customizing/ http://blog.mathandpencil.com/replacing-django-custom-user-models-in-an-existing-application/ https://www.caktusgroup.com/blog/2013/08/07/migrating-custom-user-model-django/ 
+from django.contrib.auth.models import User # XXX TODO: migrate to custom User model https://docs.djangoproject.com/en/1.9/topics/auth/customizing/ http://blog.mathandpencil.com/replacing-django-custom-user-models-in-an-existing-application/ https://www.caktusgroup.com/blog/2013/08/07/migrating-custom-user-model-django/
 
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -44,7 +44,7 @@ app_timezone = pytz.timezone(settings.TIME_ZONE)
 # notifications_emails_queue is woken up when an email should be sent to a notification subscriber.
 # XXX put these global variables in some more appropriate/official place such as notifications/__init__.py ?
 
-notifications_queue= django_rq.get_queue('notifications')  
+notifications_queue= django_rq.get_queue('notifications')
 notification_emails_queue= django_rq.get_queue('notification_emails')
 
 class CouncilmaticUserCreationForm(UserCreationForm):
@@ -110,7 +110,7 @@ class SubscriptionsManageView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(SubscriptionsManageView, self).get_context_data(*args, **kwargs)
-        
+
         context['person_subscriptions'] = self.request.user.personsubscriptions.all()
         context['committee_action_subscriptions'] = self.request.user.committeeactionsubscriptions.all()
         context['committee_event_subscriptions'] = self.request.user.committeeeventsubscriptions.all()
@@ -118,7 +118,7 @@ class SubscriptionsManageView(LoginRequiredMixin, TemplateView):
         context['bill_action_subscriptions'] = self.request.user.billactionsubscriptions.all()
         context['events_subscriptions'] = self.request.user.eventssubscriptions.all()
 
-        return context 
+        return context
 
 @csrf_exempt
 @login_required(login_url='/login/')
@@ -143,7 +143,9 @@ def bill_unsubscribe(request, slug):
 @login_required(login_url='/login/')
 def person_subscribe(request, slug):
     # using the model PersonSubscription using the current user and the Person defined by slug
+    print(slug)
     person = Person.objects.get(slug=slug)
+    print(request.user)
     (person_subscription, created) = PersonSubscription.objects.get_or_create(user=request.user, person=person)
 
     return HttpResponse('person_subscribe()d')
@@ -208,7 +210,7 @@ def search_unsubscribe(request):
         bss = BillSearchSubscription.objects.get(user=request.user,search_term__exact=q, search_facets__exact=selected_facets_json)
     except ObjectDoesNotExist as e:
         print ("error", e)     # XXX handle exceptions
-    bss.delete() 
+    bss.delete()
     return HttpResponse('unsubscribe()d')
 
 @csrf_exempt
@@ -230,7 +232,7 @@ def search_check_subscription(request):
 #def search_unsubscribe(request):
 #    try:
 #        # Make sure that the user in question is the owner of this search subscription by also looking up user=request.user
-#        bss = BillSearchSubscription.objects.get(user=request.user, id=search_subscription_id)    
+#        bss = BillSearchSubscription.objects.get(user=request.user, id=search_subscription_id)
 #    except ObjectDoesNotExist as e:
 #        print ("error", e)     # XXX handle exceptions
 #    bss.delete()
@@ -258,7 +260,7 @@ def worker_handle_notification_email(email_recipient_name, email_address, email_
     email_body = json.loads(email_body)
     #print(email_body)
     #print ("sending mail!!")
-    
+
     email = EmailMessage(
         email_subject,
         email_body,
@@ -277,9 +279,9 @@ def worker_handle_notification_email(email_recipient_name, email_address, email_
 def handle_person_subscriptions(user, update_since, updated_orgs_ids, updated_people_ids, created_bills_ids, updated_bills_ids, created_events_ids, updated_events_ids):
     person_updates = [] # list of bills sponsored by a person since subscriptions' last_datetime_updated
     # For person updates, we want to hear about any new sponsorships... so look for bills where the most recent date is
-    # also one with an Introduction. 
+    # also one with an Introduction.
     person_subscriptions = PersonSubscription.objects.filter(user=user)
-    # find all bills who have this person as a sponsor. 
+    # find all bills who have this person as a sponsor.
     for p_subscription in person_subscriptions:
         p = p_subscription.person
         #bills=Bill.objects.filter(id__in=updated_bills_ids, sponsorships___person__id = p.id)
@@ -310,14 +312,14 @@ def handle_committee_action_subscriptions(user, update_since, created_bills_ids,
     all_bills_ids = created_bills_ids + updated_bills_ids
 
     committee_action_updates = [] # list of actions taken by a committee since subscriptions' last_datetime_updated
-    
+
     for ca_subscription in committee_actions_subscriptions:
         c = ca_subscription.committee
         bills=Bill.objects.filter(
             Q(bill_id__in=all_bills_ids),
             Q(actions__organization = c) | Q(actions__related_organization = c))
         # given this, did any actions with this committee occur on the most recent date?
-        for bill in bills:            
+        for bill in bills:
             actions = bill.actions.all()
             # get the most recent date of all actions
             most_recent_date = max([a.date for a in actions])
@@ -342,7 +344,7 @@ def handle_committee_event_subscriptions(user, update_since, created_bills_ids, 
     bill_action_updates = [] # list of actions taken on a bill since subscriptions' last_datetime_updated
     events_updates = [] # list of events since subscriptions' last_datetime_updated
 
-    
+
     for ce_subscription in committee_event_subscriptions:
         c = ce_subscription.committee
         #events = Event.objects.filter(participants__entity_type='organization', participants__entity_name=self.name)
@@ -352,11 +354,11 @@ def handle_committee_event_subscriptions(user, update_since, created_bills_ids, 
             Q(participants__entity_type='organization') | Q(participants__entity_name=c.name)).order_by('-start_time')
         for event in created_events:
             committee_event_updates.append((c, event))
-        
+
         updated_events = Event.objects.filter(
             Q(id__in=updated_events_ids),
             Q(participants__entity_type='organization') | Q(participants__entity_name=c.name)).order_by('-start_time')
-        for event in updated_events:            
+        for event in updated_events:
             committee_event_updates.append((c, event)) #XXX for now, conflate created and updated events
     return committee_event_updates
 
@@ -376,13 +378,13 @@ def handle_bill_search_subscriptions(user, update_since, created_bills_ids, upda
     # XXX However, the problem is that with the current cron system, the indexes are not updated immediately
     # XXX with the new data.
     print ("NOT doing bill search subscriptions")
-    
+
     return bill_search_updates
 
 
 def handle_bill_action_subscriptions(user, update_since, created_bills_ids, updated_bills_ids, created_events_ids, updated_events_ids):
     print("doing bill action subscriptions for user" , user.username)
-    
+
     bill_action_updates = []
     # 1) Get all the bills in updated_bills_ids for which we are subscribed.
     # 2) For each of those bills, figure out if some action has occurred or will occur after the last time we updated the subscription (can this happen?)
@@ -409,11 +411,11 @@ def handle_events_subscriptions(user, update_since, created_bills_ids, updated_b
     all_events_ids = created_events_ids + updated_events_ids
     events = Event.objects.filter(
         Q(id__in=all_events_ids)).order_by('-start_time')
-    for event in events:            
+    for event in events:
         event_updates.append(event) #XXX for now, conflate created and updated events
     return event_updates
 
-    
+
 
 # This function handles notifications from the queue that includes
 # a list of recently updated orgs,people,bills,events
@@ -446,13 +448,13 @@ def worker_handle_notification_loaddata(update_since, updated_orgs_ids, updated_
 
         print ("calling worker_send_email for user ", user.username," with ", len(committee_action_updates), len(committee_event_updates), len(bill_search_updates), len(bill_action_updates), len(events_updates))
         worker_send_email(user, person_updates, committee_action_updates, committee_event_updates, bill_search_updates, bill_action_updates, events_updates)
-                    
+
 # Sends a templated email based on the updates, similar to the 'Manage Subscriptions' page
 def worker_send_email(user, person_updates, committee_action_updates, committee_event_updates, bill_search_updates, bill_action_updates, events_updates):
     ctx = {
-        'person_updates': person_updates, 
-        'committee_action_updates': committee_action_updates, 
-        'committee_event_updates': committee_event_updates, 
+        'person_updates': person_updates,
+        'committee_action_updates': committee_action_updates,
+        'committee_event_updates': committee_event_updates,
         'bill_search_updates': bill_search_updates,
         'bill_action_updates': bill_action_updates,
         'events_updates': events_updates
@@ -473,7 +475,7 @@ def notification_loaddata(request):
         print("ERROR: notifications/views.py:notification_loaddata() called without POST")
 
     update_since = json.loads(request.POST.get('update_since'))
-    update_since_dt = datetime.datetime.strptime(update_since, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=app_timezone) # XXX is this the right time/place to unmarshal this datetime? 
+    update_since_dt = datetime.datetime.strptime(update_since, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=app_timezone) # XXX is this the right time/place to unmarshal this datetime?
     updated_orgs_ids = json.loads(request.POST.get('updated_orgs_ids'))
     updated_people_ids = json.loads(request.POST.get('updated_people_ids'))
     created_bills_ids = json.loads(request.POST.get('created_bills_ids'))
@@ -488,9 +490,9 @@ def notification_loaddata(request):
     print('updated_bills_ids=', updated_bills_ids)
     print('created_events_ids=', created_events_ids)
     print('updated_events_ids=', updated_events_ids)
-    
+
     print("notifications/views.py:new OCD data detected by loaddata.py: %d orgs, %d people, %d created bills, %d updated bills, %d events" % (len(updated_orgs_ids), len(updated_people_ids), len(created_bills_ids), len(updated_bills_ids), len(updated_events_ids)))
-    
+
     # now let Redis know
     # According to http://python-rq.org/docs/ , uses pickle
     notifications_queue = django_rq.get_queue('notifications')
