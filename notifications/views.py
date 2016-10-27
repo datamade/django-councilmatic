@@ -155,6 +155,7 @@ def person_unsubscribe(request, slug):
     person = Person.objects.get(slug=slug)
     person_subscription = PersonSubscription.objects.get(user=request.user, person=person)
     person_subscription.delete() # XXX handle exceptions
+
     return HttpResponse('person_unsubscribe()d')
 
 @csrf_exempt
@@ -178,7 +179,8 @@ def committee_events_unsubscribe(request, slug):
 def committee_actions_subscribe(request, slug):
     committee = Organization.objects.get(slug=slug)
     (committee_actions_subscription, created) = CommitteeActionSubscription.objects.get_or_create(user=request.user, committee=committee) # XXX handle exceptions
-
+    print(CommitteeActionSubscription.objects.all())
+    print("Subscribed!")
     return HttpResponse('person subscribe()d to committee event')
 
 @csrf_exempt
@@ -187,6 +189,8 @@ def committee_actions_unsubscribe(request, slug):
     committee = Organization.objects.get(slug=slug)
     committee_actions_subscription = CommitteeActionSubscription.objects.get(user=request.user, committee=committee) # XXX handle exceptions
     committee_actions_subscription.delete() # XXX handle exceptions
+    print(CommitteeActionSubscription.objects.all())
+    print("Unsubscribed!")
     return HttpResponse('unsubscribe()d')
 
 @csrf_exempt
