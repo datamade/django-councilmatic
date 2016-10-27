@@ -93,7 +93,7 @@ class PersonDetailFeed(Feed):
         return o
 
     def title(self, obj):
-        return settings.SITE_META['site_name'] + settings.CITY_VOCAB['COUNCIL_MEMBER'] + " %s: Recently Sponsored Bills" % obj.name
+        return settings.SITE_META['site_name'] + ': ' + settings.CITY_VOCAB['COUNCIL_MEMBER'] + " %s: Recently Sponsored Bills" % obj.name
 
     def link(self, obj):
         # return the Councilmatic URL for the person
