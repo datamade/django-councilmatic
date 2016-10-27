@@ -41,34 +41,29 @@
                 {% if month_events %}
                     <h2>{{ CITY_VOCAB.EVENTS }}: {{ this_start_date | date:"F Y"}}</h2> <!-- XXX: this 'this_start_date' stuff appears not to work at e.g. https://nyc.councilmatic.org/events/ -->
                     <hr />
-
                     {% for date, event_list in month_events %}
                         {% include "partials/event_day.html" %}
                     {% endfor %}
                 {% else %}
                     <h2>No {{ CITY_VOCAB.EVENTS | lower }} to show</h2>
-
+                {% endif %}
+            {% else %}
+                {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+                    {% if user_subscribed %}
+                    <a href="#" id="eventsSubscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a>
+                    {% else %}
+                    <a href="#" id="eventsSubscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a>
+                    {% endif %}
                 {% endif %}
 
-	    {% else %}
-		    {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-		    {% if user_subscribed %}
-		    <a href="#" id="eventsSubscribe" class="removeSubscription">[REMOVE SUBSCRIPTION]</a>
-		    {% else %}
-		    <a href="#" id="eventsSubscribe" class="createSubscription">[CREATE SUBSCRIPTION]</a>
-		    {% endif %}
-		    
+            <small>
+               <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+            </small>
 
-		    {% endif %} 
-		    
-		    <small>
-			   <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-		   </small>
-		    
                 {% if upcoming_events %}
                     <h2><span>Upcoming {{ CITY_VOCAB.EVENTS }}</span>
-			    <br class="non-desktop-only"/>			    
-		    </h2>
+        			    <br class="non-desktop-only"/>
+        		    </h2>
                     <hr/>
                     {% for date, event_list in upcoming_events %}
                         {% include "partials/event_day.html" %}
@@ -83,7 +78,7 @@
         <div class="col-sm-4 no-pad-mobile">
             <div class='well info-blurb'>
                 <h4><i class='fa fa-fw fa-info-circle'></i> What are these {{ CITY_VOCAB.EVENTS | lower}}?</h4>
-                
+
                 {{ ABOUT_BLURBS.EVENTS | safe }}
 
                 <p><a href='/about/#about-city-council'>More on how City Council works &raquo;</a></p>

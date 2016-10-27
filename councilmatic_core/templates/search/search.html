@@ -85,41 +85,39 @@
             <div class="divider"></div>
         </div>
 
-
-
         <div class="col-sm-8">
             {% if query %}
-                <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
+            <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
 
-            {% if selected_facets %}
-            <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}"
-            title="RSS feed">
-            {% else %}
-                <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
-            {% endif %}
-
-            <i class="fa fa-rss-square" aria-hidden="true"></i></a>
-
-            {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-                {% if user_subscribed %}
-                <a href="#" id="searchSubscribe" class="removeSubscription" title="remove alert">
-                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                </a>
+                {% if selected_facets %}
+                <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}"
+                title="RSS feed">
                 {% else %}
-                <a href="#" id="searchSubscribe" class="createSubscription" title="create alert">
-                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                </a>
-                <!-- <small><a href="/search/unsubscribe/?q={{request.GET.q}}">[REMOVE ALERT]</a></small>
-                <small><a href="/search/subscribe/?q={{request.GET.q}}">[CREATE ALERT]</a></small> -->
+                    <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
                 {% endif %}
 
-        </h3>
+                <i class="fa fa-rss-square" aria-hidden="true"></i></a>
 
-
+                {% if USING_NOTIFICATIONS %}
+                    {% if user_subscribed %}
+                    <a href="#" id="searchSubscribe" class="removeSubscription" title="remove alert">
+                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                    </a>
+                    {% else %}
+                    <a href="#" id="searchSubscribe" class="createSubscription" title="create alert">
+                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                    </a>
+                    <!-- <small><a href="/search/unsubscribe/?q={{request.GET.q}}">[REMOVE ALERT]</a></small>
+                    <small><a href="/search/subscribe/?q={{request.GET.q}}">[CREATE ALERT]</a></small> -->
+                    {% endif %}
+                {% endif %}
+            </h3>
+            <div class='row'>
+                <div class='col-sm-8' id='search_message'></div>
+            </div>
             {% endif %}
 
-
-        {% for result in page.object_list %}
+            {% for result in page.object_list %}
 
             <!-- Legislation result -->
 
@@ -127,7 +125,6 @@
                 <a class="small" href="/legislation/{{ result.object.slug }}/">{{ result.object.friendly_name }}</a>
                 {{ result.object.inferred_status | inferred_status_label | safe }}
             </p>
-
 
             <div class="row">
                 <div class="col-xs-11">
@@ -205,7 +202,6 @@
         </div>
     </div>
 
-
     {% if page.has_previous or page.has_next %}
         <div class="row">
             <div class="col-md-8 col-md-offset-4">
@@ -240,25 +236,32 @@
 {% block extra_js %}
     <script>
     $(document).ready(function() {
-            $("#searchSubscribe").click(function() {
+        $("#searchSubscribe").click(function() {
             if ($(this).hasClass('createSubscription')) {
-        posturl2 = "/search_check_subscription/"
-        facets2 = JSON.stringify({{selected_facets|safe}});
-                stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
-            function(data, status) {
-                console.log("returned from post with data: ", data, "status:", status);
-            }).error(function() {
-                console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
-            }),
-
-        posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
-                facets =  JSON.stringify({{selected_facets|safe}});
-                $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
-                    console.log("Error subscribing to  interest {{request.GET.q}} with {{selected_facets}}" );
-                });
-                $(this).removeClass('createSubscription');
-                $(this).addClass('removeSubscription');
-                $(this).attr('title', 'remove alert');
+                if ('{{ request.user.is_authenticated }}'== 'True') {
+                    posturl2 = "/search_check_subscription/"
+                    facets2 = JSON.stringify({{selected_facets|safe}});
+                    stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
+                        function(data, status) {
+                        console.log("returned from post with data: ", data, "status:", status);
+                    }).error(function() {
+                    console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
+                    }),
+                    posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
+                    facets =  JSON.stringify({{selected_facets|safe}});
+                    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
+                        console.log("Error subscribing to  interest {{request.GET.q}} with {{selected_facets}}" );
+                    });
+                    $(this).removeClass('createSubscription');
+                    $(this).addClass('removeSubscription');
+                    $(this).attr('title', 'remove alert');
+                }
+                else {
+                    var loginAlert = '<div class="alert alert-info" role="alert">' +
+                    '<strong>Hoping to subscribe?</strong> Please <a href="/login">login</a> or <a href="/signup">create</a> a user account.' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                    $('#search_message').html(loginAlert);
+                }
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/search_unsubscribe/";
                 facets = JSON.stringify({{selected_facets|safe}});

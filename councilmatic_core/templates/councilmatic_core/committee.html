@@ -40,7 +40,7 @@
         {% endif %}
         </h4>
         <div class='row'>
-            <div class='col-sm-8' id='events_message'></div>
+            <div class='col-sm-8' id='actions_message'></div>
         </div>
             {% if committee.recent_activity %}
             <div class="table-responsive">
@@ -92,7 +92,7 @@
             <a name="#committeeEvents"></a>
                     <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
                     <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-        {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+        {% if USING_NOTIFICATIONS %}
         {% if user_subscribed_events %}
             <!-- <small><a href="{% url 'committee_events_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>-->
             <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" title="remove alert">
@@ -106,8 +106,11 @@
         {% endif %}
         {% endif %}
 
-
                 </h4>
+
+                <div class='row'>
+                    <div class='col-sm-8' id='events_message'></div>
+                </div>
 
                 {% for event in committee.recent_events %}
                     <p class='event-listing'>
@@ -204,7 +207,11 @@
                     var loginAlert = '<div class="alert alert-info" role="alert">' +
                     '<strong>Hoping to subscribe?</strong> Please <a href="/login">login</a> or <a href="/signup">create</a> a user account.' +
                     '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
-                     $('#events_message').html(loginAlert);
+                     if(events_or_actions == 'actions') {
+                        $('#actions_message').html(loginAlert);
+                     } else {
+                        $('#events_message').html(loginAlert);
+                     }
                 }
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/unsubscribe/";
