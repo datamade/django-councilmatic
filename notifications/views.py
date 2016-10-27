@@ -200,10 +200,6 @@ def search_subscribe(request):
     selected_facets = request.POST.get('selected_facets')
     dict_selected_facets = json.loads(selected_facets)
     (bss, created) = BillSearchSubscription.objects.get_or_create(user=request.user, search_term=q, search_facets = dict_selected_facets) # XXX handle exceptions
-    print("subscribedd!")
-    this = BillSearchSubscription.objects.all()
-    for t in this:
-        print(t.search_term)
     return HttpResponse('ok')
 
 @csrf_exempt
@@ -219,10 +215,6 @@ def search_unsubscribe(request):
     except ObjectDoesNotExist as e:
         print ("error", e)     # XXX handle exceptions
     bss.delete()
-    print("unnnnsubscribedd!")
-    this = BillSearchSubscription.objects.all()
-    for t in this:
-        print(t.search_term)
     return HttpResponse('unsubscribe()d')
 
 @csrf_exempt

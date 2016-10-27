@@ -1,4 +1,0 @@
-from councilmatic_core.models import Bill
-
-
-last_week_of_bills = 
