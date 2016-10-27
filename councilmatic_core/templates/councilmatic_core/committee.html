@@ -204,14 +204,7 @@
                     $(this).attr('title','remove alert');
                 }
                 else {
-                    var loginAlert = '<div class="alert alert-info" role="alert">' +
-                    '<strong>Hoping to subscribe?</strong> Please <a href="/login">login</a> or <a href="/signup">create</a> a user account.' +
-                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
-                     if(events_or_actions == 'actions') {
-                        $('#actions_message').html(loginAlert);
-                     } else {
-                        $('#events_message').html(loginAlert);
-                     }
+                    (events_or_actions == 'actions') ? $('#actions_message').html(alertMsg) : $('#events_message').html(alertMsg);
                 }
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/unsubscribe/";
