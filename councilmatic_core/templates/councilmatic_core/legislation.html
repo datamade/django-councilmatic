@@ -300,6 +300,7 @@
     <script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
     <script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
 
+    {% if USING_NOTIFICATIONS %}
     <script>
     $(document).ready(function() {
         $("#billSubscribe").click(function() {
@@ -335,9 +336,8 @@
             }
         }
     )});
-
     </script>
-
+    {% endif %}
 
     <script>
 
