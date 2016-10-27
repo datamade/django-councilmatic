@@ -690,3 +690,12 @@ select {
     }
 
 }
+
+/* Custom style for alert box */
+.alert-info {
+    background-color: #E5F4F5;
+    color: #3D8A8E;
+    border-color: #C7E8EA;
+}
+
+.close { color: #3D8A8E; }
