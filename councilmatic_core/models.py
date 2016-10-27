@@ -128,15 +128,15 @@ class Person(models.Model):
     def link_html(self):
 
         if self.ocd_id and self.slug:
-            
+
             try:
                 link_path = reverse('{}:person'.format(settings.APP_NAME), args=(self.slug,))
-            
+
             except NoReverseMatch:
                 link_path = reverse('person', args=(self.slug,))
-            
+
             return '<a href="{0}" title="More on {1}">{1}</a>'.format(link_path, self.name)
-        
+
         return self.name
 
     @property
@@ -236,7 +236,7 @@ class Bill(models.Model):
         returns all actions ordered by date in descending order
         """
         return self.actions.all().order_by('-order')
-    
+
     @property
     def current_action(self):
         """
@@ -453,27 +453,26 @@ class Organization(models.Model):
 
     @property
     def link_html(self):
-        
         link_fmt = '<a href="{0}">{1}</a>'
 
         if self.classification == 'committee':
-            
+
             try:
-                link_path = reverse('{}:committee'.format(settings.APP_NAME), args=(self.slug,))
+                link_path = reverse('{}:committee_detail'.format(settings.APP_NAME), args=(self.slug,))
             except NoReverseMatch:
-                link_path = reverse('committee', args=(self.slug,))
-            
+                link_path = reverse('committee_detail', args=(self.slug,))
+
             return link_fmt.format(link_path, self.name)
-        
+
         if self.classification == 'legislature':
-            
+
             try:
                 link_path = reverse('{}:council_members'.format(settings.APP_NAME))
             except NoReverseMatch:
                 link_path = reverse('council_members')
-            
+
             return link_fmt.format(link_path, self.name)
-        
+
         return self.name
 
 
@@ -659,7 +658,7 @@ class Event(models.Model):
 
     @property
     def event_page_url(self):
-        
+
         try:
             link = reverse('{}:event_detail'.format(settings.APP_NAME), args=(self.slug,))
         except NoReverseMatch:
@@ -736,7 +735,7 @@ class Document(models.Model):
     note = models.TextField()
     url = models.TextField(blank=True)
     full_text = models.TextField(blank=True, null=True)
-    
+
     class Meta:
         abstract = True
 

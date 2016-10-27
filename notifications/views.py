@@ -129,6 +129,8 @@ def bill_subscribe(request, slug):
     print("bill_subscribe(): deleting cache")
     print("cache.get('subscriptions_manage') is ",cache.get('subscriptions_manage'))
     cache.delete('subscriptions_manage')
+    print("Subscribe!")
+    print(BillActionSubscription.objects.all())
     return HttpResponse('subscribed to bill %s ' % str(bill))
 
 @csrf_exempt
@@ -137,6 +139,8 @@ def bill_unsubscribe(request, slug):
     bill = Bill.objects.get(slug=slug)
     bill_action_subscription = BillActionSubscription.objects.get(user=request.user, bill=bill)
     bill_action_subscription.delete() # XXX: handle exceptions
+    print("unsubscribe!")
+    print(BillActionSubscription.objects.all())
     return HttpResponse('bill_unsubscribe')
 
 @csrf_exempt

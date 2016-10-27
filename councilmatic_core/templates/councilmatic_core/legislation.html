@@ -13,7 +13,7 @@
                             {{ legislation.inferred_status | inferred_status_label | safe }}
                 <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     </small>
-            {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+            {% if USING_NOTIFICATIONS %}
             <small>
                 {% if user_subscribed %}
                 <a href="#" id="billSubscribe" class="removeSubscription" title="remove alert">
@@ -27,6 +27,9 @@
             </small>
             {% endif %}
                 </h1>
+                <div class='row'>
+                    <div class='col-sm-6' id='bill_message'></div>
+                </div>
                 {% if legislation.topics %}
                     <p>
                         <i class="fa fa-tag"></i>
@@ -301,14 +304,22 @@
     $(document).ready(function() {
         $("#billSubscribe").click(function() {
             if ($(this).hasClass('createSubscription')) {
-                posturl = "/legislation/" + "{{legislation.slug}}" + "/subscribe/";
-                $.post(posturl, function(data) {
-                }).error(function() {
-                    console.log("Error subscribing to  interest {{legislation.slug}}");
-                });
-                $(this).removeClass('createSubscription');
-                $(this).addClass('removeSubscription');
-                $(this).attr('title', 'remove alert');
+                 if ('{{ request.user.is_authenticated }}'== 'True') {
+                    posturl = "/legislation/" + "{{legislation.slug}}" + "/subscribe/";
+                    $.post(posturl, function(data) {
+                    }).error(function() {
+                        console.log("Error subscribing to  interest {{legislation.slug}}");
+                    });
+                    $(this).removeClass('createSubscription');
+                    $(this).addClass('removeSubscription');
+                    $(this).attr('title', 'remove alert');
+                }
+                else {
+                    var loginAlert = '<div class="alert alert-info" role="alert">' +
+                    '<strong>Hoping to subscribe?</strong> Please <a href="/login">login</a> or <a href="/signup">create</a> a user account.' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
+                     $('#bill_message').html(loginAlert);
+                }
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/legislation/" + "{{legislation.slug}}" + "/unsubscribe/";
                 $.post(posturl, function(data) {
