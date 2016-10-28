@@ -33,12 +33,10 @@
                   </div>
                   <div class="modal-body">
                         <p>Add this view to a webpage! Copy the code below.</p>
-                            <textarea>
-                            <iframe src="https://nyc.councilmatic.org/person/margaret-s-chin/widget/" style="border: 1px solid #eee;"></iframe>
-                            </textarea>
+                        <textarea cols="30" rows="5"><iframe src="{{SITE_URL}}{% url 'person_widget' person.slug %}" style="border: 1px solid #eee;"></iframe></textarea>
                         <div>
                             <h3>Preview</h3>
-                            <iframe src="https://nyc.councilmatic.org/person/margaret-s-chin/widget/" style="border: 1px solid #eee;"></iframe>
+                            <iframe src="{{SITE_URL}}{% url 'person_widget' person.slug %}" height="500px" width="100%" scrolling="no" style="border: 1px solid #eee;"></iframe>
                         </div>
                   </div>
                   <div class="modal-footer">
