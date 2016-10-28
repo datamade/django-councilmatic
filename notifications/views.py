@@ -130,35 +130,48 @@ def bill_subscribe(request, slug):
     print("cache.get('subscriptions_manage') is ",cache.get('subscriptions_manage'))
     cache.delete('subscriptions_manage')
 
-    return HttpResponse('subscribed to bill %s ' % str(bill))
+    return HttpResponse('Subscribed to bill %s.' % str(bill))
 
 @csrf_exempt
 @login_required(login_url='/login/')
 def bill_unsubscribe(request, slug):
     bill = Bill.objects.get(slug=slug)
-    bill_action_subscription = BillActionSubscription.objects.get(user=request.user, bill=bill)
-    bill_action_subscription.delete() # XXX: handle exceptions
 
-    return HttpResponse('bill_unsubscribe')
+    try:
+        bill_action_subscription = BillActionSubscription.objects.get(user=request.user, bill=bill)
+    except ObjectDoesNotExist:
+        response = HttpResponse('This bill subscription does not exist.')
+        response.status_code = 500
+        return response
+
+    bill_action_subscription.delete()
+
+    return HttpResponse('Unsubscribed from bill %s.' % str(bill))
 
 @csrf_exempt
 @login_required(login_url='/login/')
 def person_subscribe(request, slug):
-    # using the model PersonSubscription using the current user and the Person defined by slug
     person = Person.objects.get(slug=slug)
 
     (person_subscription, created) = PersonSubscription.objects.get_or_create(user=request.user, person=person)
 
-    return HttpResponse('person_subscribe()d')
+    return HttpResponse('Subscribed to person %s.' % str(person))
 
 @csrf_exempt
 @login_required(login_url='/login/')
 def person_unsubscribe(request, slug):
     person = Person.objects.get(slug=slug)
-    person_subscription = PersonSubscription.objects.get(user=request.user, person=person)
-    person_subscription.delete() # XXX handle exceptions
 
-    return HttpResponse('person_unsubscribe()d')
+    try:
+        person_subscription = PersonSubscription.objects.get(user=request.user, person=person)
+    except ObjectDoesNotExist:
+        response = HttpResponse('This person subscription does not exist.')
+        response.status_code = 500
+        return response
+
+    person_subscription.delete()
+
+    return HttpResponse('Unsubscribed from person %s.' % str(person))
 
 @csrf_exempt
 @login_required(login_url='/login/')
@@ -166,7 +179,7 @@ def committee_events_subscribe(request, slug):
     committee = Organization.objects.get(slug=slug)
     (committee_events_subscription, created) = CommitteeEventSubscription.objects.get_or_create(user=request.user, committee=committee)
 
-    return HttpResponse('person subscribe()d to committee event')
+    return HttpResponse('Subscribed to committee %s.' % str(committee))
 
 @csrf_exempt
 @login_required(login_url='/login/')
@@ -207,7 +220,6 @@ def search_unsubscribe(request):
     selected_facets = request.POST.get('selected_facets')
     selected_facets_json = json.loads(selected_facets)
     bss=None
-    print(BillSearchSubscription.objects.all())
     try:
         bss = BillSearchSubscription.objects.get(user=request.user,search_term__exact=q, search_facets__exact=selected_facets_json)
     except ObjectDoesNotExist as e:

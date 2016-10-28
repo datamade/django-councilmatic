@@ -304,16 +304,18 @@
     <script>
     $(document).ready(function() {
         $("#billSubscribe").click(function() {
+            var bullHorn = this;
             if ($(this).hasClass('createSubscription')) {
                  if ('{{ request.user.is_authenticated }}'== 'True') {
                     posturl = "/legislation/" + "{{legislation.slug}}" + "/subscribe/";
                     $.post(posturl, function(data) {
-                    }).error(function() {
-                        console.log("Error subscribing to  interest {{legislation.slug}}");
+                    }).then(function() {
+                        $(bullHorn).removeClass('createSubscription');
+                        $(bullHorn).addClass('removeSubscription');
+                        $(bullHorn).attr('title', 'remove alert');
+                    }, function (error) {
+                        console.error('Error subscribing to {{legislation.slug}}');
                     });
-                    $(this).removeClass('createSubscription');
-                    $(this).addClass('removeSubscription');
-                    $(this).attr('title', 'remove alert');
                 }
                 else {
                     // alertMsg is a global variable in base.html
@@ -322,12 +324,13 @@
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/legislation/" + "{{legislation.slug}}" + "/unsubscribe/";
                 $.post(posturl, function(data) {
-                }).error(function() {
-                    console.log("Error unsubscribing from  interest {{legislation.slug}}");
+                }).then(function() {
+                    $(bullHorn).removeClass('removeSubscription');
+                    $(bullHorn).addClass('createSubscription');
+                    $(bullHorn).attr('title', 'create alert');
+                }, function (error) {
+                    console.error('Error unsubscribing from {{legislation.slug}}');
                 });
-                $(this).removeClass('removeSubscription');
-                $(this).addClass('createSubscription');
-                $(this).attr('title', 'create alert');
             }
             else {
                 alert("ID #billSubscribe has neither createSubscription or removeSubscription class");
