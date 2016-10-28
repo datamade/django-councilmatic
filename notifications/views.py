@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template.loader import get_template
 from django.template import Context
 from django.db.models import Q
+from django.db import IntegrityError
 
 from councilmatic_core.models import Bill, Organization, Person, Event
 from notifications.models import PersonSubscription, BillActionSubscription, CommitteeActionSubscription, CommitteeEventSubscription, BillSearchSubscription, EventsSubscription
@@ -68,12 +69,15 @@ def notifications_signup(request):
         print("notifications_login(): POST", request.POST)
         form = CouncilmaticUserCreationForm(data=request.POST)
         if form.is_valid():
-            print ("got to form in notifications_signup()")
-            form.save() # make a new user. XXX handle errors? Also: XXX: how to auto-login user?
-            return HttpResponseRedirect(reverse('index'))             # XXX should either display or redirect to content saying to check your email
+            try:
+                form.save()
+                return HttpResponseRedirect(reverse('index')) # XXX should either display or redirect to content saying to check your email
+            except IntegrityError:
+                response = HttpResponse('Not able to save form.')
+                response.status_code = 500
+                return response
         else:
-            print("signup form not valid") # XXX handle errors
-            pass
+            return render(request, 'notifications_signup.html', {'form': form}, status=500)
     if not form:
         form = CouncilmaticUserCreationForm()
     return render(request, 'notifications_signup.html', {'form': form})
@@ -85,14 +89,16 @@ def notifications_login(request):
         print("notifications_login(): POST", request.POST)
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
-            print ("form is valid")
-            user = form.get_user()
-            if user is not None:
+            try:
+                user = form.get_user()
                 login(request, user)
                 return HttpResponseRedirect(reverse('index'))
+            except IntegrityError:
+                response = HttpResponse('Not able to find or login user.')
+                response.status_code = 500
+                return response
         else:
-            print ("form is NOT valid, form.errors=", form.errors)
-    print ("rendering forms")
+            return render(request, 'notifications_login.html', {'form': form}, status=500)
     if not form:
         form = AuthenticationForm()
     return render(request, 'notifications_login.html', {'form': form})
