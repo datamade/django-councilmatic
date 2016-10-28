@@ -237,6 +237,7 @@
     <script>
     $(document).ready(function() {
         $("#searchSubscribe").click(function() {
+            var bullHorn = this;
             if ($(this).hasClass('createSubscription')) {
                 if ('{{ request.user.is_authenticated }}'== 'True') {
                     posturl2 = "/search_check_subscription/"
@@ -249,12 +250,13 @@
                     }),
                     posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
                     facets =  JSON.stringify({{selected_facets|safe}});
-                    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
-                        console.log("Error subscribing to  interest {{request.GET.q}} with {{selected_facets}}" );
-                    });
-                    $(this).removeClass('createSubscription');
-                    $(this).addClass('removeSubscription');
-                    $(this).attr('title', 'remove alert');
+                    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
+                        $(bullHorn).removeClass('createSubscription');
+                        $(bullHorn).addClass('removeSubscription');
+                        $(bullHorn).attr('title', 'remove alert');
+                    }, function (error) {
+                        console.error("Error subscribing to interest {{request.GET.q}} with {{selected_facets}}" );
+                    })
                 }
                 else {
                     $('#search_message').html(alertMsg);
@@ -262,12 +264,13 @@
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/search_unsubscribe/";
                 facets = JSON.stringify({{selected_facets|safe}});
-                $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).error(function() {
-                    console.log("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
+                $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
+                    $(bullHorn).removeClass('removeSubscription');
+                    $(bullHorn).addClass('createSubscription');
+                    $(bullHorn).attr('title', 'create alert');
+                }, function (error) {
+                    console.error("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
                 });
-                $(this).removeClass('removeSubscription');
-                $(this).addClass('createSubscription');
-                $(this).attr('title', 'create alert');
             }
             else {
                 alert("ID #personSubscribe has neither createSubscription or removeSubscription class");

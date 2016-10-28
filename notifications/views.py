@@ -227,7 +227,7 @@ def search_subscribe(request):
     dict_selected_facets = json.loads(selected_facets)
     (bss, created) = BillSearchSubscription.objects.get_or_create(user=request.user, search_term=q, search_facets = dict_selected_facets)
 
-    return HttpResponse('ok')
+    return HttpResponse('Subscribed to search for: %s.' % q)
 
 @csrf_exempt
 @login_required(login_url='/login/')
@@ -235,13 +235,16 @@ def search_unsubscribe(request):
     q = request.POST.get('query')
     selected_facets = request.POST.get('selected_facets')
     selected_facets_json = json.loads(selected_facets)
-    bss=None
+
     try:
         bss = BillSearchSubscription.objects.get(user=request.user,search_term__exact=q, search_facets__exact=selected_facets_json)
-    except ObjectDoesNotExist as e:
-        print ("error", e)     # XXX handle exceptions
+    except ObjectDoesNotExist:
+        response = HttpResponse('This search subscription does not exist.')
+        response.status_code = 500
+        return response
+
     bss.delete()
-    return HttpResponse('unsubscribe()d')
+    return HttpResponse('Unsubscribed from search for: %s.' % q)
 
 @csrf_exempt
 @login_required(login_url='/login/')
@@ -249,10 +252,14 @@ def search_check_subscription(request):
     q = request.POST.get('query')
     selected_facets = request.POST.get('selected_facets')
     dict_selected_facets = json.loads(selected_facets)
+
     try:
-        bss  = BillSearchSubscription.objects.get(user=request.user, search_term__exact=q, search_facets__exact = dict_selected_facets) # XXX handle exceptions
-    except BillSearchSubscription.DoesNotExist:
-        return HttpResponse('false')
+        bss = BillSearchSubscription.objects.get(user=request.user, search_term__exact=q, search_facets__exact = dict_selected_facets)
+    except ObjectDoesNotExist:
+        response = HttpResponse('This bill search subscription does not exist.')
+        response.status_code = 500
+        return response
+
     return HttpResponse('true')
 
 # search_unsubscribe just takes an ID because it's easier to do this than to marshal dictionaries of search facets around as JSON.
