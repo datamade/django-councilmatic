@@ -66,7 +66,6 @@ class CouncilmaticUserCreationForm(UserCreationForm):
 def notifications_signup(request):
     form = None
     if request.method == 'POST':
-        print("notifications_login(): POST", request.POST)
         form = CouncilmaticUserCreationForm(data=request.POST)
         if form.is_valid():
             try:
@@ -86,7 +85,6 @@ def notifications_login(request):
     print ("notifications_login()")
     form = None
     if request.method == 'POST':
-        print("notifications_login(): POST", request.POST)
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             try:
