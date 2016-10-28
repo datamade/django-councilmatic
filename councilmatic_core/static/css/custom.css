@@ -702,3 +702,5 @@ select {
 }
 
 .close { color: #3D8A8E; }
+
+.dropdown-widget { display: inline-block; }

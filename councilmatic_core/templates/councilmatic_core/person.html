@@ -15,12 +15,40 @@
         <div class="col-sm-12">
             <br/>
             <h1>
-                <span>{{person.name}}</span>
-                <br class="non-desktop-only"/>
-                <small>
+            <span>{{person.name}}</span>
+            <br class="non-desktop-only"/>
+            <small>
             {{ title }}
             <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                </small>
+
+            <!-- Trigger modal -->
+            <i class="fa fa-share" aria-hidden="true" data-toggle="modal" data-target="#widgetModal"></i>
+
+            <!-- Modal -->
+            <div class="modal fade" id="widgetModal" tabindex="-1" role="dialog" aria-labelledby="widgetModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="modal-title" id="widgetModalLabel">Embed this view</h4>
+                  </div>
+                  <div class="modal-body">
+                        <p>Add this view to a webpage! Copy the code below.</p>
+                            <textarea>
+                            <iframe src="https://nyc.councilmatic.org/person/margaret-s-chin/widget/" style="border: 1px solid #eee;"></iframe>
+                            </textarea>
+                        <div>
+                            <h3>Preview</h3>
+                            <iframe src="https://nyc.councilmatic.org/person/margaret-s-chin/widget/" style="border: 1px solid #eee;"></iframe>
+                        </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            </small>
             {% if USING_NOTIFICATIONS %}
             <small>
                 {% if user_subscribed %}
@@ -28,9 +56,9 @@
                     <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                 </a>
                 {% else %}
-                    <a href="#" id="personSubscribe" class="createSubscription" title="create alert">
-                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                    </a>
+                <a href="#" id="personSubscribe" class="createSubscription" title="create alert">
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                </a>
                 {% endif %}
             </small>
             {% endif %}
@@ -38,6 +66,7 @@
 
         </div>
     </div>
+
     <div class='row'>
         <div class='col-sm-6' id='person_message'></div>
     </div>
@@ -298,9 +327,8 @@
     {% endif %}
 
     <script>
-
-        // for reference purposes
-        // console.log( "OCD ID: {{person.ocd_id}}" )
-
+        $(document).ready(function(){
+            $('#widget').tooltip();
+        });
     </script>
 {% endblock %}
