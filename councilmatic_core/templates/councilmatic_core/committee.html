@@ -192,16 +192,18 @@
         }
         console.log("Callback for #committee_" + events_or_actions + "_Subscribe");
         $("#committee_" + events_or_actions + "_Subscribe").click(function() {
+            var bullHorn = this;
             if ($(this).hasClass('createSubscription')) {
                 if ('{{ request.user.is_authenticated }}'== 'True') {
                     posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/subscribe/";
                     $.post(posturl, function(data) {
-                    }).error(function() {
-                        console.log("Error subscribing to  interest {{committee.slug}}");
+                    }).then(function() {
+                        $(bullHorn).removeClass('createSubscription');
+                        $(bullHorn).addClass('removeSubscription');
+                        $(bullHorn).attr('title', 'remove alert');
+                    }, function (error) {
+                        console.error("Error subscribing to  interest {{committee.slug}}");
                     });
-                    $(this).removeClass('createSubscription');
-                    $(this).addClass('removeSubscription');
-                    $(this).attr('title','remove alert');
                 }
                 else {
                     (events_or_actions == 'actions') ? $('#actions_message').html(alertMsg) : $('#events_message').html(alertMsg);
@@ -209,12 +211,13 @@
             } else if ($(this).hasClass('removeSubscription')) {
                 posturl = "/committee/" + "{{committee.slug}}" + "/" + events_or_actions  + "/unsubscribe/";
                 $.post(posturl, function(data) {
-                }).error(function() {
-                    console.log("Error unsubscribing from  interest {{committee.slug}}");
+                }).then(function(){
+                    $(bullHorn).removeClass('removeSubscription');
+                    $(bullHorn).addClass('createSubscription');
+                    $(bullHorn).attr('title','create alert');
+                }, function (error) {
+                    console.error("Error unsubscribing from  interest {{committee.slug}}");
                 });
-                $(this).removeClass('removeSubscription');
-                $(this).addClass('createSubscription');
-                $(this).attr('title','create alert');
             }
             else {
                 alert("ID #committee_" + events_or_actions + "Subscribe" + " has neither createSubscription or removeSubscription class");

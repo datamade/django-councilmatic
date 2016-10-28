@@ -179,30 +179,45 @@ def committee_events_subscribe(request, slug):
     committee = Organization.objects.get(slug=slug)
     (committee_events_subscription, created) = CommitteeEventSubscription.objects.get_or_create(user=request.user, committee=committee)
 
-    return HttpResponse('Subscribed to committee %s.' % str(committee))
+    return HttpResponse('Subscribed to events of %s.' % str(committee))
 
 @csrf_exempt
 @login_required(login_url='/login/')
 def committee_events_unsubscribe(request, slug):
     committee = Organization.objects.get(slug=slug)
-    committee_events_subscription = CommitteeEventSubscription.objects.get(user=request.user, committee=committee)
-    committee_events_subscription.delete() # XXX handle exceptions
-    return HttpResponse('unsubscribe()d')
+    try:
+        committee_events_subscription = CommitteeEventSubscription.objects.get(user=request.user, committee=committee)
+    except ObjectDoesNotExist:
+        response = HttpResponse('This committee event subscription does not exist.')
+        response.status_code = 500
+        return response
+
+    committee_events_subscription.delete()
+    return HttpResponse('Unsubscribed from events of %s.' % str(committee))
 
 @csrf_exempt
 @login_required(login_url='/login/')
 def committee_actions_subscribe(request, slug):
     committee = Organization.objects.get(slug=slug)
-    (committee_actions_subscription, created) = CommitteeActionSubscription.objects.get_or_create(user=request.user, committee=committee) # XXX handle exceptions
-    return HttpResponse('person subscribe()d to committee event')
+    (committee_actions_subscription, created) = CommitteeActionSubscription.objects.get_or_create(user=request.user, committee=committee)
+
+    return HttpResponse('Subscribed to actions of %s.' % str(committee))
 
 @csrf_exempt
 @login_required(login_url='/login/')
 def committee_actions_unsubscribe(request, slug):
     committee = Organization.objects.get(slug=slug)
-    committee_actions_subscription = CommitteeActionSubscription.objects.get(user=request.user, committee=committee) # XXX handle exceptions
-    committee_actions_subscription.delete() # XXX handle exceptions
-    return HttpResponse('unsubscribe()d')
+
+    try:
+        committee_actions_subscription = CommitteeActionSubscription.objects.get(user=request.user, committee=committee)
+    except ObjectDoesNotExist:
+        response = HttpResponse('This committee action subscription does not exist.')
+        response.status_code = 500
+        return response
+
+    committee_actions_subscription.delete()
+
+    return HttpResponse('Unsubscribed from actions of %s.' % str(committee))
 
 @csrf_exempt
 @login_required(login_url='/login/')
@@ -210,7 +225,8 @@ def search_subscribe(request):
     q = request.POST.get('query')
     selected_facets = request.POST.get('selected_facets')
     dict_selected_facets = json.loads(selected_facets)
-    (bss, created) = BillSearchSubscription.objects.get_or_create(user=request.user, search_term=q, search_facets = dict_selected_facets) # XXX handle exceptions
+    (bss, created) = BillSearchSubscription.objects.get_or_create(user=request.user, search_term=q, search_facets = dict_selected_facets)
+
     return HttpResponse('ok')
 
 @csrf_exempt
@@ -255,16 +271,23 @@ def search_check_subscription(request):
 @csrf_exempt
 @login_required(login_url='/login/')
 def events_subscribe(request):
-    (events_subscription, created) = EventsSubscription.objects.get_or_create(user=request.user) # XXX handle exceptions
-    return HttpResponse('person subscribe()d to all events')
+    (events_subscription, created) = EventsSubscription.objects.get_or_create(user=request.user)
+
+    return HttpResponse('%s unsubscribed from all events.' % request.user)
 
 @csrf_exempt
 @login_required(login_url='/login/')
 def events_unsubscribe(request):
-    events_subscription = EventsSubscription.objects.get(user=request.user) # XXX handle exceptions
-    events_subscription.delete() # XXX handle exceptions
-    return HttpResponse('unsubscribe()d')
+    try:
+        events_subscription = EventsSubscription.objects.get(user=request.user)
+    except ObjectDoesNotExist:
+        response = HttpResponse('This event subscription does not exist.')
+        response.status_code = 500
+        return response
 
+    events_subscription.delete()
+
+    return HttpResponse('%s unsubscribed from all events.' % str(request.user))
 
 # The function worker_handle_notification_email() is invoked when the 'notifications_emails' queue (notification_emails_queue)
 # is woken up.

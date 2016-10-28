@@ -130,16 +130,18 @@
     <script>
     $(document).ready(function() {
 	    $("#eventsSubscribe").click(function() {
+            var bullHorn = this;
 		    if ($(this).hasClass('createSubscription')) {
                 if ('{{ request.user.is_authenticated }}'== 'True') {
     			    posturl = "/events/subscribe/";
     			    $.post(posturl, function(data) {
-    			    }).error(function() {
-    				    console.log("Error subscribing to all events");
-    			    });
-    			    $(this).removeClass('createSubscription');
-    			    $(this).addClass('removeSubscription');
-                    $(this).attr('title', 'remove alert');
+    			    }).then( function() {
+                        $(bullHorn).removeClass('createSubscription');
+                        $(bullHorn).addClass('removeSubscription');
+                        $(bullHorn).attr('title', 'remove alert');
+                    }, function (error) {
+                        console.error("Error subscribing to all events");
+                    });
                 }
                 else {
                     $('#events_message').html(alertMsg);
@@ -147,12 +149,13 @@
 		    } else if ($(this).hasClass('removeSubscription')) {
 			    posturl = "/events/unsubscribe/";
 			    $.post(posturl, function(data) {
-			    }).error(function() {
-				    console.log("Error unsubscribing from all events");
-			    });
-			    $(this).removeClass('removeSubscription');
-			    $(this).addClass('createSubscription');
-                $(this).attr('title', 'create alert');
+			    }).then( function() {
+                    $(bullHorn).removeClass('removeSubscription');
+                    $(bullHorn).addClass('createSubscription');
+                    $(bullHorn).attr('title', 'create alert');
+                }, function (error) {
+                    console.error("Error unsubscribing from all events");
+                });
 		    }
 		    else {
 			    alert("ID #eventsSubscribe has neither createSubscription or removeSubscription class");
