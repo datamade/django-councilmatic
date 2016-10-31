@@ -24,8 +24,7 @@ setup(
                       'Django<1.10',
                       'pysolr==3.3.3',
                       'python-dateutil==2.4.2',
-                      'SQLAlchemy==1.1.2',
-                      'django-rq==0.9.3',],
+                      'SQLAlchemy==1.1.2',],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
