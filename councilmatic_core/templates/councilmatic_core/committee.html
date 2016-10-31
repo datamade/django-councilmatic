@@ -7,7 +7,14 @@
     <div class="row-fluid">
         <div class="col-sm-8">
             <br/>
-            <h1>{{committee.name}}</h1>
+            <h1>
+                {{committee.name}}
+                <small>
+                {% with slug=committee.slug widget='committee_widget' frameheight='180px' %}
+                    {% include 'partials/widget_modal.html' %}
+                {% endwith %}
+                </small>
+            </h1>
             {% if committee_description %}
                 <p>{{committee_description}}</p>
             {% endif %}
@@ -22,12 +29,11 @@
 
             <hr />
 
-
             <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
             <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+
         {% if USING_NOTIFICATIONS %}
             {% if user_subscribed_actions %}
-                <!-- <small><a href="{% url 'committee_actions_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>-->
                 <a href="#" id="committee_actions_Subscribe" class="removeSubscription" title="remove alert">
                     <i class="fa fa-bullhorn"></i>
                 </a>
@@ -35,7 +41,6 @@
                 <a href="#" id="committee_actions_Subscribe" class="createSubscription" title="create alert">
                     <i class="fa fa-bullhorn"></i>
                 </a>
-        <!-- <small><a href="{% url 'committee_actions_subscribe' committee.slug %}">[CREATE ALERT]</a></small>-->
             {% endif %}
         {% endif %}
         </h4>

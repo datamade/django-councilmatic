@@ -701,8 +701,12 @@ select {
     border-color: #C7E8EA;
 }
 
-.close { color: #3D8A8E; }
+/*.close { color: #3D8A8E; }*/
 
+/* Custom style for modal instrucitons on widget */
 textarea {
     font-size: 16px;
+    width:100%;
 }
+
+.fa-share { color: #ddd; }
