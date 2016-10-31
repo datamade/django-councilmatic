@@ -63,9 +63,9 @@ h1, h2, h3, h4 {
     padding-bottom: 19.5px;
     line-height: 21px;
 }
-#nav-items > li > a:hover, 
-#nav-items > li > a:focus, 
-#nav-items > li a.dropdown-toggle:hover, 
+#nav-items > li > a:hover,
+#nav-items > li > a:focus,
+#nav-items > li a.dropdown-toggle:hover,
 #nav-items > li a.dropdown-toggle:focus {
     color: #000;
     background-color: #EEE;
@@ -423,7 +423,10 @@ select {
     padding-left: 0;
     list-style-type: none;
 }
-
+.badge-facet{
+    background-color: #D9D9D9;
+    font-weight: normal;
+}
 .remove-filter-value{
     background-color: #eee;
     border-radius: 10px;
@@ -690,3 +693,20 @@ select {
     }
 
 }
+
+/* Custom style for alert box */
+.alert-info {
+    background-color: #E5F4F5;
+    color: #3D8A8E;
+    border-color: #C7E8EA;
+}
+
+/*.close { color: #3D8A8E; }*/
+
+/* Custom style for modal instrucitons on widget */
+textarea {
+    font-size: 16px;
+    width:100%;
+}
+
+.fa-share { color: #ddd; }

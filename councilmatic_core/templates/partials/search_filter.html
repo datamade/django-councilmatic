@@ -11,7 +11,7 @@
     </div>
     <div class="panel-body {% if facet_name in selected_facets %}panel-show{% endif %} collapse" id="filter-{{facet_name}}">
         <ul class="search-facet-list">
-            
+
 
         {% if facet_name == 'topics' %}
             <!-- for topics, show routine & nonroutine first -->
@@ -32,7 +32,7 @@
             {% endfor %}
 
         {% elif facet_name == 'sponsorships' %}
-            
+
             <!-- for sponsorships, show current vs old reps separately if there are multiple leg sessions. also, don't show counts & instead show title -->
             {% if facets.fields.legislative_session|length > 1 %}
 
@@ -98,7 +98,7 @@
 
             {% for full_name, count in item_list %}
                 {% if count %}
-                    {% with name=full_name|committee_topic_only %}
+                    {% with name=full_name %}
 
                         {% include 'partials/search_filter_item.html' %}
 
