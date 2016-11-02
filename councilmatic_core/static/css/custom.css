@@ -441,16 +441,22 @@ select {
 
 
 /* subscription stuff */
-.createSubscription, .createSubscription:active, .createSubscription:focus {
+.getModal, .getModal:active, .getModal:focus, .createSubscription, .createSubscription:active, .createSubscription:focus {
     color: #ddd;
 }
 .removeSubscription {
     color: #e22620;
 }
 
+.tooltip-inner {
+    background-color: #ddd;
+    color: #fff;
+    font-family: "Open Sans", sans-serif;
+}
 
-
-
+.tooltip.top .tooltip-arrow {
+    border-top-color: #ddd;
+}
 
 /* pdf */
 .pdf-viewer{

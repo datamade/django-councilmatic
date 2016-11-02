@@ -57,11 +57,11 @@
                         {% if USING_NOTIFICATIONS %}
                             <small>
                             {% if user_subscribed %}
-                            <a href="#" id="eventsSubscribe" class="removeSubscription" title="remove alert">
+                            <a href="#" id="eventsSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
                                 <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                             </a>
                             {% else %}
-                            <a href="#" id="eventsSubscribe" class="createSubscription" title="create alert">
+                            <a href="#" id="eventsSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to events">
                                 <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                             </a>
                             {% endif %}
@@ -84,11 +84,11 @@
                         {% if USING_NOTIFICATIONS %}
                             <small>
                             {% if user_subscribed %}
-                            <a href="#" id="eventsSubscribe" class="removeSubscription" title="remove alert">
+                            <a href="#" id="eventsSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
                                 <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                             </a>
                             {% else %}
-                            <a href="#" id="eventsSubscribe" class="createSubscription" title="create alert">
+                            <a href="#" id="eventsSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to events">
                                 <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                             </a>
                             {% endif %}

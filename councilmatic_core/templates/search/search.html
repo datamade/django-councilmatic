@@ -100,15 +100,13 @@
 
                 {% if USING_NOTIFICATIONS %}
                     {% if user_subscribed %}
-                    <a href="#" id="searchSubscribe" class="removeSubscription" title="remove alert">
+                    <a href="#" id="searchSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from search">
                         <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                     </a>
                     {% else %}
-                    <a href="#" id="searchSubscribe" class="createSubscription" title="create alert">
+                    <a href="#" id="searchSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to search">
                         <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                     </a>
-                    <!-- <small><a href="/search/unsubscribe/?q={{request.GET.q}}">[REMOVE ALERT]</a></small>
-                    <small><a href="/search/subscribe/?q={{request.GET.q}}">[CREATE ALERT]</a></small> -->
                     {% endif %}
                 {% endif %}
             </h3>

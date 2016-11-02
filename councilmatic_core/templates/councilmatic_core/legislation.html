@@ -22,11 +22,11 @@
             {% if USING_NOTIFICATIONS %}
             <small>
                 {% if user_subscribed %}
-                <a href="#" id="billSubscribe" class="removeSubscription" title="remove alert">
+                <a href="#" id="billSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from {{legislation.friendly_name}}">
                     <i class="fa fa-bullhorn"></i>
                 </a>
                 {% else %}
-                <a href="#" id="billSubscribe" class="createSubscription" title="create alert">
+                <a href="#" id="billSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to {{legislation.friendly_name}}">
                     <i class="fa fa-bullhorn"></i>
                 </a>
                 {% endif %}
