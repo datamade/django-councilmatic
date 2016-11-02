@@ -34,11 +34,11 @@
 
         {% if USING_NOTIFICATIONS %}
             {% if user_subscribed_actions %}
-                <a href="#" id="committee_actions_Subscribe" class="removeSubscription" title="remove alert">
+                <a href="#" id="committee_actions_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from actions">
                     <i class="fa fa-bullhorn"></i>
                 </a>
             {% else %}
-                <a href="#" id="committee_actions_Subscribe" class="createSubscription" title="create alert">
+                <a href="#" id="committee_actions_Subscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to actions">
                     <i class="fa fa-bullhorn"></i>
                 </a>
             {% endif %}
@@ -99,13 +99,11 @@
                     <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
         {% if USING_NOTIFICATIONS %}
         {% if user_subscribed_events %}
-            <!-- <small><a href="{% url 'committee_events_unsubscribe' committee.slug %}">[REMOVE ALERT]</a></small>-->
-            <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" title="remove alert">
+            <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from meetings">
                 <i class="fa fa-bullhorn"></i>
             </a>
         {% else %}
-            <!-- <small><a href="{% url 'committee_events_subscribe' committee.slug %}">[CREATE ALERT]</a></small>-->
-            <a href="#committeeEvents" id="committee_events_Subscribe" class="createSubscription" title="create alert">
+            <a href="#committeeEvents" id="committee_events_Subscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to meetings">
                 <i class="fa fa-bullhorn"></i>
             </a>
         {% endif %}

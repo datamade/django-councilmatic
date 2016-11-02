@@ -30,11 +30,11 @@
             <small>
                 {% if user_subscribed %}
                 <a href="#" id="personSubscribe" class="removeSubscription" title="remove alert">
-                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Unsubscribe from {{person.name}}"></i>
                 </a>
                 {% else %}
                 <a href="#" id="personSubscribe" class="createSubscription" title="create alert">
-                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Subscribe to {{person.name}}"></i>
                 </a>
                 {% endif %}
             </small>
@@ -303,9 +303,4 @@
 
     {% endif %}
 
-    <script>
-        $(document).ready(function(){
-            $('#widget').tooltip();
-        });
-    </script>
 {% endblock %}
