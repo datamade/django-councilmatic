@@ -22,11 +22,12 @@ import pytz
 
 from .models import Person, Bill, Organization, Event, Post
 
-from notifications.models import BillSearchSubscription, PersonSubscription
-
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+
+if (settings.USING_NOTIFICATIONS):
+    from notifications.models import BillSearchSubscription, PersonSubscription
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
