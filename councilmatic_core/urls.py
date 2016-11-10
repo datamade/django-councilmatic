@@ -1,11 +1,13 @@
 from django.conf.urls import url
 from . import views
 from . import feeds
-import notifications
 from django.views.decorators.cache import never_cache # use never_cache wrapper for class-based Views which need to reflect current subscription status
 
 from django.contrib import admin
 admin.autodiscover() # XXX necessary?
+
+if (settings.USING_NOTIFICATIONS):
+    import notifications
 
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
@@ -36,7 +38,7 @@ urlpatterns = [
         views.PersonWidgetView.as_view(), name='person_widget'),
 
     url(r'^events/$', never_cache(views.EventsView.as_view()), name='events'),
-    url(r'^events/rss/$', feeds.EventsFeed(), name='events_feed'), 
+    url(r'^events/rss/$', feeds.EventsFeed(), name='events_feed'),
     url(r'^event/(?P<slug>.+)/$',
         views.EventDetailView.as_view(), name='event_detail'),
 
