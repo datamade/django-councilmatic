@@ -10,7 +10,8 @@
         <tr>
             <td class='nowrap'>
                 <i class="fa fa-fw fa-{{leg_type.fa_icon}}"></i>
-                <a href="/search/?q=&selected_facets=bill_type_exact:{{leg_type.search_term}}">
+                <!-- <a href="/search/?q=&selected_facets=bill_type_exact:{{leg_type.search_term}}"> -->
+                <a href="/search/?selected_facets=bill_type_exact%3A{{leg_type.search_term}}">
                     {{leg_type.name}}
                 </a>
             </td>
