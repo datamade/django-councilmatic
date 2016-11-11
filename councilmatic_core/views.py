@@ -389,17 +389,19 @@ class PersonDetailView(DetailView):
             context['map_geojson'] = json.dumps(map_geojson)
 
         context['user_subscribed'] = False
-        subscriptions = PersonSubscription.objects.all()
 
-        if self.request.user.is_authenticated():
-            user = self.request.user
-            context['user'] = user
-            # check if person of interest is subscribed to by user
+        if (settings.USING_NOTIFICATIONS):
+            subscriptions = PersonSubscription.objects.all()
 
-            for ps in user.personsubscriptions.all():
-                if person == ps.person:
-                    context['user_subscribed'] = True
-                    break
+            if self.request.user.is_authenticated():
+                user = self.request.user
+                context['user'] = user
+                # check if person of interest is subscribed to by user
+
+                for ps in user.personsubscriptions.all():
+                    if person == ps.person:
+                        context['user_subscribed'] = True
+                        break
 
         return context
 
