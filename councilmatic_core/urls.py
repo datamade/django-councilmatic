@@ -4,6 +4,7 @@ from . import feeds
 from django.views.decorators.cache import never_cache # use never_cache wrapper for class-based Views which need to reflect current subscription status
 
 from django.contrib import admin
+from django.conf import settings
 admin.autodiscover() # XXX necessary?
 
 if (settings.USING_NOTIFICATIONS):
