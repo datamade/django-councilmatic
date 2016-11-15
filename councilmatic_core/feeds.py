@@ -40,13 +40,14 @@ class CouncilmaticFacetedSearchFeed(Feed):
         all_results = SearchQuerySet().all()
         #results = all_results.filter(content=self.query, last_action_date=datetime(2015, 10, 28, 4, 0))
         results = all_results.filter(content=self.query)
-        print ("feeds.py:get_object(): got ", len(results), "results")
+        print("feeds.py:get_object(): got ", len(results), "results")
         if 'selected_facets' in request.GET:
             facets = request.GET.getlist('selected_facets')
             for facet in facets:
                 (facet_name, facet_value) = facet.split(':')
                 facet_name = facet_name.rsplit('_exact')[0]
                 results = results.narrow('%s:%s' % (facet_name, facet_value))
+
         return results.order_by('-last_action_date')
 
     def title(self, obj):

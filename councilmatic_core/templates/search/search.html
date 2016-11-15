@@ -29,7 +29,7 @@
     <div class="row">
         <div class="col-sm-4">
 
-            {% if selected_facets %}
+            {% if selected_facets or 'sort_by=date' in request.get_full_path or 'sort_by=title' in request.get_full_path %}
                 <p>
                     <a href="/search/" class="btn btn-sm btn-default">
                     <i class='fa fa-times'></i>
@@ -82,6 +82,56 @@
                 {% endif %}
             {% endif %}
 
+
+            <br>
+
+            <!-- For ordering results -->
+            <div class="panel panel-default panel-filter">
+                <div class="panel-heading" data-toggle="collapse" data-target="#sort_by">
+                    <h3 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-controls="collapseOne">
+                            Order
+                            <i class="fa fa-fw {% if facet_name in selected_facets %}fa-minus {% else %} fa-plus {% endif %} pull-right"></i>
+                        </a>
+                    </h3>
+                </div>
+                <div class="panel-body {% if 'sort_by' in request.get_full_path %}panel-show{% endif %} collapse" id="sort_by">
+                    <ul class="search-facet-list">
+
+                        <li class="small">
+                            {% if 'sort_by=date' in request.get_full_path %}
+                                <a class="sort-by" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=date" {% endif %}>
+                                    <strong>By date</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=date">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=date" {% endif %}>
+                                    By date
+                                </a>
+                            {% endif %}
+                        </li>
+
+                        <li class="small">
+                            {% if 'sort_by=title' in request.get_full_path %}
+                                <a class="sort-by" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=title" {% endif %}>
+                                    <strong>By title</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=title">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=title" {% endif %}>
+                                    By title
+                                </a>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- End sorting -->
+
             <div class="divider"></div>
         </div>
 
@@ -114,6 +164,8 @@
                 <div class='col-sm-8' id='search_message'></div>
             </div>
             {% endif %}
+
+
 
             {% for result in page.object_list %}
 
@@ -150,6 +202,10 @@
             {% if result.object.last_action_date %}
                 <p class="small text-muted condensed">
                     <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                </p>
+            {% elif result.object.get_last_action_date %}
+                 <p class="small text-muted condensed">
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.get_last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
                 </p>
             {% endif %}
 
@@ -320,10 +376,43 @@
                 });
 
                 window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
-
-
             });
 
+            $(".remove-order-value").click(function() {
+
+                console.log("CLICK")
+
+                var to_remove = encodeURIComponent($(this).attr('data'));
+
+
+                var existing_components = existing_q.split("&")
+                var new_components = $.grep(existing_components, function(value) {
+                    return encodeURIComponent(value) != to_remove;
+                });
+
+                window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+
+                console.log(to_remove)
+            });
+
+            $(".sort-by").click(function() {
+
+                console.log("CLICK")
+
+                // var to_remove = encodeURIComponent($(this).attr('data'));
+
+                console.log(existing_q)
+
+
+                // var existing_components = existing_q.split("&")
+                // var new_components = $.grep(existing_components, function(value) {
+                //     return encodeURIComponent(value) != to_remove;
+                // });
+
+                // window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+
+                // console.log(to_remove)
+            });
 
         });
     </script>

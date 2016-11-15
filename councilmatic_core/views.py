@@ -15,6 +15,9 @@ from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 
+
+from django.template import *
+
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
 
@@ -38,7 +41,9 @@ class NeverCacheMixin(object):
         return super(NeverCacheMixin, self).dispatch(*args, **kwargs)
 
 class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
+
     def extra_context(self):
+
         extra = super(FacetedSearchView, self).extra_context()
         extra['request'] = self.request
         extra['facets'] = self.results.facet_counts()
@@ -95,7 +100,10 @@ class CouncilmaticSearchForm(FacetedSearchForm):
         super(CouncilmaticSearchForm, self).__init__(*args, **kwargs)
 
     def no_query_found(self):
-        return self.searchqueryset.order_by('-last_action_date').all()
+
+        # return self.searchqueryset.order_by('-last_action_date').all()
+        return self.searchqueryset.all()
+
 
 # This is used by a context processor in settings.py to render these variables
 # into the context of every page.
