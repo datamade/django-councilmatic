@@ -126,9 +126,9 @@ def jsonify(object):
     if isinstance(object, QuerySet):
         return mark_safe(serialize('json', object))
     return mark_safe(json.dumps(object))
-jsonify.is_safe = True   
+jsonify.is_safe = True
 
-# Given a search subscription object, successfully reconstruct the 
+# Given a search subscription object, successfully reconstruct the
 # URL representing it
 @register.filter
 def custom_reverse_search_url(subscription):
@@ -136,11 +136,20 @@ def custom_reverse_search_url(subscription):
     d = [('q',subscription.search_term)]
     for k,vs in subscription.search_facets.items():
         #print ("k=",k, "vs=",vs)
-        for v in vs: 
+        for v in vs:
             #print ("k=",k, "v=",v)
             d.append(("selected_facets","%s_exact:%s" % (k,v)))
     url += "?" + urllib.parse.urlencode(d)
     #print ("custom_reverse_search_url: url is=", url)
     return url
-        
-    
+
+
+@register.filter
+def format_url_parameters(url):
+    print(url)
+    params = {"?&sort_by=date": "", "?&sort_by=title": "", "?&sort_by=relevance": ""}
+
+    paramsDict = dict((re.escape(k), v) for k, v in params.items())
+    pattern = re.compile("|".join(paramsDict.keys()))
+
+    return pattern.sub(lambda m: paramsDict[re.escape(m.group(0))], url)

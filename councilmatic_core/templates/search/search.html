@@ -29,7 +29,7 @@
     <div class="row">
         <div class="col-sm-4">
 
-            {% if selected_facets or 'sort_by=date' in request.get_full_path or 'sort_by=title' in request.get_full_path %}
+            {% if selected_facets %}
                 <p>
                     <a href="/search/" class="btn btn-sm btn-default">
                     <i class='fa fa-times'></i>
@@ -83,59 +83,64 @@
             {% endif %}
 
 
-            <br>
-
-            <!-- For ordering results -->
-            <div class="panel panel-default panel-filter">
-                <div class="panel-heading" data-toggle="collapse" data-target="#sort_by">
-                    <h3 class="panel-title">
-                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-controls="collapseOne">
-                            Order
-                            <i class="fa fa-fw {% if facet_name in selected_facets %}fa-minus {% else %} fa-plus {% endif %} pull-right"></i>
-                        </a>
-                    </h3>
-                </div>
-                <div class="panel-body {% if 'sort_by' in request.get_full_path %}panel-show{% endif %} collapse" id="sort_by">
-                    <ul class="search-facet-list">
-
-                        <li class="small">
-                            {% if 'sort_by=date' in request.get_full_path %}
-                                <a class="sort-by" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=date" {% endif %}>
-                                    <strong>By date</strong>
-                                </a>
-                                <a href ="#" class="remove-order-value" data="sort_by=date">
-                                   <i class="fa fa-times"></i>
-                                </a>
-                            {% else %}
-                                <a class="sort-by" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=date" {% endif %}>
-                                    By date
-                                </a>
-                            {% endif %}
-                        </li>
-
-                        <li class="small">
-                            {% if 'sort_by=title' in request.get_full_path %}
-                                <a class="sort-by" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=title" {% endif %}>
-                                    <strong>By title</strong>
-                                </a>
-                                <a href ="#" class="remove-order-value" data="sort_by=title">
-                                   <i class="fa fa-times"></i>
-                                </a>
-                            {% else %}
-                                <a class="sort-by" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path }}" {% else %} href="{{ request.get_full_path }}?&amp;sort_by=title" {% endif %}>
-                                    By title
-                                </a>
-                            {% endif %}
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <!-- End sorting -->
 
             <div class="divider"></div>
         </div>
 
         <div class="col-sm-8">
+
+                <nav class="nav nav-inline">
+
+                            Order by:
+
+                            {% if 'sort_by=date' in request.get_full_path %}
+                                <a class="sort-by nav-link" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" {% endif %} data="sort_by=date">
+                                    <strong>Date</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=date">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by nav-link" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" {% endif %} data="sort_by=date">
+                                    Date
+                                </a>
+                            {% endif %}
+
+
+                            {% if 'sort_by=title' in request.get_full_path %}
+                                <a class="sort-by nav-link" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" {% endif %} data="sort_by=title">
+                                    <strong>Title</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=title">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by nav-link" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" {% endif %} data="sort_by=title">
+                                    Title
+                                </a>
+                            {% endif %}
+
+
+                            {% if 'sort_by=relevance' in request.get_full_path %}
+                                <a class="sort-by nav-link" {% if 'sort_by=relevance' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=relevance" {% endif %} data="sort_by=relevance">
+                                    <strong>Relevance</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=relevance">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by nav-link" {% if 'sort_by=relevance' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=relevance" {% endif %} data="sort_by=relevance">
+                                    Relevance
+                                </a>
+                            {% endif %}
+                </nav>
+
+            <!-- End sorting -->
+
+
+
+            <hr>
+
             {% if query %}
             <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
 
@@ -380,8 +385,6 @@
 
             $(".remove-order-value").click(function() {
 
-                console.log("CLICK")
-
                 var to_remove = encodeURIComponent($(this).attr('data'));
 
 
@@ -391,28 +394,68 @@
                 });
 
                 window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
-
-                console.log(to_remove)
             });
 
-            $(".sort-by").click(function() {
+//             $(".sort-by").click(function() {
 
-                console.log("CLICK")
+//                 var sibArr = $(this).siblings();
+//                 var otherLinks = new Array();
 
-                // var to_remove = encodeURIComponent($(this).attr('data'));
+//                 // $.each(sibArr, function() {
+//                 //     otherLinks.push(encodeURIComponent($(this).attr('data')));
+//                 // });
 
-                console.log(existing_q)
+//                 // var existing_components = existing_q.split("&")
+//                 // var new_components = $.grep(existing_components, function(value) {
+//                 //     var urlValue = encodeURIComponent(value)
+//                 //     // console.log(urlValue)
+//                 //     // $.each(otherLinks, function() {
+//                 //     //     console.log($(this));
+//                 //     //     // var urlValue = urlValue.replace($(this),'');
+//                 //     // })
+//                 //     // console.log(urlValue)
+//                 //     if (urlValue.includes('sort_by=date')) {
+//                 //         var urlValue = urlValue.replace('sort_by=date', '');
+//                 //     }
+//                 //     console.log(urlValue);
+//                 // });
+
+//                 // window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+//                 urlCurrent = window.location.href
+
+//                 var result = removeURLParameter(urlCurrent, 'sort_by')
+
+//                 window.location.assign(result+"&_="+timestamp);
+//                 // console.log(result)
 
 
-                // var existing_components = existing_q.split("&")
-                // var new_components = $.grep(existing_components, function(value) {
-                //     return encodeURIComponent(value) != to_remove;
-                // });
 
-                // window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
 
-                // console.log(to_remove)
-            });
+
+//             });
+
+// function removeURLParameter(url, parameter) {
+//     //prefer to use l.search if you have a location/link object
+//     var urlparts= url.split('?');
+//     if (urlparts.length>=2) {
+
+//         var prefix= encodeURIComponent(parameter)+'=';
+//         var pars= urlparts[1].split(/[&;]/g);
+
+//         //reverse iteration as may be destructive
+//         for (var i= pars.length; i-- > 0;) {
+//             //idiom for string.startsWith
+//             if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+//                 pars.splice(i, 1);
+//             }
+//         }
+
+//         url= urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : "");
+//         return url;
+//     } else {
+//         return url;
+//     }
+// }
 
         });
     </script>

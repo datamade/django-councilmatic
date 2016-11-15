@@ -428,18 +428,20 @@ select {
     font-weight: normal;
     font-size: 65%;
 }
-.remove-filter-value, .remove-order-value{
+.remove-filter-value{
     background-color: #eee;
     border-radius: 10px;
     font-size: .8em;
     padding: 0px 4px 1px 4px;
 }
-.remove-filter-value:hover, .remove-order-value:hover{
+.remove-filter-value:hover{
     cursor: pointer;
 }
 
 
-
+.nav a.sort-by {
+    padding-left: 20px;
+}
 
 
 /* subscription stuff */
