@@ -96,6 +96,8 @@ class CouncilmaticSearchForm(FacetedSearchForm):
 
     def __init__(self, *args, **kwargs):
         self.load_all = True
+        print("Running init....")
+        print(kwargs)
 
         super(CouncilmaticSearchForm, self).__init__(*args, **kwargs)
 
@@ -104,10 +106,8 @@ class CouncilmaticSearchForm(FacetedSearchForm):
         # return self.searchqueryset.order_by('-last_action_date').all()
         return self.searchqueryset.all()
 
-
 # This is used by a context processor in settings.py to render these variables
 # into the context of every page.
-
 
 def city_context(request):
     relevant_settings = [
