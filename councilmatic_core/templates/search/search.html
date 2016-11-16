@@ -37,7 +37,7 @@
 
                 <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q}}"{% endif %}>
                 <div class='input-group-btn'>
-                    <button type="submit" class="btn btn-lg btn-primary" id="searchSubmit">
+                    <button type="submit" class="btn btn-lg btn-primary">
                         <i class='fa fa-fw fa-search'></i>
                     </button>
                 </div>
@@ -375,12 +375,6 @@
 
             var timestamp = Date.now();
             var existing_q = decodeURIComponent("{{ q_filters }}").replace(/&amp;/g, '&').replace(/\+/g, ' ');
-
-            $("#searchSubmit").click(function() {
-                console.log(existing_q)
-                // does not work, because the 'submit' still updates the url
-                window.location.assign('/search/?'+existing_q)
-            });
 
             $(".filter-value").click(function() {
                 var addtl_filter = $(this).attr('data');
