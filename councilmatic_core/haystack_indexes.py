@@ -30,6 +30,7 @@ class BillIndex(indexes.SearchIndex):
     inferred_status = indexes.CharField(faceted=True)
     legislative_session = indexes.CharField(faceted=True)
 
+
     def get_model(self):
         return Bill
 
