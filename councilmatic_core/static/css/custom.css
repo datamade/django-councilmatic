@@ -439,6 +439,9 @@ select {
 }
 
 
+.nav a.sort-by {
+    padding-left: 20px;
+}
 
 
 /* subscription stuff */

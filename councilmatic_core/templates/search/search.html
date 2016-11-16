@@ -16,6 +16,25 @@
         </p>
         <form method="get" action=".">
             <div class="input-group site-intro-search">
+
+                {% for facet, selections in selected_facets.items %}
+                    {% for s in selections %}
+                        <input name="selected_facets" type="hidden" class="form-control" value="{{facet}}_exact:{{s}}">
+                    {% endfor %}
+                {% endfor %}
+
+                {% if 'sort_by=date' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="date">
+                {% endif %}
+
+                {% if 'sort_by=title' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="title">
+                {% endif %}
+
+                {% if 'sort_by=relevance' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="relevance">
+                {% endif %}
+
                 <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q}}"{% endif %}>
                 <div class='input-group-btn'>
                     <button type="submit" class="btn btn-lg btn-primary">
@@ -82,10 +101,65 @@
                 {% endif %}
             {% endif %}
 
+
+
             <div class="divider"></div>
         </div>
 
         <div class="col-sm-8">
+
+                <nav class="nav nav-inline">
+
+                            Order by:
+
+                            {% if 'sort_by=date' in request.get_full_path %}
+                                <a class="sort-by nav-link" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" {% endif %} data="sort_by=date">
+                                    <strong>Date</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=date">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by nav-link" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" {% endif %} data="sort_by=date">
+                                    Date
+                                </a>
+                            {% endif %}
+
+
+                            {% if 'sort_by=title' in request.get_full_path %}
+                                <a class="sort-by nav-link" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" {% endif %} data="sort_by=title">
+                                    <strong>Title</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=title">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by nav-link" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" {% endif %} data="sort_by=title">
+                                    Title
+                                </a>
+                            {% endif %}
+
+
+                            {% if 'sort_by=relevance' in request.get_full_path %}
+                                <a class="sort-by nav-link" {% if 'sort_by=relevance' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=relevance" {% endif %} data="sort_by=relevance">
+                                    <strong>Relevance</strong>
+                                </a>
+                                <a href ="#" class="remove-order-value" data="sort_by=relevance">
+                                   <i class="fa fa-times"></i>
+                                </a>
+                            {% else %}
+                                <a class="sort-by nav-link" {% if 'sort_by=relevance' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=relevance" {% endif %} data="sort_by=relevance">
+                                    Relevance
+                                </a>
+                            {% endif %}
+                </nav>
+
+            <!-- End sorting -->
+
+
+
+            <hr>
+
             {% if query %}
             <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
 
@@ -114,6 +188,8 @@
                 <div class='col-sm-8' id='search_message'></div>
             </div>
             {% endif %}
+
+
 
             {% for result in page.object_list %}
 
@@ -150,6 +226,10 @@
             {% if result.object.last_action_date %}
                 <p class="small text-muted condensed">
                     <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                </p>
+            {% elif result.object.get_last_action_date %}
+                 <p class="small text-muted condensed">
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.get_last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
                 </p>
             {% endif %}
 
@@ -292,20 +372,18 @@
                     $(this).find('i').removeClass("fa-plus").addClass("fa-minus");
                 }
             });
-        var timestamp = Date.now();
 
+            var timestamp = Date.now();
             var existing_q = decodeURIComponent("{{ q_filters }}").replace(/&amp;/g, '&').replace(/\+/g, ' ');
 
             $(".filter-value").click(function() {
                 var addtl_filter = $(this).attr('data');
 
                 if(existing_q){
-            window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
-
+                    window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
                 }
                 else{
-            window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
-
+                    window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
                 };
 
             });
@@ -320,9 +398,21 @@
                 });
 
                 window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
-
-
             });
+
+            $(".remove-order-value").click(function() {
+
+                var to_remove = encodeURIComponent($(this).attr('data'));
+
+
+                var existing_components = existing_q.split("&")
+                var new_components = $.grep(existing_components, function(value) {
+                    return encodeURIComponent(value) != to_remove;
+                });
+
+                window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+            });
+
 
 
         });
