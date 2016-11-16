@@ -259,11 +259,13 @@ class BillDetailView(DetailView):
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
-            for bas in user.billactionsubscriptions.all():
-                print ("looking at bill action subscription ", bas.bill, "bill=",bill)
-                if bill == bas.bill:
-                    context['user_subscribed'] = True
-                    break
+
+            if settings.USING_NOTIFICATIONS:
+                for bas in user.billactionsubscriptions.all():
+
+                    if bill == bas.bill:
+                        context['user_subscribed'] = True
+                        break
 
         return context
 
@@ -317,12 +319,14 @@ class CommitteeDetailView(DetailView):
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
-            for cas in user.committeeactionsubscriptions.all():
-                if committee == cas.committee:
-                    context['user_subscribed_actions'] = True
-            for ces in user.committeeeventsubscriptions.all():
-                if committee == ces.committee:
-                    context['user_subscribed_events'] = True
+            
+            if settings.USING_NOTIFICATIONS:
+                for cas in user.committeeactionsubscriptions.all():
+                    if committee == cas.committee:
+                        context['user_subscribed_actions'] = True
+                for ces in user.committeeeventsubscriptions.all():
+                    if committee == ces.committee:
+                        context['user_subscribed_events'] = True
 
         return context
 
@@ -467,8 +471,10 @@ class EventsView(ListView):
         if self.request.user.is_authenticated():
             user = self.request.user
             context['user'] = user
-            if (len(user.eventssubscriptions.all()) > 0):
-                context['user_subscribed'] = True
+
+            if settings.USING_NOTIFICATIONS:
+                if (len(user.eventssubscriptions.all()) > 0):
+                    context['user_subscribed'] = True
 
         upcoming_dates = upcoming_dates.order_by('start_time')
 
