@@ -152,3 +152,23 @@ def format_url_parameters(url):
     pattern = re.compile("|".join(paramsDict.keys()))
 
     return pattern.sub(lambda m: paramsDict[re.escape(m.group(0))], url)
+
+# TODO: Clean up for refactor of javascript.
+# @register.simple_tag
+# def query_transform(request, **kwargs):
+
+#     data_dict = dict(request.GET.copy())
+#     print(data_dict)
+#     try:
+#         selected_facet_names = data_dict['selected_facets']
+#     except:
+#         selected_facet_names = []
+
+#     updated = request.GET.copy()
+#     if selected_facet_names:
+#         for k,v in kwargs.items():
+#             selected_facet_names.append(v)
+
+#     updated['selected_facets'] = selected_facet_names
+
+#     return updated.urlencode()

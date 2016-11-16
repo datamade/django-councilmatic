@@ -23,6 +23,18 @@
                     {% endfor %}
                 {% endfor %}
 
+                {% if 'sort_by=date' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="date">
+                {% endif %}
+
+                {% if 'sort_by=title' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="title">
+                {% endif %}
+
+                {% if 'sort_by=relevance' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="relevance">
+                {% endif %}
+
                 <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q}}"{% endif %}>
                 <div class='input-group-btn'>
                     <button type="submit" class="btn btn-lg btn-primary" id="searchSubmit">

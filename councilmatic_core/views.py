@@ -96,8 +96,6 @@ class CouncilmaticSearchForm(FacetedSearchForm):
 
     def __init__(self, *args, **kwargs):
         self.load_all = True
-        print("Running init....")
-        print(kwargs)
 
         super(CouncilmaticSearchForm, self).__init__(*args, **kwargs)
 
