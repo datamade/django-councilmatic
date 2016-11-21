@@ -72,8 +72,6 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
 
         extra['selected_facets'] = selected_facets
 
-        extra['last_action'] = [b.last_action_date for b in Bill.objects.all() if b.last_action_date != None]
-
         extra['current_council_members'] = {
             p.current_member.person.name: p.label for p in Post.objects.all() if p.current_member
         }

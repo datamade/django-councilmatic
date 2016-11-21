@@ -1,0 +1,14 @@
+{% load extras %}
+
+{% if 'sort_by='|add:order_name in request.get_full_path %}
+    <a class="sort-by nav-link" {% if 'sort_by='|add:order_name in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by={{ order_name }}" {% endif %} data='sort_by='|add:order_name>
+        <strong>{{order_name|title}}</strong>
+    </a>
+    <a href ="#" class="remove-order-value" data='sort_by='|add:order_name>
+       <i class="fa fa-times"></i>
+    </a>
+{% else %}
+    <a class="sort-by nav-link" {% if 'sort_by='|add:order_name in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by={{ order_name }}" {% endif %} data='sort_by='|add:order_name>
+        {{order_name|title}}
+    </a>
+{% endif %}

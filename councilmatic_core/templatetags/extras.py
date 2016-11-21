@@ -146,11 +146,9 @@ def custom_reverse_search_url(subscription):
 
 @register.filter
 def format_url_parameters(url):
-    params = {"?&sort_by=date": "",\
-        "?&sort_by=title": "", "?&sort_by=relevance": "",\
-        "&sort_by=date": "", "&sort_by=title": "",\
-        "&sort_by=relevance": "", "sort_by=date": "",\
-        "sort_by=title": "", "sort_by=relevance": ""}
+    params = { "?&sort_by=date": "", "?&sort_by=title": "", "?&sort_by=relevance": "", "?&ascending=true": "",\
+        "&sort_by=date": "", "&sort_by=title": "", "&sort_by=relevance": "", "&ascending=true": "",\
+        "sort_by=date": "", "sort_by=title": "", "sort_by=relevance": "", "ascending=true": "" }
 
     paramsDict = dict((re.escape(k), v) for k, v in params.items())
     pattern = re.compile("|".join(paramsDict.keys()))
