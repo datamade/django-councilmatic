@@ -20,6 +20,7 @@ from django.template import *
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
+from haystack.query import SearchQuerySet
 
 import pytz
 
@@ -329,7 +330,7 @@ class CommitteeDetailView(DetailView):
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
-            
+
             if settings.USING_NOTIFICATIONS:
                 for cas in user.committeeactionsubscriptions.all():
                     if committee == cas.committee:

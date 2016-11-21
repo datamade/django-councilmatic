@@ -108,55 +108,46 @@
 
         <div class="col-sm-8">
 
-                <nav class="nav nav-inline">
+            <nav class="nav nav-inline">
 
-                            Order by:
+                Order by:
 
-                            {% if 'sort_by=date' in request.get_full_path %}
-                                <a class="sort-by nav-link" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" {% endif %} data="sort_by=date">
-                                    <strong>Date</strong>
-                                </a>
-                                <a href ="#" class="remove-order-value" data="sort_by=date">
-                                   <i class="fa fa-times"></i>
-                                </a>
-                            {% else %}
-                                <a class="sort-by nav-link" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" {% endif %} data="sort_by=date">
-                                    Date
-                                </a>
-                            {% endif %}
+                {% with order_name='date' %}
+                    {% include 'partials/order_by_filter.html' %}
+                {% endwith %}
 
+                {% with order_name='title' %}
+                    {% include 'partials/order_by_filter.html' %}
+                {% endwith %}
 
-                            {% if 'sort_by=title' in request.get_full_path %}
-                                <a class="sort-by nav-link" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" {% endif %} data="sort_by=title">
-                                    <strong>Title</strong>
-                                </a>
-                                <a href ="#" class="remove-order-value" data="sort_by=title">
-                                   <i class="fa fa-times"></i>
-                                </a>
-                            {% else %}
-                                <a class="sort-by nav-link" {% if 'sort_by=title' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" {% endif %} data="sort_by=title">
-                                    Title
-                                </a>
-                            {% endif %}
+                {% with order_name='relevance' %}
+                    {% include 'partials/order_by_filter.html' %}
+                {% endwith %}
 
 
-                            {% if 'sort_by=relevance' in request.get_full_path %}
-                                <a class="sort-by nav-link" {% if 'sort_by=relevance' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=relevance" {% endif %} data="sort_by=relevance">
-                                    <strong>Relevance</strong>
-                                </a>
-                                <a href ="#" class="remove-order-value" data="sort_by=relevance">
-                                   <i class="fa fa-times"></i>
-                                </a>
-                            {% else %}
-                                <a class="sort-by nav-link" {% if 'sort_by=relevance' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=relevance" {% endif %} data="sort_by=relevance">
-                                    Relevance
-                                </a>
-                            {% endif %}
-                </nav>
+                {% if 'sort_by=date' in request.get_full_path %}
+                    {% if 'ascending' in request.get_full_path %}
+                        <a class="sort-by nav-link assort" href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" data="sort_by=date">
+                            <i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+                        </a>
+                    {% else %}
+                        <a class="sort-by nav-link assort" href="{{ request.get_full_path }}?&amp;ascending=true" data="ascending=true">
+                            <i class="fa fa-sort-amount-desc" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                {% elif 'sort_by=title' in request.get_full_path%}
+                    {% if 'descending' in request.get_full_path %}
+                        <a class="sort-by nav-link assort" href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" data="sort_by=title">
+                            <i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+                        </a>
+                    {% else %}
+                        <a class="sort-by nav-link assort" href="{{ request.get_full_path }}?&amp;ascending=true" data="descending=true">
+                             <i class="fa fa-sort-amount-desc" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                {% endif %}
 
-            <!-- End sorting -->
-
-
+            </nav>
 
             <hr>
 
@@ -223,9 +214,9 @@
                 </div>
             </div>
 
-            {% if result.object.last_action_date %}
+            {% if result.last_action_date %}
                 <p class="small text-muted condensed">
-                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
                 </p>
             {% elif result.object.get_last_action_date %}
                  <p class="small text-muted condensed">
@@ -401,19 +392,18 @@
             });
 
             $(".remove-order-value").click(function() {
-
-                var to_remove = encodeURIComponent($(this).attr('data'));
-
-
+                var to_remove = $(this).attr('data');
                 var existing_components = existing_q.split("&")
-                var new_components = $.grep(existing_components, function(value) {
-                    return encodeURIComponent(value) != to_remove;
-                });
 
-                window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+                for(var i = existing_components.length -1; i >= 0 ; i--){
+                    var el = existing_components[i]
+                    if(el.includes('ascending') || el.includes(to_remove) || el.includes('descending')) {
+                        existing_components.splice(i, 1);
+                    }
+                }
+
+                window.location.assign('/search/?' + existing_components.join('&')+"&_="+timestamp);
             });
-
-
 
         });
     </script>
