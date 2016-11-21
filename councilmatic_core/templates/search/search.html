@@ -120,7 +120,6 @@
                                    <i class="fa fa-times"></i>
                                 </a>
                             {% else %}
-                                <a class="sort-by nav-link" {% if 'sort_by=date' in request.get_full_path %} href="{{ request.get_full_path | format_url_parameters }}" {% else %} href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" {% endif %} data="sort_by=date">
                                     Date
                                 </a>
                             {% endif %}
@@ -152,6 +151,7 @@
                                     Relevance
                                 </a>
                             {% endif %}
+
                 </nav>
 
             <!-- End sorting -->
@@ -223,9 +223,9 @@
                 </div>
             </div>
 
-            {% if result.object.last_action_date %}
+            {% if result.last_action_date %}
                 <p class="small text-muted condensed">
-                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
                 </p>
             {% elif result.object.get_last_action_date %}
                  <p class="small text-muted condensed">

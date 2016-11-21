@@ -20,6 +20,7 @@ from django.template import *
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
+from haystack.query import SearchQuerySet
 
 import pytz
 
@@ -70,6 +71,8 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
                     selected_facets[k] = [v]
 
         extra['selected_facets'] = selected_facets
+
+        extra['last_action'] = [b.last_action_date for b in Bill.objects.all() if b.last_action_date != None]
 
         extra['current_council_members'] = {
             p.current_member.person.name: p.label for p in Post.objects.all() if p.current_member
@@ -325,7 +328,7 @@ class CommitteeDetailView(DetailView):
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
-            
+
             if settings.USING_NOTIFICATIONS:
                 for cas in user.committeeactionsubscriptions.all():
                     if committee == cas.committee:
