@@ -118,30 +118,6 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
     else:
         return '0'
 
-# Used in subscriptions_manage.html. XXX: potential (?) site of concern for injecting JSON in search facet dicts and re-jsonifying it there
-# (From https://stackoverflow.com/questions/4698220/django-template-convert-a-python-list-into-a-javascript-object )
-# Open ticket in Django (with discussion of problematic aspects) https://code.djangoproject.com/ticket/17419
-@register.filter
-def jsonify(object):
-    if isinstance(object, QuerySet):
-        return mark_safe(serialize('json', object))
-    return mark_safe(json.dumps(object))
-jsonify.is_safe = True
-
-# Given a search subscription object, successfully reconstruct the
-# URL representing it
-@register.filter
-def custom_reverse_search_url(subscription):
-    url = '/search/'
-    d = [('q',subscription.search_term)]
-    for k,vs in subscription.search_facets.items():
-        #print ("k=",k, "vs=",vs)
-        for v in vs:
-            #print ("k=",k, "v=",v)
-            d.append(("selected_facets","%s_exact:%s" % (k,v)))
-    url += "?" + urllib.parse.urlencode(d)
-    #print ("custom_reverse_search_url: url is=", url)
-    return url
 
 
 @register.filter

@@ -129,6 +129,13 @@ class Command(BaseCommand):
                 etl_method(import_only=import_only,
                            download_only=download_only,
                            delete=options['delete'])
+
+        if getattr(settings, 'USING_NOTIFICATIONS', None):
+            from django.core import management
+
+            management.call_command('update_index', age=24)
+            management.call_command('send_notifications')
+
     
     def log_message(self, 
                     message, 
@@ -443,7 +450,6 @@ class Command(BaseCommand):
         else:
             query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
 
-        # grab all legislative sessions
         if self.update_since is None:
             max_updated = Bill.objects.all().aggregate(
                 Max('ocd_updated_at'))['ocd_updated_at__max']
@@ -499,6 +505,17 @@ class Command(BaseCommand):
         events_url = '{0}/events/'.format(base_url)
 
         params = {'jurisdiction_id': settings.OCD_JURISDICTION_ID}
+        
+        if self.update_since is None:
+            max_updated = Event.objects.all().aggregate(
+                Max('ocd_updated_at'))['ocd_updated_at__max']
+
+            if max_updated is None:
+                max_updated = datetime.datetime(1900, 1, 1)
+        else:
+            max_updated = self.update_since
+        
+        params['updated_at__gte'] = max_updated.isoformat()
         
         r = requests.get(events_url, params=params)
         page_json = json.loads(r.text)
