@@ -81,11 +81,15 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
             if self.request.user.is_authenticated():
                 user = self.request.user
                 extra['user'] = user
-                # check if person of interest is subscribed to by user
-                print ("checking the notifications_billsearchsubscription table for search term ", search_term, "with exact search_facets: ", selected_facets)
-                # there should be only one..
+                
+                search_params = {
+                    'term': search_term,
+                    'facets': selected_facets
+                }
+
                 try:
-                    bss = user.billsearchsubscriptions.get(user=user, search_term=search_term, search_facets__exact=selected_facets)
+                    bss = user.billsearchsubscriptions.get(user=user, 
+                                                           search_params__exact=search_params)
                     extra['user_subscribed'] = True
                 except BillSearchSubscription.DoesNotExist:
                     extra['user_subscribed'] = False
