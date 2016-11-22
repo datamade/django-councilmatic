@@ -21,6 +21,7 @@ class BillIndex(indexes.SearchIndex):
     abstract = indexes.CharField(model_attr='abstract', boost=1.25, default='')
 
     friendly_name = indexes.CharField()
+    sort_name = indexes.CharField()
     sponsorships = indexes.MultiValueField(faceted=True)
     actions = indexes.MultiValueField()
     controlling_body = indexes.MultiValueField(faceted=True)
@@ -36,6 +37,9 @@ class BillIndex(indexes.SearchIndex):
 
     def prepare_friendly_name(self, obj):
         return obj.friendly_name
+
+    def prepare_sort_name(self, obj):
+        return obj.friendly_name.replace(" ", "")
 
     def prepare_bill_type(self, obj):
         return obj.bill_type.lower()
