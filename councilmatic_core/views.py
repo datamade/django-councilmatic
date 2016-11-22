@@ -81,14 +81,14 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
             if self.request.user.is_authenticated():
                 user = self.request.user
                 extra['user'] = user
-                
+
                 search_params = {
                     'term': search_term,
                     'facets': selected_facets
                 }
 
                 try:
-                    bss = user.billsearchsubscriptions.get(user=user, 
+                    bss = user.billsearchsubscriptions.get(user=user,
                                                            search_params__exact=search_params)
                     extra['user_subscribed'] = True
                 except BillSearchSubscription.DoesNotExist:
