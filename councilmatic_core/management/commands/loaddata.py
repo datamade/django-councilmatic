@@ -1594,7 +1594,8 @@ class Command(BaseCommand):
         fields = []
         for col in cols:
             condition = '''
-                ((raw."{0}" IS NOT NULL OR dat."{0}" IS NOT NULL) AND raw."{0}" <> dat."{0}")
+                ((raw."{0}" IS NOT NULL OR dat."{0}" IS NOT NULL) AND
+                COALESCE(raw."{0}"::VARCHAR, '') <> COALESCE(dat."{0}"::VARCHAR, ''))
             '''.format(col)
             wheres.append(condition)
 
@@ -2813,6 +2814,7 @@ class Command(BaseCommand):
                 # update the right post(s) with the shape
                 if 'ocd-division' in bndry_json['external_id']:
                     division_ocd_id = bndry_json['external_id']
+
                     Post.objects.filter(
                         division_ocd_id=division_ocd_id).update(shape=r.text)
                 else:
