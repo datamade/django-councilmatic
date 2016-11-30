@@ -438,11 +438,13 @@ select {
     cursor: pointer;
 }
 
-
-.nav a.sort-by {
-    padding-left: 20px;
+.nav a.sort-by, .nav a.btn {
+    margin-left: 24px;
 }
 
+.fa-sort-amount-asc, .fa-sort-amount-desc {
+    margin-left: 8px;
+}
 
 /* subscription stuff */
 .getModal, .getModal:active, .getModal:focus, .createSubscription, .createSubscription:active, .createSubscription:focus {
