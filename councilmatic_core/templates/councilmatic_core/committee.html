@@ -94,21 +94,19 @@
                 <hr />
 
                 <h4>
-            <a name="#committeeEvents"></a>
                     <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
                     <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-        {% if USING_NOTIFICATIONS %}
-        {% if user_subscribed_events %}
-            <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from meetings">
-                <i class="fa fa-bullhorn"></i>
-            </a>
-        {% else %}
-            <a href="#committeeEvents" id="committee_events_Subscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to meetings">
-                <i class="fa fa-bullhorn"></i>
-            </a>
-        {% endif %}
-        {% endif %}
-
+                    {% if USING_NOTIFICATIONS %}
+                        {% if user_subscribed_events %}
+                            <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from meetings">
+                                <i class="fa fa-bullhorn"></i>
+                            </a>
+                        {% else %}
+                            <a href="#committeeEvents" id="committee_events_Subscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to meetings">
+                                <i class="fa fa-bullhorn"></i>
+                            </a>
+                        {% endif %}
+                    {% endif %}
                 </h4>
 
                 <div class='row'>

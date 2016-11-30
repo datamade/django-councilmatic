@@ -29,29 +29,38 @@ class CouncilmaticFacetedSearchFeed(Feed):
     def url_with_querystring(self, path, **kwargs):
         return path + '?' + urllib.parse.urlencode(kwargs)
 
-    # XXX need to extract since_datetime parameter
     def get_object(self, request):
         self.queryDict = request.GET
-        self.query = request.GET['q']
+        all_results    = SearchQuerySet().all()
 
-        #self.since_datetime = request.GET['since_datetime']
-        #print ("since_datetime=", self.since_datetime)
-
-        all_results = SearchQuerySet().all()
-        #results = all_results.filter(content=self.query, last_action_date=datetime(2015, 10, 28, 4, 0))
-        results = all_results.filter(content=self.query)
-        print("feeds.py:get_object(): got ", len(results), "results")
         if 'selected_facets' in request.GET:
             facets = request.GET.getlist('selected_facets')
+
+        if 'q' in request.GET:
+            self.query = request.GET['q']
+            results = all_results.filter(content=self.query)
+
+            if facets:
+                for facet in facets:
+                    (facet_name, facet_value) = facet.split(':')
+                    facet_name = facet_name.rsplit('_exact')[0]
+                    results = results.narrow('%s:%s' % (facet_name, facet_value))
+        elif facets:
             for facet in facets:
                 (facet_name, facet_value) = facet.split(':')
                 facet_name = facet_name.rsplit('_exact')[0]
-                results = results.narrow('%s:%s' % (facet_name, facet_value))
+                results = all_results.narrow('%s:%s' % (facet_name, facet_value))
 
         return results.order_by('-last_action_date')
 
     def title(self, obj):
-        return settings.SITE_META['site_name'] + ": Search for " + self.query # XXX: create a nice title based on all search parameters
+        if self.query:
+            title = settings.SITE_META['site_name'] + ": Search for '" + self.query.capitalize() + "'"
+            # XXX: create a nice title based on all search parameters
+        else:
+            title = settings.SITE_META['site_name'] + ": Filtered Search"
+
+        return title
 
     def link(self, obj):
         # return the main non-RSS search URL somehow

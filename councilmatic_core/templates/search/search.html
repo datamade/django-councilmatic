@@ -151,12 +151,13 @@
 
             <hr>
 
-            {% if query %}
-            <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
+            {% if query or selected_facets %}
+            <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
 
-                {% if selected_facets %}
-                <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}"
-                title="RSS feed">
+                {% if query and selected_facets %}
+                    <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
+                {% elif selected_facets %}
+                    <a href="/search/rss/?{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
                 {% else %}
                     <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
                 {% endif %}
