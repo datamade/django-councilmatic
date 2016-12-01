@@ -2,6 +2,10 @@ from councilmatic_core.models import Bill
 from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
 
+# XXX: is it OK to link to Django settings in haystack_indexes.py ?
+from django.conf import settings
+import pytz
+app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 class BillIndex(indexes.SearchIndex):
 
@@ -17,6 +21,7 @@ class BillIndex(indexes.SearchIndex):
     abstract = indexes.CharField(model_attr='abstract', boost=1.25, default='')
 
     friendly_name = indexes.CharField()
+    sort_name = indexes.CharField()
     sponsorships = indexes.MultiValueField(faceted=True)
     actions = indexes.MultiValueField()
     controlling_body = indexes.MultiValueField(faceted=True)
@@ -26,11 +31,15 @@ class BillIndex(indexes.SearchIndex):
     inferred_status = indexes.CharField(faceted=True)
     legislative_session = indexes.CharField(faceted=True)
 
+
     def get_model(self):
         return Bill
 
     def prepare_friendly_name(self, obj):
         return obj.friendly_name
+
+    def prepare_sort_name(self, obj):
+        return obj.friendly_name.replace(" ", "")
 
     def prepare_bill_type(self, obj):
         return obj.bill_type.lower()
@@ -51,7 +60,7 @@ class BillIndex(indexes.SearchIndex):
     def prepare_last_action_date(self, obj):
         from datetime import datetime, timedelta
         if not obj.last_action_date:
-            return datetime.now() - timedelta(days=36500)
+            return datetime.now().replace(tzinfo=app_timezone) - timedelta(days=36500)
         return obj.last_action_date
 
     def prepare_inferred_status(self, obj):

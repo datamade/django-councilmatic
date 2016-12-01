@@ -3,6 +3,12 @@ from django.template.defaultfilters import stringfilter
 from django.utils.html import strip_entities, strip_tags
 import re
 
+from django.utils.safestring import mark_safe
+from django.core.serializers import serialize
+import json
+from django.db.models.query import QuerySet
+import urllib
+
 register = template.Library()
 
 
@@ -78,8 +84,8 @@ def strip_mailto(email):
 @register.filter
 @stringfilter
 def committee_topic_only(committee_name):
-    clean = re.sub('Committee on', '', committee_name)
-    clean = re.sub('Subcommittee on', '', clean)
+    clean = re.sub('Committee on ', '', committee_name)
+    clean = re.sub('Subcommittee on ', '', clean)
     if 'Mental Health, Developmental Disability' in clean:
         clean = 'Mental Health & Disability'
     return clean
@@ -111,3 +117,33 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
         return s.strftime(fmt)
     else:
         return '0'
+
+
+@register.filter
+def format_url_parameters(url):
+    params = ["?&sort_by=date", "?&sort_by=title", "?&sort_by=relevance", "?&ascending=true", "?&descending=true", "&sort_by=date", "&sort_by=title", "&sort_by=relevance", "&ascending=true", "&descending=true", "sort_by=date", "sort_by=title", "sort_by=relevance", "ascending=true", "descending=true"]
+
+    paramsDict = dict((re.escape(el), "") for el in params)
+    pattern = re.compile("|".join(paramsDict.keys()))
+
+    return pattern.sub(lambda m: paramsDict[re.escape(m.group(0))], url)
+
+# TODO: Clean up for refactor of javascript.
+# @register.simple_tag
+# def query_transform(request, **kwargs):
+
+#     data_dict = dict(request.GET.copy())
+#     print(data_dict)
+#     try:
+#         selected_facet_names = data_dict['selected_facets']
+#     except:
+#         selected_facet_names = []
+
+#     updated = request.GET.copy()
+#     if selected_facet_names:
+#         for k,v in kwargs.items():
+#             selected_facet_names.append(v)
+
+#     updated['selected_facets'] = selected_facet_names
+
+#     return updated.urlencode()

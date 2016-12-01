@@ -12,17 +12,40 @@
 {% block content %}
 
     <div class="row-fluid">
-        <div class="col=sm=12">
+        <div class="col-sm-12">
             <br/>
             <h1>
-                <span>{{person.name}}</span>
-                <br class="non-desktop-only"/>
-                <small>
-			{{ title }}
-			<a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                </small>
+            <span>{{person.name}}</span>
+            <br class="non-desktop-only"/>
+            <small>
+            {{ title }}
+            <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+
+            {% with slug=person.slug widget='person_widget' frameheight='460px' %}
+                {% include 'partials/widget_modal.html' %}
+            {% endwith %}
+
+            </small>
+            {% if USING_NOTIFICATIONS %}
+            <small>
+                {% if user_subscribed %}
+                <a href="#" id="personSubscribe" class="removeSubscription" title="remove alert">
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Unsubscribe from {{person.name}}"></i>
+                </a>
+                {% else %}
+                <a href="#" id="personSubscribe" class="createSubscription" title="create alert">
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Subscribe to {{person.name}}"></i>
+                </a>
+                {% endif %}
+            </small>
+            {% endif %}
             </h1>
+
         </div>
+    </div>
+
+    <div class='row'>
+        <div class='col-sm-6' id='person_message'></div>
     </div>
     <div class="row-fluid">
         <div class="col-sm-4 non-mobile-only">
@@ -191,6 +214,44 @@
 {% endblock %}
 
 {% block extra_js %}
+    {% if USING_NOTIFICATIONS %}
+    <script>
+    $(document).ready(function() {
+        $("#personSubscribe").click(function() {
+            var bullHorn = this;
+            if ($(this).hasClass('createSubscription')) {
+                if ('{{ request.user.is_authenticated }}'== 'True') {
+                    posturl = "/person/" + "{{person.slug}}" + "/subscribe/";
+                    $.post(posturl, function(data) {
+                    }).then(function() {
+                        $(bullHorn).removeClass('createSubscription');
+                        $(bullHorn).addClass('removeSubscription');
+                        $(bullHorn).attr('title', 'remove alert');
+                    }, function (error) {
+                        console.error("Error subscribing to  interest {{person.slug}}");
+                    });
+                }
+                else {
+                    $('#person_message').html(alertMsg);
+                }
+            } else if ($(this).hasClass('removeSubscription')) {
+                posturl = "/person/" + "{{person.slug}}" + "/unsubscribe/";
+                $.post(posturl, function(data) {
+                }).then(function() {
+                    $(bullHorn).removeClass('removeSubscription');
+                    $(bullHorn).addClass('createSubscription');
+                    $(bullHorn).attr('title', 'create alert');
+                }, function (error) {
+                    console.error("Error unsubscribing from  interest {{person.slug}}");
+                });
+            }
+            else {
+                alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
+            }
+        }
+    )});
+    </script>
+    {% endif %}
 
     {% if map_geojson %}
 
@@ -242,10 +303,4 @@
 
     {% endif %}
 
-    <script>
-
-        // for reference purposes
-        // console.log( "OCD ID: {{person.ocd_id}}" )
-
-    </script>
 {% endblock %}

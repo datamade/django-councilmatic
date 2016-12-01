@@ -42,7 +42,7 @@ h1, h2, h3, h4 {
     display: block;
     float: left;
 }
-#nav-items > li > a {
+#nav-items > li > a, #nav-items > li > .dropdown > a {
     color: #000;
     position: relative;
     display: block;
@@ -52,10 +52,27 @@ h1, h2, h3, h4 {
     padding-bottom: 19.5px;
     line-height: 21px;
 }
-#nav-items > li > a:hover, #nav-items > li > a:focus {
+#nav-items > li > i {
+    font-size: .8em;
+    color: #78777d;
+    position: relative;
+    display: block;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 19.5px;
+    padding-bottom: 19.5px;
+    line-height: 21px;
+}
+#nav-items > li > a:hover,
+#nav-items > li > a:focus,
+#nav-items > li a.dropdown-toggle:hover,
+#nav-items > li a.dropdown-toggle:focus {
     color: #000;
     background-color: #EEE;
     text-decoration: none;
+}
+.dropdown-menu > li.non-link {
+    padding: 3px 20px;
 }
 .nav-pills > li > a{
     border-radius: 0px;
@@ -406,7 +423,11 @@ select {
     padding-left: 0;
     list-style-type: none;
 }
-
+.badge-facet{
+    background-color: #D9D9D9;
+    font-weight: normal;
+    font-size: 65%;
+}
 .remove-filter-value{
     background-color: #eee;
     border-radius: 10px;
@@ -417,6 +438,31 @@ select {
     cursor: pointer;
 }
 
+.nav a.sort-by, .nav a.btn {
+    margin-left: 2.8em;
+}
+
+.fa-sort-amount-asc, .fa-sort-amount-desc {
+    margin-left: 8px;
+}
+
+/* subscription stuff */
+.getModal, .getModal:active, .getModal:focus, .createSubscription, .createSubscription:active, .createSubscription:focus {
+    color: #ddd;
+}
+.removeSubscription {
+    color: #e22620;
+}
+
+.tooltip-inner {
+    background-color: #ddd;
+    color: #fff;
+    font-family: "Open Sans", sans-serif;
+}
+
+.tooltip.top .tooltip-arrow {
+    border-top-color: #ddd;
+}
 
 /* pdf */
 .pdf-viewer{
@@ -659,3 +705,20 @@ select {
     }
 
 }
+
+/* Custom style for alert box */
+.alert-info {
+    background-color: #E5F4F5;
+    color: #3D8A8E;
+    border-color: #C7E8EA;
+}
+
+/*.close { color: #3D8A8E; }*/
+
+/* Custom style for modal instrucitons on widget */
+textarea {
+    font-size: 16px;
+    width:100%;
+}
+
+.fa-share { color: #ddd; }

@@ -16,6 +16,25 @@
         </p>
         <form method="get" action=".">
             <div class="input-group site-intro-search">
+
+                {% for facet, selections in selected_facets.items %}
+                    {% for s in selections %}
+                        <input name="selected_facets" type="hidden" class="form-control" value="{{facet}}_exact:{{s}}">
+                    {% endfor %}
+                {% endfor %}
+
+                {% if 'sort_by=date' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="date">
+                {% endif %}
+
+                {% if 'sort_by=title' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="title">
+                {% endif %}
+
+                {% if 'sort_by=relevance' in request.get_full_path %}
+                    <input name="sort_by" type="hidden" class="form-control" value="relevance">
+                {% endif %}
+
                 <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q}}"{% endif %}>
                 <div class='input-group-btn'>
                     <button type="submit" class="btn btn-lg btn-primary">
@@ -82,26 +101,80 @@
                 {% endif %}
             {% endif %}
 
+
+
             <div class="divider"></div>
         </div>
 
-
-
         <div class="col-sm-8">
-            {% if query %}
-                <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} for '{{ request.GET.q }}'
-			{% with selected_facets=request.GET.selected_facets %}
-			{% if selected_facets %}
-			<a href="/search/rss/?q={{request.GET.q}}&selected_facets={{request.GET.selected_facets}}" title="RSS feed">
-			{% else %}
-				<a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
-			{% endif %}
-			{% endwith %}
-			<i class="fa fa-rss-square" aria-hidden="true"></i></a>
-		</h3>
+
+            <nav class="nav nav-inline">
+
+                Order by:
+
+                {% with order_name='date' %}
+                    {% include 'partials/order_by_filter.html' %}
+                {% endwith %}
+
+                {% with order_name='title' %}
+                    {% include 'partials/order_by_filter.html' %}
+                {% endwith %}
+
+                {% with order_name='relevance' %}
+                    {% include 'partials/order_by_filter.html' %}
+                {% endwith %}
+
+                {% if 'sort_by' in request.get_full_path %}
+                    <a href ="#" class="remove-order-value btn btn-sm btn-primary"
+                        {% if 'sort_by=date' in request.get_full_path %}
+                            data='sort_by=date'
+                        {% elif 'sort_by=title' in request.get_full_path%}
+                            data='sort_by=title'
+                        {% elif 'sort_by=relevance' in request.get_full_path%}
+                            data='sort_by=relevance'
+                        {% endif %}
+                        ><i class="fa fa-times"></i>
+                        Remove
+                    </a>
+                {% endif %}
+
+            </nav>
+
+            <hr>
+
+            {% if query or selected_facets %}
+            <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
+
+                {% if query and selected_facets %}
+                    <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
+                {% elif selected_facets %}
+                    <a href="/search/rss/?{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
+                {% else %}
+                    <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
+                {% endif %}
+
+                <i class="fa fa-rss-square" aria-hidden="true"></i></a>
+
+                {% if USING_NOTIFICATIONS %}
+                    {% if user_subscribed %}
+                    <a href="#" id="searchSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from search">
+                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                    </a>
+                    {% else %}
+                    <a href="#" id="searchSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to search">
+                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </h3>
+            <div class='row'>
+                <div class='col-sm-8' id='search_message'></div>
+            </div>
             {% endif %}
 
-        {% for result in page.object_list %}
+
+
+            {% for result in page.object_list %}
 
             <!-- Legislation result -->
 
@@ -110,17 +183,16 @@
                 {{ result.object.inferred_status | inferred_status_label | safe }}
             </p>
 
-
             <div class="row">
                 <div class="col-xs-11">
 
                     {% if query %}
                         <p class="search-result">
-                            {{ result.highlighted.text.0|safe  }}
+                {{ result.highlighted.text.0|safe  }}
                         </p>
                     {% else %}
                         <p>
-                            {{result.object.listing_description | short_blurb}}
+                {{result.object.listing_description | short_blurb}}
                         </p>
                     {% endif %}
 
@@ -134,9 +206,13 @@
                 </div>
             </div>
 
-            {% if result.object.last_action_date %}
+            {% if result.last_action_date %}
                 <p class="small text-muted condensed">
-                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
+                </p>
+            {% elif result.object.get_last_action_date %}
+                 <p class="small text-muted condensed">
+                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.get_last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
                 </p>
             {% endif %}
 
@@ -153,7 +229,7 @@
                     <i class="fa fa-fw fa-tag"></i>
                     {% for tag in result.object.topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag }}'>{{ tag }}</a>
+                            <a href='/search/?q={{request.GET.q}}&selected_facets=topics_exact:{{ tag }}'>{{tag}}</a>
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
@@ -161,7 +237,7 @@
                     <i class="fa fa-fw fa-tag"></i>
                     {% for tag in result.object.pseudo_topics %}
                         <span class="badge badge-muted pseudo-topic-tag">
-                            <a href='/search/?q=&selected_facets=topics_exact:{{ tag | committee_topic_only }}'>{{ tag | committee_topic_only }}</a>
+                            <a href='/search/?q={{request.GET.q}}&selected_facets=topics_exact:{{ tag | committee_topic_only }}'>{{ tag | committee_topic_only }}</a>
                         </span>&nbsp;
                     {% endfor %}
                     <br/>
@@ -186,7 +262,6 @@
         {% endfor %}
         </div>
     </div>
-
 
     {% if page.has_previous or page.has_next %}
         <div class="row">
@@ -221,6 +296,53 @@
 
 {% block extra_js %}
     <script>
+    $(document).ready(function() {
+        $("#searchSubscribe").click(function() {
+            var bullHorn = this;
+            if ($(this).hasClass('createSubscription')) {
+                if ('{{ request.user.is_authenticated }}'== 'True') {
+                    posturl2 = "/search_check_subscription/"
+                    facets2 = JSON.stringify({{selected_facets|safe}});
+                    stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
+                        function(data, status) {
+                        console.log("returned from post with data: ", data, "status:", status);
+                    }).error(function() {
+                    console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
+                    }),
+                    posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
+                    facets =  JSON.stringify({{selected_facets|safe}});
+                    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
+                        $(bullHorn).removeClass('createSubscription');
+                        $(bullHorn).addClass('removeSubscription');
+                        $(bullHorn).attr('title', 'remove alert');
+                    }, function (error) {
+                        console.error("Error subscribing to interest {{request.GET.q}} with {{selected_facets}}" );
+                    })
+                }
+                else {
+                    $('#search_message').html(alertMsg);
+                }
+            } else if ($(this).hasClass('removeSubscription')) {
+                posturl = "/search_unsubscribe/";
+                facets = JSON.stringify({{selected_facets|safe}});
+                $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
+                    $(bullHorn).removeClass('removeSubscription');
+                    $(bullHorn).addClass('createSubscription');
+                    $(bullHorn).attr('title', 'create alert');
+                }, function (error) {
+                    console.error("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
+                });
+            }
+            else {
+                alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
+            }
+        }
+    )});
+    </script>
+
+
+
+    <script>
         $(function() {
             // filters are collapsed be default b/c they are long
             // filters w/ class panel-show (i.e. filters that have been selected) are expanded
@@ -234,17 +356,17 @@
                 }
             });
 
+            var timestamp = Date.now();
             var existing_q = decodeURIComponent("{{ q_filters }}").replace(/&amp;/g, '&').replace(/\+/g, ' ');
 
             $(".filter-value").click(function() {
-
                 var addtl_filter = $(this).attr('data');
 
                 if(existing_q){
-                    window.location = '/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter);
+                    window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
                 }
                 else{
-                    window.location = '/search/?selected_facets=' + encodeURIComponent(addtl_filter);
+                    window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
                 };
 
             });
@@ -258,10 +380,22 @@
                     return encodeURIComponent(value) != to_remove;
                 });
 
-                window.location = '/search/?' + new_components.join('&');
-
+                window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
             });
 
+            $(".remove-order-value").click(function() {
+                var to_remove = $(this).attr('data');
+                var existing_components = existing_q.split("&")
+
+                for(var i = existing_components.length -1; i >= 0 ; i--){
+                    var el = existing_components[i]
+                    if(el.includes('ascending') || el.includes(to_remove) || el.includes('descending')) {
+                        existing_components.splice(i, 1);
+                    }
+                }
+
+                window.location.assign('/search/?' + existing_components.join('&')+"&_="+timestamp);
+            });
 
         });
     </script>

@@ -15,17 +15,33 @@ from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 
+
+from django.template import *
+
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
+from haystack.query import SearchQuerySet
 
 import pytz
 
 from .models import Person, Bill, Organization, Event, Post
 
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
+if (settings.USING_NOTIFICATIONS):
+    from notifications.models import BillSearchSubscription, PersonSubscription
+
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
+# XXX mcc: genuinely not sure if this is helping or not
+class NeverCacheMixin(object):
+    @method_decorator(never_cache)
+    def dispatch(self, *args, **kwargs):
+        return super(NeverCacheMixin, self).dispatch(*args, **kwargs)
 
-class CouncilmaticFacetedSearchView(FacetedSearchView):
+class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
 
     def extra_context(self):
 
@@ -35,8 +51,9 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
 
         q_filters = ''
         url_params = [(p, val) for (p, val) in self.request.GET.items(
-        ) if p != 'page' and p != 'selected_facets' and p != 'amp']
+        ) if p != 'page' and p != 'selected_facets' and p != 'amp' and p != '_']
         selected_facet_vals = self.request.GET.getlist('selected_facets')
+        search_term = self.request.GET.get('q')
         for facet_val in selected_facet_vals:
             url_params.append(('selected_facets', facet_val))
         if url_params:
@@ -59,6 +76,24 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
             p.current_member.person.name: p.label for p in Post.objects.all() if p.current_member
         }
 
+        if (settings.USING_NOTIFICATIONS):
+            extra['user_subscribed'] = False
+            if self.request.user.is_authenticated():
+                user = self.request.user
+                extra['user'] = user
+
+                search_params = {
+                    'term': search_term,
+                    'facets': selected_facets
+                }
+
+                try:
+                    bss = user.billsearchsubscriptions.get(user=user,
+                                                           search_params__exact=search_params)
+                    extra['user_subscribed'] = True
+                except BillSearchSubscription.DoesNotExist:
+                    extra['user_subscribed'] = False
+
         return extra
 
 
@@ -70,11 +105,12 @@ class CouncilmaticSearchForm(FacetedSearchForm):
         super(CouncilmaticSearchForm, self).__init__(*args, **kwargs)
 
     def no_query_found(self):
-        return self.searchqueryset.order_by('-last_action_date').all()
+
+        # return self.searchqueryset.order_by('-last_action_date').all()
+        return self.searchqueryset.all()
 
 # This is used by a context processor in settings.py to render these variables
 # into the context of every page.
-
 
 def city_context(request):
     relevant_settings = [
@@ -92,6 +128,7 @@ def city_context(request):
         'MAP_CONFIG',
         'ANALYTICS_TRACKING_CODE',
         'ABOUT_BLURBS',
+        'USING_NOTIFICATIONS'
     ]
 
     city_context = {s: getattr(settings, s, None) for s in relevant_settings}
@@ -111,7 +148,7 @@ class IndexView(TemplateView):
         recently_passed = []
         # go back in time at 10-day intervals til you find 3 passed bills
         for i in range(0, -100, -10):
-            
+
             today = timezone.now()
 
             begin = today + timedelta(days=i)
@@ -228,6 +265,19 @@ class BillDetailView(DetailView):
                                     settings.SITE_META['site_name'])
         context['seo'] = seo
 
+        context['user_subscribed'] = False
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            context['user'] = user
+            # check if person of interest is subscribed to by user
+
+            if settings.USING_NOTIFICATIONS:
+                for bas in user.billactionsubscriptions.all():
+
+                    if bill == bas.bill:
+                        context['user_subscribed'] = True
+                        break
+
         return context
 
 
@@ -254,7 +304,7 @@ class CommitteeDetailView(DetailView):
 
         committee = context['committee']
         context['memberships'] = committee.memberships.all()
-        
+
         description = None
 
         if getattr(settings, 'COMMITTEE_DESCRIPTIONS', None):
@@ -263,16 +313,31 @@ class CommitteeDetailView(DetailView):
 
         seo = {}
         seo.update(settings.SITE_META)
-        
+
         if description:
             seo['site_desc'] = description
         else:
             seo['site_desc'] = "See what %s's %s has been up to!" % (
                 settings.CITY_COUNCIL_NAME, committee.name)
-        
+
         seo['title'] = '%s - %s' % (committee.name,
                                     settings.SITE_META['site_name'])
         context['seo'] = seo
+
+        context['user_subscribed_actions'] = False
+        context['user_subscribed_events'] = False
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            context['user'] = user
+            # check if person of interest is subscribed to by user
+
+            if settings.USING_NOTIFICATIONS:
+                for cas in user.committeeactionsubscriptions.all():
+                    if committee == cas.committee:
+                        context['user_subscribed_actions'] = True
+                for ces in user.committeeeventsubscriptions.all():
+                    if committee == ces.committee:
+                        context['user_subscribed_events'] = True
 
         return context
 
@@ -338,6 +403,21 @@ class PersonDetailView(DetailView):
 
             context['map_geojson'] = json.dumps(map_geojson)
 
+        context['user_subscribed'] = False
+
+        if (settings.USING_NOTIFICATIONS):
+            subscriptions = PersonSubscription.objects.all()
+
+            if self.request.user.is_authenticated():
+                user = self.request.user
+                context['user'] = user
+                # check if person of interest is subscribed to by user
+
+                for ps in user.personsubscriptions.all():
+                    if person == ps.person:
+                        context['user_subscribed'] = True
+                        break
+
         return context
 
 @method_decorator(xframe_options_exempt, name='dispatch')
@@ -365,15 +445,15 @@ class EventsView(ListView):
 
         context['month_options'] = []
         for index in range(1, 13):
-            month_name = datetime(date.today().year, index, 1).strftime('%B')
+            month_name = datetime(datetime.now(app_timezone).date().year, index, 1).strftime('%B')
             context['month_options'].append([month_name, index])
 
         context['show_upcoming'] = True
-        context['this_month'] = date.today().month
-        context['this_year'] = date.today().year
+        context['this_month'] = datetime.now(app_timezone).date().month
+        context['this_year'] = datetime.now(app_timezone).date().year
         events_key = 'upcoming_events'
 
-        upcoming_dates = Event.objects.filter(start_time__gt=date.today())
+        upcoming_dates = Event.objects.filter(start_time__gt=datetime.now(app_timezone).date())
 
         current_year = self.request.GET.get('year')
         current_month = self.request.GET.get('month')
@@ -396,6 +476,16 @@ class EventsView(ListView):
             context['show_upcoming'] = False
             context['this_month'] = int(current_month)
             context['this_year'] = int(current_year)
+            context['this_start_date']= datetime(year=int(current_year), month=int(current_month), day=1)
+
+        context['user_subscribed'] = False
+        if self.request.user.is_authenticated():
+            user = self.request.user
+            context['user'] = user
+
+            if settings.USING_NOTIFICATIONS:
+                if (len(user.eventssubscriptions.all()) > 0):
+                    context['user_subscribed'] = True
 
         upcoming_dates = upcoming_dates.order_by('start_time')
 
