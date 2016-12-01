@@ -439,7 +439,7 @@ select {
 }
 
 .nav a.sort-by, .nav a.btn {
-    margin-left: 24px;
+    margin-left: 2.8em;
 }
 
 .fa-sort-amount-asc, .fa-sort-amount-desc {
