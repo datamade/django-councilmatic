@@ -11,9 +11,9 @@
 {% block content %}
     <br/>
     <div class='jumbotron' id='search-jumbotron'>
-        <p class="h4">
-            Search {{CITY_NAME}} Legislation
-        </p>
+        <!-- Add partial, so the title above search can be easily customized for site. -->
+        {% include 'partials/search_header.html' %}
+
         <form method="get" action=".">
             <div class="input-group site-intro-search">
 
@@ -178,10 +178,9 @@
 
             <!-- Legislation result -->
 
-            <p>
-                <a class="small" href="/legislation/{{ result.object.slug }}/">{{ result.object.friendly_name }}</a>
-                {{ result.object.inferred_status | inferred_status_label | safe }}
-            </p>
+            {% with r=result %}
+                {% include 'partials/search_result.html' %}
+            {% endwith %}
 
             <div class="row">
                 <div class="col-xs-11">

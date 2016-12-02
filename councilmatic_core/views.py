@@ -190,6 +190,19 @@ class IndexView(TemplateView):
 class AboutView(TemplateView):
     template_name = 'councilmatic_core/about.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['timestamp'] = datetime.now(app_timezone).strftime('%m%d%Y%s')
+
+        return context
+
+    def extra_context(self):
+        """
+        Override this in custom subclass to add more context variables if needed.
+        """
+        return {}
+
 
 class CouncilMembersView(ListView):
     template_name = 'councilmatic_core/council_members.html'
