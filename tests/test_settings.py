@@ -17,10 +17,10 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'travis',
-        'USER': 'travis',
+        'NAME': 'test_councilmatic',
+        'USER': 'postgres',
         'PASSWORD': '',
-        'HOST': 'localhost',
+        'HOST': '',
         'PORT': '5432',
     }
 }
@@ -116,3 +116,20 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
+OCD_CITY_COUNCIL_ID = 'ocd-organization/ef168607-9135-4177-ad8e-c1f7a4806c3a'
+CITY_COUNCIL_NAME = 'Chicago City Council'
+OCD_JURISDICTION_ID = 'ocd-jurisdiction/country:us/state:il/place:chicago/government'
+LEGISLATIVE_SESSIONS = ['2007', '2011', '2015'] # the last one in this list should be the current legislative session
+CITY_NAME = 'Chicago'
+CITY_NAME_SHORT = 'Chicago'
+
+# VOCAB SETTINGS FOR FRONT-END DISPLAY
+CITY_VOCAB = {
+    'MUNICIPAL_DISTRICT': 'Ward',       # e.g. 'District'
+    'SOURCE': 'Chicago City Clerk',
+    'COUNCIL_MEMBER': 'Alderman',       # e.g. 'Council Member'
+    'COUNCIL_MEMBERS': 'Aldermen',      # e.g. 'Council Members'
+    'EVENTS': 'Meetings',               # label for the events listing, e.g. 'Events'
+}
+
+APP_NAME = 'chicago'
