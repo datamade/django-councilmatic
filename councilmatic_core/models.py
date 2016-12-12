@@ -1,7 +1,6 @@
 from datetime import datetime
 import inspect
 import importlib
-from django.utils import timezone
 
 import pytz
 
@@ -55,9 +54,11 @@ def override_relation(base_model):
 
     return overridden
 
+
 def get_uuid():
     import uuid
     return str(uuid.uuid4())
+
 
 class Person(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True, default=get_uuid, primary_key=True)
@@ -383,7 +384,7 @@ class Bill(models.Model):
     @property
     def unique_related_upcoming_events(self):
         events = [r.agenda_item.event for r in self.related_agenda_items.filter(
-            agenda_item__event__start_time__gte=timezone.now(app_timezone)).all()] # timezone fix to avoid runtime warnings re: "naive datetime"
+            agenda_item__event__start_time__gte=timezone.now(app_timezone)).all()]
         return list(set(events))
 
 
@@ -431,10 +432,10 @@ class Organization(models.Model):
         """
         # need to look up event participants by name
         events = Event.objects\
-                    .filter(participants__entity_type='organization', participants__entity_name=self.name)\
-                    .filter(start_time__gt=datetime.now(app_timezone))\
-                    .order_by('start_time')\
-                    .all()
+                      .filter(participants__entity_type='organization', participants__entity_name=self.name)\
+                      .filter(start_time__gt=datetime.now(app_timezone))\
+                      .order_by('start_time')\
+                      .all()
         return events
 
     @property
@@ -738,6 +739,7 @@ class Document(models.Model):
 
     class Meta:
         abstract = True
+
 
 class BillDocument(Document):
     bill = models.ForeignKey('Bill', related_name='documents')

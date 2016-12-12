@@ -7,6 +7,7 @@ from django.conf import settings
 import pytz
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
+
 class BillIndex(indexes.SearchIndex):
 
     text = indexes.CharField(document=True, use_template=True,
@@ -30,7 +31,6 @@ class BillIndex(indexes.SearchIndex):
     last_action_date = indexes.DateTimeField()
     inferred_status = indexes.CharField(faceted=True)
     legislative_session = indexes.CharField(faceted=True)
-
 
     def get_model(self):
         return Bill

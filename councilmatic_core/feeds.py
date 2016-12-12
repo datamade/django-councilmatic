@@ -1,18 +1,14 @@
-from .models import Person, Bill, Organization, Event, Post
-from datetime import date, timedelta, datetime
-import itertools
-from operator import attrgetter
 import urllib
+
+from haystack.query import SearchQuerySet
+
 from django.contrib.syndication.views import Feed
 from django.utils.feedgenerator import Rss201rev2Feed
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.conf import settings
 
-import pytz
-import re
-import json
+from .models import Person, Bill, Organization, Event
 
-from haystack.query import SearchQuerySet
 
 class CouncilmaticFacetedSearchFeed(Feed):
     title_template = 'feeds/search_item_title.html'
@@ -31,7 +27,7 @@ class CouncilmaticFacetedSearchFeed(Feed):
 
     def get_object(self, request):
         self.queryDict = request.GET
-        all_results    = SearchQuerySet().all()
+        all_results = SearchQuerySet().all()
 
         if 'selected_facets' in request.GET:
             facets = request.GET.getlist('selected_facets')
@@ -82,7 +78,7 @@ class CouncilmaticFacetedSearchFeed(Feed):
         l_items = list(searchresults)[:20]
         # turn these into bills. XXX: should override in subclasses, e.g. NYCCouncilmaticFacetedSearchFeed,
         # to access methods like inferred_status()
-        pks =[i.pk for i in l_items]
+        pks = [i.pk for i in l_items]
         bills = self.bill_model.objects.filter(pk__in=pks).order_by('-last_action_date')
         return list(bills)
 
@@ -159,8 +155,8 @@ class CommitteeDetailEventsFeed(Feed):
         return "Events for committee %s" % obj.name
 
     def items(self, obj):
-        events =  obj.recent_events.all()[:self.NUM_RECENT_COMMITTEE_EVENTS]
-        levents =  list(events)
+        events = obj.recent_events.all()[:self.NUM_RECENT_COMMITTEE_EVENTS]
+        levents = list(events)
         return levents
 
 
@@ -198,8 +194,9 @@ class CommitteeDetailActionFeed(Feed):
 
     def items(self, obj):
         actions = obj.recent_activity[:self.NUM_RECENT_COMMITTEE_ACTIONS]
-        actions_list =  list(actions)
+        actions_list = list(actions)
         return actions_list
+
 
 class BillDetailActionFeed(Feed):
     """
@@ -235,7 +232,7 @@ class BillDetailActionFeed(Feed):
 
     def items(self, obj):
         actions = obj.ordered_actions[:self.NUM_RECENT_BILL_ACTIONS]
-        actions_list =  list(actions)
+        actions_list = list(actions)
         return actions_list
 
 
@@ -247,11 +244,6 @@ class EventsFeed(Feed):
     description_template = 'feeds/events_item_description.html'
     feed_type = Rss201rev2Feed
     NUM_RECENT_EVENTS = 20
-
-
-    #def get_object(self, request):
-    #    o = Event.objects.all()
-    #    return o
 
     title = settings.CITY_COUNCIL_NAME + " " + "Recent Events"
     link = reverse_lazy('events')
@@ -268,7 +260,6 @@ class EventsFeed(Feed):
         return "Events"
 
     def items(self, obj):
-        events =  Event.objects.all()[:self.NUM_RECENT_EVENTS]
-        levents =  list(events)
+        events = Event.objects.all()[:self.NUM_RECENT_EVENTS]
+        levents = list(events)
         return levents
-

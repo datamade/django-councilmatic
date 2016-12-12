@@ -14,32 +14,27 @@ from django.core.cache import cache
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.utils import timezone
-
-
-from django.template import *
+from django.views.decorators.cache import never_cache
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
-from haystack.query import SearchQuerySet
 
 import pytz
 
 from .models import Person, Bill, Organization, Event, Post
 
-from django.views.decorators.cache import never_cache
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 
 if (settings.USING_NOTIFICATIONS):
-    from notifications.models import BillSearchSubscription, PersonSubscription
+    from notifications.models import BillSearchSubscription
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
-# XXX mcc: genuinely not sure if this is helping or not
+
 class NeverCacheMixin(object):
     @method_decorator(never_cache)
     def dispatch(self, *args, **kwargs):
         return super(NeverCacheMixin, self).dispatch(*args, **kwargs)
+
 
 class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
 
@@ -88,8 +83,8 @@ class CouncilmaticFacetedSearchView(FacetedSearchView, NeverCacheMixin):
                 }
 
                 try:
-                    bss = user.billsearchsubscriptions.get(user=user,
-                                                           search_params__exact=search_params)
+                    user.billsearchsubscriptions.get(user=user,
+                                                     search_params__exact=search_params)
                     extra['user_subscribed'] = True
                 except BillSearchSubscription.DoesNotExist:
                     extra['user_subscribed'] = False
@@ -111,6 +106,7 @@ class CouncilmaticSearchForm(FacetedSearchForm):
 
 # This is used by a context processor in settings.py to render these variables
 # into the context of every page.
+
 
 def city_context(request):
     relevant_settings = [
@@ -354,6 +350,7 @@ class CommitteeDetailView(DetailView):
 
         return context
 
+
 @method_decorator(xframe_options_exempt, name='dispatch')
 class CommitteeWidgetView(CommitteeDetailView):
     template_name = 'councilmatic_core/widgets/committee.html'
@@ -419,7 +416,6 @@ class PersonDetailView(DetailView):
         context['user_subscribed'] = False
 
         if (settings.USING_NOTIFICATIONS):
-            subscriptions = PersonSubscription.objects.all()
 
             if self.request.user.is_authenticated():
                 user = self.request.user
@@ -432,6 +428,7 @@ class PersonDetailView(DetailView):
                         break
 
         return context
+
 
 @method_decorator(xframe_options_exempt, name='dispatch')
 class PersonWidgetView(PersonDetailView):
@@ -489,7 +486,7 @@ class EventsView(ListView):
             context['show_upcoming'] = False
             context['this_month'] = int(current_month)
             context['this_year'] = int(current_year)
-            context['this_start_date']= datetime(year=int(current_year), month=int(current_month), day=1)
+            context['this_start_date'] = datetime(year=int(current_year), month=int(current_month), day=1)
 
         context['user_subscribed'] = False
         if self.request.user.is_authenticated():
@@ -546,6 +543,7 @@ def flush(request, flush_key):
         print("\n\n** NOTE: to use flush-cache, set FLUSH_KEY in settings_local.py **\n\n")
 
     return redirect('index')
+
 
 @xframe_options_exempt
 def pdfviewer(request):
