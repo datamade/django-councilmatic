@@ -1,15 +1,19 @@
 from django.conf.urls import url
-from . import views
-from . import feeds
+from django.views.generic import RedirectView
 
 # use never_cache wrapper for class-based Views which need to reflect current subscription status
 from django.views.decorators.cache import never_cache
-
 from django.contrib import admin
+
+from . import views
+from . import feeds
+
 admin.autodiscover()
+
 
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
+    url(r'^search/$', RedirectView.as_view(), name='search'),
     url(r'^about/$', views.AboutView.as_view(), name='about'),
     url(r'^committees/$', views.CommitteesView.as_view(), name='committees'),
     url(r'^council-members/$', views.CouncilMembersView.as_view(),
