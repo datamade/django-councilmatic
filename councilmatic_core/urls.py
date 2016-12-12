@@ -3,12 +3,13 @@ from django.views.generic import RedirectView
 
 # use never_cache wrapper for class-based Views which need to reflect current subscription status
 from django.views.decorators.cache import never_cache
-
 from django.contrib import admin
-admin.autodiscover()
 
 from . import views
 from . import feeds
+
+admin.autodiscover()
+
 
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
