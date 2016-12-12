@@ -6,6 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'replacethiswithsomethingsecret'
+USING_NOTIFICATIONS = False
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Set this to True while you are developing
@@ -131,5 +132,7 @@ CITY_VOCAB = {
     'COUNCIL_MEMBERS': 'Aldermen',      # e.g. 'Council Members'
     'EVENTS': 'Meetings',               # label for the events listing, e.g. 'Events'
 }
+
+CITY_COUNCIL_MEETING_NAME = 'City Council'
 
 APP_NAME = 'chicago'
