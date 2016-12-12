@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.db import connection
 
-from councilmatic_core.models import Organization, Bill, Person
+from councilmatic_core.models import Organization, Bill, Person, Event
 
 class RouteTest(TestCase):
     fixtures = [
@@ -10,6 +10,7 @@ class RouteTest(TestCase):
         'bill.json',
         'person.json',
         'post.json',
+        'event.json',
     ]
     
     def getPage(self, url):
@@ -66,4 +67,22 @@ class RouteTest(TestCase):
     def test_person(self):
         for person in Person.objects.all():
             url = '/person/{}/'.format(person.slug)
+            assert self.getPage(url).status_code == 200
+    
+    def test_person_rss(self):
+        for person in Person.objects.all():
+            url = '/person/{}/rss/'.format(person.slug)
+            assert self.getPage(url).status_code == 200
+    
+    def test_person_widget(self):
+        for person in Person.objects.all():
+            url = '/person/{}/widget/'.format(person.slug)
+            assert self.getPage(url).status_code == 200
+
+    def test_events(self):
+        assert self.getPage('/events/').status_code == 200
+    
+    def test_event(self):
+        for event in Event.objects.all():
+            url = '/event/{}/'.format(event.slug)
             assert self.getPage(url).status_code == 200
