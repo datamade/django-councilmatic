@@ -1,29 +1,29 @@
 <!-- To trigger modal -->
-<a class="getModal createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to {{ subscription_model }}"><i class="fa fa-bullhorn" aria-hidden="true" data-toggle="modal" data-target="#{{subscription_model}}subscribeModal"></i></a>
+<a class="getModal createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to {{ custom_text }}"><i class="fa fa-bullhorn" aria-hidden="true" data-toggle="modal" data-target="#{{modal_id}}subscribeModal"></i></a>
 
 <!-- Show after subscription -->
 <a href="{{ href }}" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="Successful subscription! <br> Visit your accounts page to unsubscribe." style="display: none;"><i class="fa fa-bullhorn"></i></a>
 
 <!-- Modal -->
-<div class="modal fade" id="{{subscription_model}}subscribeModal" tabindex="-1" role="dialog" aria-labelledby="widgetModalLabel" aria-hidden="true">
+<div class="modal fade" id="{{modal_id}}subscribeModal" tabindex="-1" role="dialog" aria-labelledby="widgetModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
 
       <div class="modal-header">
         <h3 class="modal-title">
-          Subscribe to {{ model }}
+          Subscribe to {{ custom_text }}
         </h3>
       </div>
 
       <div class="modal-body">
-        <p>Stay up-to-date! Get notifications about <strong>{{ subscription_model }} from {{ model }}</strong>. {{ SITE_META.site_name }} will send you a morning email on days when new information about {{ model }} becomes available.</p>
+        <p>Stay up-to-date! Get notifications about things that matter. {{ SITE_META.site_name }} will send you a morning email on days when <strong>new information about {{ custom_text }}</strong> becomes available.</p>
         <p>You can <a href="{% url 'subscriptions_manage' %}">view all subscriptions</a> and manage your preferences at any time.</p>
 
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal" id="{{ link_id }}">Yes, sign me up!</button>
-        <button type="button" class="btn btn-primary" data-dismiss="modal">No, not today.</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="{{ link_id }}">Yes, sign me up!</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">No, not today.</button>
       </div>
 
     </div>

@@ -157,13 +157,13 @@
 
                 {% if USING_NOTIFICATIONS %}
                     {% if user_subscribed %}
-                    <a href="#" id="searchSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from search">
+                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to searches for {{request.GET.q}}!<br> Visit your accounts page to unsubscribe.">
                         <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                     </a>
                     {% else %}
-                    <a href="#" id="searchSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to search">
-                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                    </a>
+                        {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' %}
+                            {% include 'partials/subscription_modal.html' %}
+                        {% endwith %}
                     {% endif %}
                 {% endif %}
             </h3>
@@ -297,43 +297,30 @@
     <script>
     $(document).ready(function() {
         $("#searchSubscribe").click(function() {
-            var bullHorn = this;
-            if ($(this).hasClass('createSubscription')) {
-                if ('{{ request.user.is_authenticated }}'== 'True') {
-                    posturl2 = "/search_check_subscription/"
-                    facets2 = JSON.stringify({{selected_facets|safe}});
-                    stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
-                        function(data, status) {
-                        console.log("returned from post with data: ", data, "status:", status);
-                    }).error(function() {
-                    console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
-                    }),
-                    posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
-                    facets =  JSON.stringify({{selected_facets|safe}});
-                    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
-                        $(bullHorn).removeClass('createSubscription');
-                        $(bullHorn).addClass('removeSubscription');
-                        $(bullHorn).attr('title', 'remove alert');
-                    }, function (error) {
-                        console.error("Error subscribing to interest {{request.GET.q}} with {{selected_facets}}" );
-                    })
-                }
-                else {
-                    $('#search_message').html(alertMsg);
-                }
-            } else if ($(this).hasClass('removeSubscription')) {
-                posturl = "/search_unsubscribe/";
-                facets = JSON.stringify({{selected_facets|safe}});
+            var bullHorn    = $(this).parents().find(".createSubscription");
+            var bullHornNew = $(this).parents().find(".removeSubscription");
+
+            if ('{{ request.user.is_authenticated }}'== 'True') {
+                posturl2 = "/search_check_subscription/"
+                facets2 = JSON.stringify({{selected_facets|safe}});
+                stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
+                    function(data, status) {
+                    console.log("returned from post with data: ", data, "status:", status);
+                }).error(function() {
+                console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
+                }),
+                posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
+                facets =  JSON.stringify({{selected_facets|safe}});
                 $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
-                    $(bullHorn).removeClass('removeSubscription');
-                    $(bullHorn).addClass('createSubscription');
-                    $(bullHorn).attr('title', 'create alert');
+                    $(bullHorn).hide();
+                    $(bullHornNew).show();
+
                 }, function (error) {
-                    console.error("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
-                });
+                    console.error("Error subscribing to interest {{request.GET.q}} with {{selected_facets}}" );
+                })
             }
             else {
-                alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
+                $('#search_message').html(alertMsg);
             }
         }
     )});

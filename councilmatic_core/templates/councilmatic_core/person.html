@@ -29,13 +29,14 @@
             {% if USING_NOTIFICATIONS %}
             <small>
                 {% if user_subscribed %}
-                <a href="#" id="personSubscribe" class="removeSubscription" title="remove alert">
-                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Unsubscribe from {{person.name}}"></i>
+                <a href="#" class="removeSubscription" title="remove alert">
+                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe."></i>
                 </a>
                 {% else %}
-                <a href="#" id="personSubscribe" class="createSubscription" title="create alert">
-                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Subscribe to {{person.name}}"></i>
-                </a>
+                    {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' %}
+                        {% include 'partials/subscription_modal.html' %}
+                    {% endwith %}
+
                 {% endif %}
             </small>
             {% endif %}
@@ -218,38 +219,27 @@
     <script>
     $(document).ready(function() {
         $("#personSubscribe").click(function() {
-            var bullHorn = this;
-            if ($(this).hasClass('createSubscription')) {
-                if ('{{ request.user.is_authenticated }}'== 'True') {
-                    posturl = "/person/" + "{{person.slug}}" + "/subscribe/";
-                    $.post(posturl, function(data) {
-                    }).then(function() {
-                        $(bullHorn).removeClass('createSubscription');
-                        $(bullHorn).addClass('removeSubscription');
-                        $(bullHorn).attr('title', 'remove alert');
-                    }, function (error) {
-                        console.error("Error subscribing to  interest {{person.slug}}");
-                    });
-                }
-                else {
-                    $('#person_message').html(alertMsg);
-                }
-            } else if ($(this).hasClass('removeSubscription')) {
-                posturl = "/person/" + "{{person.slug}}" + "/unsubscribe/";
+            var bullHorn    = $(this).parents().find(".createSubscription");
+            var bullHornNew = $(this).parents().find(".removeSubscription");
+
+            if ('{{ request.user.is_authenticated }}'== 'True') {
+                posturl = "/person/" + "{{person.slug}}" + "/subscribe/";
                 $.post(posturl, function(data) {
                 }).then(function() {
-                    $(bullHorn).removeClass('removeSubscription');
-                    $(bullHorn).addClass('createSubscription');
-                    $(bullHorn).attr('title', 'create alert');
+                    $(bullHorn).hide();
+                    $(bullHornNew).show();
                 }, function (error) {
-                    console.error("Error unsubscribing from  interest {{person.slug}}");
+                    console.error("Error subscribing to  interest {{person.slug}}");
                 });
             }
             else {
-                alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
+                $('#person_message').html(alertMsg);
             }
-        }
-    )});
+
+        });
+
+    });
+
     </script>
     {% endif %}
 

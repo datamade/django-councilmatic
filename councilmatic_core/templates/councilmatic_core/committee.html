@@ -34,11 +34,11 @@
 
             {% if USING_NOTIFICATIONS %}
                 {% if user_subscribed_actions %}
-                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Recent Legslative Activity.<br> Visit your accounts page to unsubscribe.">
+                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Recent Legslative Activity!<br> Visit your accounts page to unsubscribe.">
                         <i class="fa fa-bullhorn"></i>
                     </a>
                 {% else %}
-                    {% with link_id='committee_actions_Subscribe' subscription_model='Activity' model=committee.name href='#'%}
+                    {% with link_id='committee_actions_Subscribe' modal_id='Activity' custom_text='recent activities from the '|add:committee.name href='#'%}
                         {% include 'partials/subscription_modal.html' %}
                     {% endwith %}
                 {% endif %}
@@ -100,11 +100,11 @@
                     <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     {% if USING_NOTIFICATIONS %}
                         {% if user_subscribed_events %}
-                            <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Committee Meetings.<br> Visit your accounts page to unsubscribe.">
+                            <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Committee Meetings!<br> Visit your accounts page to unsubscribe.">
                                 <i class="fa fa-bullhorn"></i>
                             </a>
                         {% else %}
-                            {% with link_id='committee_events_Subscribe' subscription_model='Meetings' model=committee.name href='#committeeEvents' %}
+                            {% with link_id='committee_events_Subscribe' modal_id='Meetings' custom_text='meetings from the '|add:committee.name href='#committeeEvents' %}
                                 {% include 'partials/subscription_modal.html' %}
                             {% endwith %}
                         {% endif %}
