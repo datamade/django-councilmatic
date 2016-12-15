@@ -19,7 +19,7 @@
             <br class="non-desktop-only"/>
             <small>
             {{ title }}
-            <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+          <!--   <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a> -->
 
             {% with slug=person.slug widget='person_widget' frameheight='460px' %}
                 {% include 'partials/widget_modal.html' %}
@@ -33,7 +33,7 @@
                     <i class="fa fa-bullhorn fa-fw" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe."></i>
                 </a>
                 {% else %}
-                    {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' %}
+                    {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' RSS_href='rss/' RSS_for='RSS feed for Sponsored Legislation by '|add:person.name %}
                         {% include 'partials/subscription_modal.html' %}
                     {% endwith %}
 

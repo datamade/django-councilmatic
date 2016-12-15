@@ -145,15 +145,7 @@
             {% if query or selected_facets %}
             <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
 
-                {% if query and selected_facets %}
-                    <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
-                {% elif selected_facets %}
-                    <a href="/search/rss/?{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
-                {% else %}
-                    <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
-                {% endif %}
-
-                <i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                <!-- <i class="fa fa-rss-square" aria-hidden="true"></i></a> -->
 
                 {% if USING_NOTIFICATIONS %}
                     {% if user_subscribed %}
@@ -161,9 +153,41 @@
                         <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
                     </a>
                     {% else %}
-                        {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' %}
-                            {% include 'partials/subscription_modal.html' %}
-                        {% endwith %}
+
+                        <!-- Monstrous code for using modal partials with three different RSS links -->
+                        {% if query and selected_facets %}
+
+                            {% for key, values in selected_facets.items %}
+                                {% for value in values %}
+
+                                {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' RSS_href='/search/rss/?q='|add:request.GET.q|add:'&selected_facets='|add:key|add:':'|add:value RSS_for='RSS feed' %}
+                                    {% include 'partials/subscription_modal.html' %}
+                                {% endwith %}
+
+                                {% endfor %}
+                            {% endfor %}
+
+                        {% elif selected_facets %}
+
+                            {% for key, values in selected_facets.items %}
+                                {% for value in values %}
+
+                                {% with link_id='searchSubscribe' modal_id='Search' custom_text='filters for '|add:value href='#' RSS_href='/search/rss/?&selected_facets='|add:key|add:':'|add:value RSS_for='RSS feed' %}
+                                    {% include 'partials/subscription_modal.html' %}
+                                {% endwith %}
+
+                                {% endfor %}
+                            {% endfor %}
+
+                        {% else %}
+
+                            {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' RSS_href='/search/rss/?q='|add:request.GET.q RSS_for='RSS feed' %}
+                                {% include 'partials/subscription_modal.html' %}
+                            {% endwith %}
+
+                        {% endif %}
+
+
                     {% endif %}
                 {% endif %}
             </h3>
