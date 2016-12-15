@@ -150,7 +150,7 @@
                 {% if USING_NOTIFICATIONS %}
                     {% if user_subscribed %}
                     <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to searches for {{request.GET.q}}!<br> Visit your accounts page to unsubscribe.">
-                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                        <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
                     </a>
                     {% else %}
 
@@ -189,6 +189,18 @@
 
 
                     {% endif %}
+                {% else %}
+
+                    {% if query and selected_facets %}
+                        <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
+                    {% elif selected_facets %}
+                        <a href="/search/rss/?{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
+                    {% else %}
+                        <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
+                    {% endif %}
+
+                    <i class="fa fa-rss-square" aria-hidden="true"></i></a>
+
                 {% endif %}
             </h3>
             <div class='row'>

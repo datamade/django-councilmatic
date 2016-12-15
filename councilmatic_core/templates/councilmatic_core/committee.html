@@ -30,7 +30,6 @@
             <hr />
 
             <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
-            <!-- <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a> -->
 
             {% if USING_NOTIFICATIONS %}
                 {% if user_subscribed_actions %}
@@ -42,6 +41,10 @@
                         {% include 'partials/subscription_modal.html' %}
                     {% endwith %}
                 {% endif %}
+            {% else %}
+
+                <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+
             {% endif %}
             </h4>
 
@@ -97,7 +100,7 @@
 
                 <h4>
                     <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
-                    <!-- <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a> -->
+
                     {% if USING_NOTIFICATIONS %}
                         {% if user_subscribed_events %}
                             <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Committee Meetings!<br> Visit your accounts page to unsubscribe.">
@@ -108,6 +111,8 @@
                                 {% include 'partials/subscription_modal.html' %}
                             {% endwith %}
                         {% endif %}
+                    {% else %}
+                        <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                     {% endif %}
                 </h4>
 

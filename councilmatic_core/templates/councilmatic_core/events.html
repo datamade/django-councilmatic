@@ -51,22 +51,24 @@
                 {% if upcoming_events %}
                     <h2><span>Upcoming {{ CITY_VOCAB.EVENTS }}</span>
         			    <br class="non-desktop-only"/>
-                        <small>
-                           <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                        </small>
+
                         {% if USING_NOTIFICATIONS %}
                             <small>
-                            {% if user_subscribed %}
-                            <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                            </a>
-                            {% else %}
+                                {% if user_subscribed %}
+                                <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
+                                    <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
+                                </a>
+                                {% else %}
 
-                                {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' %}
-                                    {% include 'partials/subscription_modal.html' %}
-                                {% endwith %}
+                                    {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' RSS_href='rss/' RSS_for='RSS feed for Upcoming and Recent Events' %}
+                                        {% include 'partials/subscription_modal.html' %}
+                                    {% endwith %}
 
-                            {% endif %}
+                                {% endif %}
+                            </small>
+                        {% else %}
+                            <small>
+                                <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                             </small>
                         {% endif %}
         		    </h2>
@@ -80,22 +82,24 @@
                 {% else %}
                     <h2>
                         No Upcoming {{ CITY_VOCAB.EVENTS }}
-                        <small>
-                           <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                        </small>
+
                         {% if USING_NOTIFICATIONS %}
                             <small>
                             {% if user_subscribed %}
                             <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
                             </a>
                             {% else %}
 
-                                {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' %}
+                                {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' RSS_href='rss/' RSS_for='RSS feed for Upcoming and Recent Events' %}
                                     {% include 'partials/subscription_modal.html' %}
                                 {% endwith %}
 
                             {% endif %}
+                            </small>
+                        {% else %}
+                            <small>
+                               <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                             </small>
                         {% endif %}
                     </h2>
