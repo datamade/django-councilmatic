@@ -9,7 +9,7 @@
             <br/>
             <h1>
                 {{committee.name}}
-                <small>
+                <small class="modal-links">
                 {% with slug=committee.slug widget='committee_widget' frameheight='180px' %}
                     {% include 'partials/widget_modal.html' %}
                 {% endwith %}
@@ -29,12 +29,12 @@
 
             <hr />
 
-            <h4><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
+            <h4 class="modal-links"><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
 
             {% if USING_NOTIFICATIONS %}
                 {% if user_subscribed_actions %}
                     <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Recent Legslative Activity!<br> Visit your accounts page to unsubscribe.">
-                        <i class="fa fa-envelope"></i>
+                        <i class="fa fa-envelope"></i> Subscriptions
                     </a>
                 {% else %}
                     {% with link_id='committee_actions_Subscribe' modal_id='Activity' custom_text='recent activities from the '|add:committee.name href='#' RSS_href='actions/rss/' RSS_for='RSS feed for Recent Legislative Activity by '|add:committee.name %}
@@ -98,13 +98,13 @@
             {% if committee.recent_events %}
                 <hr />
 
-                <h4>
+                <h4 class="modal-links">
                     <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
 
                     {% if USING_NOTIFICATIONS %}
                         {% if user_subscribed_events %}
                             <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Committee Meetings!<br> Visit your accounts page to unsubscribe.">
-                                <i class="fa fa-envelope"></i>
+                                <i class="fa fa-envelope"></i> Subscriptions
                             </a>
                         {% else %}
                             {% with link_id='committee_events_Subscribe' modal_id='Meetings' custom_text='meetings from the '|add:committee.name href='#committeeEvents' RSS_href='events/rss/' RSS_for='RSS feed for Events by '|add:committee.name %}

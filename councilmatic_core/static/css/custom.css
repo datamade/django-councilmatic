@@ -470,6 +470,11 @@ select {
     border-top-color: #ddd;
 }
 
+.modal-links a {
+    text-decoration: none;
+    padding-right: 12px;
+}
+
 /* pdf */
 .pdf-viewer{
     max-width: 700px;

@@ -1,8 +1,8 @@
 <!-- To trigger modal -->
-<a class="getModal createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to {{ custom_text }}"><i class="fa fa-envelope" aria-hidden="true" data-toggle="modal" data-target="#{{modal_id}}subscribeModal"></i></a>
+<a class="getModal createSubscription" data-toggle="modal" data-target="#{{modal_id}}subscribeModal"><i class="fa fa-envelope" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Subscribe to {{ custom_text }}"></i> Subscriptions</a>
 
 <!-- Show after subscription -->
-<a href="{{ href }}" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="Successful subscription! <br> Visit your accounts page to unsubscribe." style="display: none;"><i class="fa fa-envelope"></i></a>
+<a href="{{ href }}" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="Successful subscription! <br> Visit your accounts page to unsubscribe." style="display: none;"><i class="fa fa-envelope"></i> Subscriptions</a>
 
 <!-- Modal -->
 <div class="modal fade" id="{{modal_id}}subscribeModal" tabindex="-1" role="dialog" aria-labelledby="widgetModalLabel" aria-hidden="true">
@@ -20,7 +20,7 @@
 
         <p>You can also subscribe to the RSS feed to get regular summaries of changing {{ SITE_META.site_name }} content.</p>
 
-        <p><a href="{% url 'subscriptions_manage' %}" target="_blank">View all subscriptions</a> and manage your preferences at any time.</p>
+        <p><a href="{% url 'subscriptions_manage' %}" target="_blank">View all subscriptions</a>, and manage your preferences at any time.</p>
 
       </div>
 

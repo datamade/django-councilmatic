@@ -53,7 +53,7 @@
         			    <br class="non-desktop-only"/>
 
                         {% if USING_NOTIFICATIONS %}
-                            <small>
+                            <small class="modal-links">
                                 {% if user_subscribed %}
                                 <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
                                     <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
@@ -84,7 +84,7 @@
                         No Upcoming {{ CITY_VOCAB.EVENTS }}
 
                         {% if USING_NOTIFICATIONS %}
-                            <small>
+                            <small class="modal-links">
                             {% if user_subscribed %}
                             <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
                                 <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>

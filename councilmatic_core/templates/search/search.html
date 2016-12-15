@@ -143,10 +143,8 @@
             <hr>
 
             {% if query or selected_facets %}
-            <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
-
-                <!-- <i class="fa fa-rss-square" aria-hidden="true"></i></a> -->
-
+            <h3 class="modal-links">{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
+                <small>
                 {% if USING_NOTIFICATIONS %}
                     {% if user_subscribed %}
                     <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to searches for {{request.GET.q}}!<br> Visit your accounts page to unsubscribe.">
@@ -202,6 +200,7 @@
                     <i class="fa fa-rss-square" aria-hidden="true"></i></a>
 
                 {% endif %}
+                </small>
             </h3>
             <div class='row'>
                 <div class='col-sm-8' id='search_message'></div>
