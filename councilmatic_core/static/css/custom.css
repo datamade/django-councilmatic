@@ -450,6 +450,12 @@ select {
 .getModal, .getModal:active, .getModal:focus, .createSubscription, .createSubscription:active, .createSubscription:focus {
     color: #ddd;
 }
+
+.modal-body > p {
+    color: #999999;
+    font-weight: 200;
+}
+
 .removeSubscription {
     color: #e22620;
 }
