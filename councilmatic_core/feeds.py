@@ -28,6 +28,7 @@ class CouncilmaticFacetedSearchFeed(Feed):
     def get_object(self, request):
         self.queryDict = request.GET
         all_results = SearchQuerySet().all()
+        facets = None
 
         if 'selected_facets' in request.GET:
             facets = request.GET.getlist('selected_facets')

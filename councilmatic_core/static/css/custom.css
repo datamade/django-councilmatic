@@ -450,6 +450,12 @@ select {
 .getModal, .getModal:active, .getModal:focus, .createSubscription, .createSubscription:active, .createSubscription:focus {
     color: #ddd;
 }
+
+.modal-body > p {
+    color: #999999;
+    font-weight: 200;
+}
+
 .removeSubscription {
     color: #e22620;
 }
@@ -462,6 +468,11 @@ select {
 
 .tooltip.top .tooltip-arrow {
     border-top-color: #ddd;
+}
+
+.modal-links a {
+    text-decoration: none;
+    padding-right: 12px;
 }
 
 /* pdf */

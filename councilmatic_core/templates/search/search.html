@@ -143,29 +143,64 @@
             <hr>
 
             {% if query or selected_facets %}
-            <h3>{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
-
-                {% if query and selected_facets %}
-                    <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
-                {% elif selected_facets %}
-                    <a href="/search/rss/?{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
-                {% else %}
-                    <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
-                {% endif %}
-
-                <i class="fa fa-rss-square" aria-hidden="true"></i></a>
-
+            <h3 class="modal-links">{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
+                <small>
                 {% if USING_NOTIFICATIONS %}
                     {% if user_subscribed %}
-                    <a href="#" id="searchSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from search">
-                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to searches for {{request.GET.q}}!<br> Visit your accounts page to unsubscribe.">
+                        <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
                     </a>
                     {% else %}
-                    <a href="#" id="searchSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to search">
-                        <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                    </a>
+
+                        <!-- Monstrous code for using modal partials with three different RSS links -->
+                        {% if query and selected_facets %}
+
+                            {% for key, values in selected_facets.items %}
+                                {% for value in values %}
+
+                                {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' RSS_href='/search/rss/?q='|add:request.GET.q|add:'&selected_facets='|add:key|add:':'|add:value RSS_for='RSS feed' %}
+                                    {% include 'partials/subscription_modal.html' %}
+                                {% endwith %}
+
+                                {% endfor %}
+                            {% endfor %}
+
+                        {% elif selected_facets %}
+
+                            {% for key, values in selected_facets.items %}
+                                {% for value in values %}
+
+                                {% with link_id='searchSubscribe' modal_id='Search' custom_text='filters for '|add:value href='#' RSS_href='/search/rss/?&selected_facets='|add:key|add:':'|add:value RSS_for='RSS feed' %}
+                                    {% include 'partials/subscription_modal.html' %}
+                                {% endwith %}
+
+                                {% endfor %}
+                            {% endfor %}
+
+                        {% else %}
+
+                            {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' RSS_href='/search/rss/?q='|add:request.GET.q RSS_for='RSS feed' %}
+                                {% include 'partials/subscription_modal.html' %}
+                            {% endwith %}
+
+                        {% endif %}
+
+
                     {% endif %}
+                {% else %}
+
+                    {% if query and selected_facets %}
+                        <a href="/search/rss/?q={{request.GET.q}}{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
+                    {% elif selected_facets %}
+                        <a href="/search/rss/?{% for key, values in selected_facets.items %}{% for value in values %}&selected_facets={{key}}:{{value}}{% endfor %}{% endfor %}" title="RSS feed">
+                    {% else %}
+                        <a href="/search/rss/?q={{request.GET.q}}" title="RSS feed">
+                    {% endif %}
+
+                    <i class="fa fa-rss-square" aria-hidden="true"></i></a>
+
                 {% endif %}
+                </small>
             </h3>
             <div class='row'>
                 <div class='col-sm-8' id='search_message'></div>
@@ -297,43 +332,30 @@
     <script>
     $(document).ready(function() {
         $("#searchSubscribe").click(function() {
-            var bullHorn = this;
-            if ($(this).hasClass('createSubscription')) {
-                if ('{{ request.user.is_authenticated }}'== 'True') {
-                    posturl2 = "/search_check_subscription/"
-                    facets2 = JSON.stringify({{selected_facets|safe}});
-                    stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
-                        function(data, status) {
-                        console.log("returned from post with data: ", data, "status:", status);
-                    }).error(function() {
-                    console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
-                    }),
-                    posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
-                    facets =  JSON.stringify({{selected_facets|safe}});
-                    $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
-                        $(bullHorn).removeClass('createSubscription');
-                        $(bullHorn).addClass('removeSubscription');
-                        $(bullHorn).attr('title', 'remove alert');
-                    }, function (error) {
-                        console.error("Error subscribing to interest {{request.GET.q}} with {{selected_facets}}" );
-                    })
-                }
-                else {
-                    $('#search_message').html(alertMsg);
-                }
-            } else if ($(this).hasClass('removeSubscription')) {
-                posturl = "/search_unsubscribe/";
-                facets = JSON.stringify({{selected_facets|safe}});
+            var bullHorn    = $(this).parents().find(".createSubscription");
+            var bullHornNew = $(this).parents().find(".removeSubscription");
+
+            if ('{{ request.user.is_authenticated }}'== 'True') {
+                posturl2 = "/search_check_subscription/"
+                facets2 = JSON.stringify({{selected_facets|safe}});
+                stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
+                    function(data, status) {
+                    console.log("returned from post with data: ", data, "status:", status);
+                }).error(function() {
+                console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
+                }),
+                posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
+                facets =  JSON.stringify({{selected_facets|safe}});
                 $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
-                    $(bullHorn).removeClass('removeSubscription');
-                    $(bullHorn).addClass('createSubscription');
-                    $(bullHorn).attr('title', 'create alert');
+                    $(bullHorn).hide();
+                    $(bullHornNew).show();
+
                 }, function (error) {
-                    console.error("Error unsubscribing to  interest {{request.GET.q}} with {{selected_facets|safe}}" );
-                });
+                    console.error("Error subscribing to interest {{request.GET.q}} with {{selected_facets}}" );
+                })
             }
             else {
-                alert("ID #personSubscribe has neither createSubscription or removeSubscription class");
+                $('#search_message').html(alertMsg);
             }
         }
     )});

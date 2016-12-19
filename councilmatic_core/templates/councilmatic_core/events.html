@@ -51,20 +51,24 @@
                 {% if upcoming_events %}
                     <h2><span>Upcoming {{ CITY_VOCAB.EVENTS }}</span>
         			    <br class="non-desktop-only"/>
-                        <small>
-                           <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                        </small>
+
                         {% if USING_NOTIFICATIONS %}
+                            <small class="modal-links">
+                                {% if user_subscribed %}
+                                <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
+                                    <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
+                                </a>
+                                {% else %}
+
+                                    {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' RSS_href='rss/' RSS_for='RSS feed for Upcoming and Recent Events' %}
+                                        {% include 'partials/subscription_modal.html' %}
+                                    {% endwith %}
+
+                                {% endif %}
+                            </small>
+                        {% else %}
                             <small>
-                            {% if user_subscribed %}
-                            <a href="#" id="eventsSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                            </a>
-                            {% else %}
-                            <a href="#" id="eventsSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to events">
-                                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                            </a>
-                            {% endif %}
+                                <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                             </small>
                         {% endif %}
         		    </h2>
@@ -78,20 +82,24 @@
                 {% else %}
                     <h2>
                         No Upcoming {{ CITY_VOCAB.EVENTS }}
-                        <small>
-                           <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                        </small>
+
                         {% if USING_NOTIFICATIONS %}
-                            <small>
+                            <small class="modal-links">
                             {% if user_subscribed %}
-                            <a href="#" id="eventsSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                            <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
+                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
                             </a>
                             {% else %}
-                            <a href="#" id="eventsSubscribe" class="createSubscription" data-toggle="tooltip" data-placement="top" title="Subscribe to events">
-                                <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                            </a>
+
+                                {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' RSS_href='rss/' RSS_for='RSS feed for Upcoming and Recent Events' %}
+                                    {% include 'partials/subscription_modal.html' %}
+                                {% endwith %}
+
                             {% endif %}
+                            </small>
+                        {% else %}
+                            <small>
+                               <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
                             </small>
                         {% endif %}
                     </h2>
@@ -124,38 +132,25 @@
     <script>
     $(document).ready(function() {
 	    $("#eventsSubscribe").click(function() {
-            var bullHorn = this;
-		    if ($(this).hasClass('createSubscription')) {
-                if ('{{ request.user.is_authenticated }}'== 'True') {
-    			    posturl = "/events/subscribe/";
-    			    $.post(posturl, function(data) {
-    			    }).then( function() {
-                        $(bullHorn).removeClass('createSubscription');
-                        $(bullHorn).addClass('removeSubscription');
-                        $(bullHorn).attr('title', 'remove alert');
-                    }, function (error) {
-                        console.error("Error subscribing to all events");
-                    });
-                }
-                else {
-                    $('#events_message').html(alertMsg);
-                }
-		    } else if ($(this).hasClass('removeSubscription')) {
-			    posturl = "/events/unsubscribe/";
+            var bullHorn    = $(this).parents().find(".createSubscription");
+            var bullHornNew = $(this).parents().find(".removeSubscription");
+
+            if ('{{ request.user.is_authenticated }}'== 'True') {
+			    posturl = "/events/subscribe/";
 			    $.post(posturl, function(data) {
 			    }).then( function() {
-                    $(bullHorn).removeClass('removeSubscription');
-                    $(bullHorn).addClass('createSubscription');
-                    $(bullHorn).attr('title', 'create alert');
+                    $(bullHorn).hide();
+                    $(bullHornNew).show();
                 }, function (error) {
-                    console.error("Error unsubscribing from all events");
+                    console.error("Error subscribing to all events");
                 });
-		    }
-		    else {
-			    alert("ID #eventsSubscribe has neither createSubscription or removeSubscription class");
-		    }
-	    }
-	    )});
+            }
+            else {
+                $('#events_message').html(alertMsg);
+            }
+
+	   });
+	});
     </script>
     {% endif %}
 
