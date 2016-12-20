@@ -20,34 +20,33 @@
                 <br class="non-desktop-only"/>
 
                 <small>{{ title }}</small>
+            </h1>
 
-                <div class="modal-links" style="font-size: 80%;">
-                <small>
+                <div class="modal-links">
+
+                    {% if USING_NOTIFICATIONS %}
+
+                        {% if user_subscribed %}
+                        <a href="#" class="removeSubscription" title="remove alert" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
+                            <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
+                        </a>
+                        {% else %}
+                            {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' RSS_href='rss/' RSS_for='RSS feed for Sponsored Legislation by '|add:person.name %}
+                                {% include 'partials/subscription_modal.html' %}
+                            {% endwith %}
+                        {% endif %}
+
+                    {% else %}
+                        <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
+                    {% endif %}
+
+                    <!-- Embed -->
                     {% with slug=person.slug widget='person_widget' frameheight='460px' %}
                         {% include 'partials/widget_modal.html' %}
                     {% endwith %}
-                </small>
 
-                {% if USING_NOTIFICATIONS %}
-                <small>
-                    {% if user_subscribed %}
-                    <a href="#" class="removeSubscription" title="remove alert" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
-                        <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
-                    </a>
-                    {% else %}
-                        {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' RSS_href='rss/' RSS_for='RSS feed for Sponsored Legislation by '|add:person.name %}
-                            {% include 'partials/subscription_modal.html' %}
-                        {% endwith %}
-                    {% endif %}
-                </small>
-                {% else %}
-                <small>
-                    <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                </small>
-                {% endif %}
                 </div>
 
-            </h1>
         </div>
     </div>
 
