@@ -27,12 +27,13 @@ The `Councilmatic family <http://www.councilmatic.org/>`_ includes:
 
 We recommend using [virtualenv](http://virtualenv.readthedocs.org/en/latest/virtualenv.html) and [virtualenvwrapper](http://virtualenvwrapper.readthedocs.org/en/latest/install.html) for working in a virtualized development environment. [Read how to set up virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
 
+
 Once you have virtualenvwrapper set up,
 
 ```bash
 mkvirtualenv councilmatic
 git clone https://github.com/datamade/django-councilmatic.git
-cd nyc-councilmatic
+cd django-councilmatic
 pip install -r requirements.txt
 ```
 
