@@ -106,7 +106,7 @@
             <div class="divider"></div>
         </div>
 
-        <div class="col-sm-8">
+        <div class="col-sm-8 order-nav">
 
             <nav class="nav nav-inline">
 
@@ -125,7 +125,7 @@
                 {% endwith %}
 
                 {% if 'sort_by' in request.get_full_path %}
-                    <a href ="#" class="remove-order-value btn btn-sm btn-primary"
+                    <a href ="#" class="remove-order-value btn btn-sm btn-primary hidden-xs"
                         {% if 'sort_by=date' in request.get_full_path %}
                             data='sort_by=date'
                         {% elif 'sort_by=title' in request.get_full_path%}
@@ -135,6 +135,17 @@
                         {% endif %}
                         ><i class="fa fa-times"></i>
                         Remove
+                    </a>
+
+                    <a href ="#" class="remove-order-value btn btn-sm btn-primary visible-xs"
+                        {% if 'sort_by=date' in request.get_full_path %}
+                            data='sort_by=date'
+                        {% elif 'sort_by=title' in request.get_full_path%}
+                            data='sort_by=title'
+                        {% elif 'sort_by=relevance' in request.get_full_path%}
+                            data='sort_by=relevance'
+                        {% endif %}
+                        ><i class="fa fa-times"></i>
                     </a>
                 {% endif %}
 

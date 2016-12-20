@@ -51,27 +51,24 @@
                 {% if upcoming_events %}
                     <h2><span>Upcoming {{ CITY_VOCAB.EVENTS }}</span>
         			    <br class="non-desktop-only"/>
+                    </h2>
 
+                    <div class="modal-links">
                         {% if USING_NOTIFICATIONS %}
-                            <small class="modal-links">
-                                {% if user_subscribed %}
-                                <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                    <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
-                                </a>
-                                {% else %}
-
-                                    {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' RSS_href='rss/' RSS_for='RSS feed for Upcoming and Recent Events' %}
-                                        {% include 'partials/subscription_modal.html' %}
-                                    {% endwith %}
-
-                                {% endif %}
-                            </small>
+                            {% if user_subscribed %}
+                            <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
+                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
+                            </a>
+                            {% else %}
+                                {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' RSS_href='rss/' RSS_for='RSS feed for Upcoming and Recent Events' %}
+                                    {% include 'partials/subscription_modal.html' %}
+                                {% endwith %}
+                            {% endif %}
                         {% else %}
-                            <small>
-                                <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                            </small>
+                            <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
                         {% endif %}
-        		    </h2>
+                    </div>
+
                     <div class='row'>
                         <div class='col-sm-8' id='events_message'></div>
                     </div>
@@ -82,12 +79,13 @@
                 {% else %}
                     <h2>
                         No Upcoming {{ CITY_VOCAB.EVENTS }}
+                    </h2>
 
+                    <div class="modal-links">
                         {% if USING_NOTIFICATIONS %}
-                            <small class="modal-links">
                             {% if user_subscribed %}
                             <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i>
+                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
                             </a>
                             {% else %}
 
@@ -96,13 +94,11 @@
                                 {% endwith %}
 
                             {% endif %}
-                            </small>
                         {% else %}
-                            <small>
-                               <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                            </small>
+                           <a href="rss/" title="RSS feed for Upcoming and Recent Events"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
                         {% endif %}
-                    </h2>
+                    </div>
+
                     <div class='row'>
                         <div class='col-sm-8' id='events_message'></div>
                     </div>

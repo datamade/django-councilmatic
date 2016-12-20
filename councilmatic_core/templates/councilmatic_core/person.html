@@ -20,18 +20,14 @@
                 <br class="non-desktop-only"/>
 
                 <small>{{ title }}</small>
+            </h1>
 
-                <div class="modal-links" style="font-size: 80%;">
-                <small>
-                    {% with slug=person.slug widget='person_widget' frameheight='460px' %}
-                        {% include 'partials/widget_modal.html' %}
-                    {% endwith %}
-                </small>
+            <div class="modal-links">
 
                 {% if USING_NOTIFICATIONS %}
-                <small>
+
                     {% if user_subscribed %}
-                    <a href="#" class="removeSubscription" title="remove alert" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
+                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
                         <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
                     </a>
                     {% else %}
@@ -39,15 +35,21 @@
                             {% include 'partials/subscription_modal.html' %}
                         {% endwith %}
                     {% endif %}
-                </small>
-                {% else %}
-                <small>
-                    <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                </small>
-                {% endif %}
-                </div>
 
-            </h1>
+                {% else %}
+                    <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
+                {% endif %}
+
+                <!-- Embed -->
+                {% with slug=person.slug widget='person_widget' frameheight='460px' %}
+                    {% include 'partials/widget_modal.html' %}
+                {% endwith %}
+
+                <!-- View on legistar -->
+                <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website</a>
+
+            </div>
+
         </div>
     </div>
 
@@ -87,9 +89,6 @@
                     <i class='fa fa-fw fa-camera'></i> Credit: {{person.headshot_source}}
                 </p>
             {% endif %}
-            <p class='small'>
-                <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website</a>
-            </p>
         </div>
 
         <div class="col-sm-4 mobile-only">

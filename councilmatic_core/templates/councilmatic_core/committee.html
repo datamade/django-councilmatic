@@ -9,31 +9,31 @@
             <br/>
             <h1>
                 {{committee.name}}
-                <small class="modal-links">
-                {% with slug=committee.slug widget='committee_widget' frameheight='180px' %}
-                    {% include 'partials/widget_modal.html' %}
-                {% endwith %}
-                </small>
             </h1>
             {% if committee_description %}
                 <p>{{committee_description}}</p>
             {% endif %}
-            {% if committee.source_url %}
-                <p class="small">
-                    <a href='{{committee.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
-                        <i class='fa fa-fw fa-external-link'></i>
-                        View on the {{CITY_VOCAB.SOURCE}} website
-                    </a>
-                </p>
-            {% endif %}
+
+            <div class="modal-links">
+                {% with slug=committee.slug widget='committee_widget' frameheight='180px' %}
+                    {% include 'partials/widget_modal.html' %}
+                {% endwith %}
+
+                {% if committee.source_url %}
+                        <a href='{{committee.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
+                            <i class='fa fa-fw fa-external-link'></i>
+                            View on the {{CITY_VOCAB.SOURCE}} website
+                        </a>
+                {% endif %}
+            </div>
 
             <hr />
 
-            <h4 class="modal-links"><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity
+            <h4 class="modal-links"><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity&nbsp;
 
             {% if USING_NOTIFICATIONS %}
                 {% if user_subscribed_actions %}
-                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Recent Legslative Activity!<br> Visit your accounts page to unsubscribe.">
+                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Recent Legislative Activity!<br> Visit your accounts page to unsubscribe.">
                         <i class="fa fa-envelope"></i> Subscriptions
                     </a>
                 {% else %}
@@ -43,10 +43,12 @@
                 {% endif %}
             {% else %}
 
-                <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
 
             {% endif %}
+
             </h4>
+
 
             <div class='row'>
                 <div class='col-sm-8' id='actions_message'></div>
@@ -99,7 +101,7 @@
                 <hr />
 
                 <h4 class="modal-links">
-                    <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}
+                    <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}&nbsp;
 
                     {% if USING_NOTIFICATIONS %}
                         {% if user_subscribed_events %}
@@ -112,7 +114,7 @@
                             {% endwith %}
                         {% endif %}
                     {% else %}
-                        <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                        <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
                     {% endif %}
                 </h4>
 

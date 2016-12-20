@@ -12,7 +12,6 @@ h1, h2, h3, h4 {
 }
 
 
-
 /* navbar */
 #logo{
     height: 45px;
@@ -397,9 +396,6 @@ select {
     display: inline-block;
 }
 
-
-
-
 /* search filters */
 .panel-filter{
     margin-bottom: 4px;
@@ -439,16 +435,18 @@ select {
 }
 
 .nav a.sort-by, .nav a.btn {
-    margin-left: 2.8em;
+    margin-left: 1.8em;
 }
+
+div.order-nav { margin-top: 21px; }
 
 .fa-sort-amount-asc, .fa-sort-amount-desc {
     margin-left: 8px;
 }
 
 /* subscription stuff */
-.getModal, .getModal:active, .getModal:focus, .createSubscription, .createSubscription:active, .createSubscription:focus {
-    color: #ddd;
+.modal-body {
+ padding: 12px;
 }
 
 .modal-body > p {
@@ -456,8 +454,9 @@ select {
     font-weight: 200;
 }
 
-.removeSubscription {
-    color: #e22620;
+.removeSubscription, a.removeSubscription:hover, a.removeSubscription:focus {
+    color: #3D8A8E;
+    text-decoration: none;
 }
 
 .tooltip-inner {
@@ -466,13 +465,17 @@ select {
     font-family: "Open Sans", sans-serif;
 }
 
+.tooltip.in {
+  opacity: 0.98;
+  filter: alpha(opacity=100);
+}
 .tooltip.top .tooltip-arrow {
     border-top-color: #ddd;
 }
 
-.modal-links a {
-    text-decoration: none;
+.modal-links > a {
     padding-right: 12px;
+    display: inline;
 }
 
 /* pdf */
@@ -491,6 +494,24 @@ select {
 .hidden{
     display: none;
 }
+
+
+
+/* Custom style for alert box */
+.alert-info {
+    background-color: #E5F4F5;
+    color: #3D8A8E;
+    border-color: #C7E8EA;
+}
+
+/* Custom style for modal instrucitons on widget */
+textarea {
+    font-size: 16px;
+    width:100%;
+}
+
+.fa-share { color: #ddd; }
+
 
 
 /* medium screens */
@@ -566,7 +587,17 @@ select {
         display: inline;
     }
 
+    .nav a.sort-by, .nav a.btn {
+        margin-left: 0.6em;
+    }
+
+    .visible-xs {
+        display: inline-block !important;
+    }
+
 }
+
+
 
 /* lil screens */
 @media only screen and (max-width : 360px) {
@@ -687,9 +718,6 @@ select {
         top: 38px;
     }
 
-
-
-
     .footer p{
         font-size: .7em;
         margin-bottom: 6px;
@@ -715,21 +743,12 @@ select {
         display: inline;
     }
 
+    .nav a.sort-by, .nav a.btn {
+        margin-left: 0.4em;
+    }
+
+    .visible-xs {
+        display: inline-block !important;
+    }
 }
 
-/* Custom style for alert box */
-.alert-info {
-    background-color: #E5F4F5;
-    color: #3D8A8E;
-    border-color: #C7E8EA;
-}
-
-/*.close { color: #3D8A8E; }*/
-
-/* Custom style for modal instrucitons on widget */
-textarea {
-    font-size: 16px;
-    width:100%;
-}
-
-.fa-share { color: #ddd; }
