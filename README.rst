@@ -1,7 +1,7 @@
 django-councilmatic
 ===========
 
- The django-councilmatic app provides the core functionality for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the open civic data standard, and ultimately makes Councilmatic easier to re-deploy in new cities.
+ The django-councilmatic app provides the core functionality for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the open civic data standard and, ultimately, makes Councilmatic easier to re-deploy in new cities.
 
 django-councilmatic includes:
 
@@ -20,7 +20,7 @@ Councilmatic in your city
 ----
 If you're interested in bringing Councilmatic to your city, `contact us <mailto:info@councilmatic.org>`_! We'd love to help.
 
-Want to build your own Councilmatic? Check out our `Starter Template <https://github.com/datamade/councilmatic-starter-template>`. It contains everything you need to create your own Councilmatic from scratch.
+Want to build your own Councilmatic? Check out our `Starter Template <https://github.com/datamade/councilmatic-starter-template>`_. It contains everything you need to create your own Councilmatic from scratch.
 
 Team
 ----
