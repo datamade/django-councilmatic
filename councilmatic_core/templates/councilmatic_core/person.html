@@ -27,7 +27,7 @@
                 {% if USING_NOTIFICATIONS %}
 
                     {% if user_subscribed %}
-                    <a href="#" class="removeSubscription" title="remove alert" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
+                    <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
                         <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
                     </a>
                     {% else %}
