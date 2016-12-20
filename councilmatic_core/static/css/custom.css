@@ -470,6 +470,10 @@ select {
     font-family: "Open Sans", sans-serif;
 }
 
+.tooltip.in {
+  opacity: 0.98;
+  filter: alpha(opacity=100);
+}
 .tooltip.top .tooltip-arrow {
     border-top-color: #ddd;
 }

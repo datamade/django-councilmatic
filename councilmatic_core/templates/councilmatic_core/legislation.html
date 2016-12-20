@@ -10,18 +10,11 @@
                     <br class="non-mobile-only" />
                     {{ legislation.friendly_name }}
                     <small>{{ legislation.inferred_status | inferred_status_label | safe }}</small>
+                </h1>
 
-
-                    <div class="modal-links" style="font-size: 80%;">
-
-                    <small>
-                        {% with slug=legislation.slug widget='bill_widget' frameheight='260px' %}
-                            {% include 'partials/widget_modal.html' %}
-                        {% endwith %}
-                    </small>
-
+                <div class="modal-links">
+                    <!-- Subscribe -->
                     {% if USING_NOTIFICATIONS %}
-                    <small>
                         {% if user_subscribed %}
                         <a href="#" id="billSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{legislation.friendly_name}}! <br>Visit your accounts page to unsubscribe.">
                             <i class="fa fa-envelope"></i>
@@ -34,16 +27,22 @@
                             {% endwith %}
 
                         {% endif %}
-                    </small>
                     {% else %}
-                    <small>
                         <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
-                    </small>
                     {% endif %}
 
-                    </div>
+                    <!-- Embed -->
+                    {% with slug=legislation.slug widget='bill_widget' frameheight='260px' %}
+                        {% include 'partials/widget_modal.html' %}
+                    {% endwith %}
 
-                </h1>
+                    <!-- Link to legistar -->
+                    <a href='{{legislation.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
+                        <i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website
+                    </a>
+
+                </div>
+
                 <div class='row'>
                     <div class='col-sm-6' id='bill_message'></div>
                 </div>
@@ -80,11 +79,6 @@
             {% endif %}
             {% endblock %}
 
-            <p class="small">
-                <a href='{{legislation.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank">
-                    <i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website
-                </a>
-            </p>
             <div class="divider"></div>
 
             {% if legislation.sponsorships.all %}

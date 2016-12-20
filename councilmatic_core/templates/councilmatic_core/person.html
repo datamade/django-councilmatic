@@ -22,30 +22,33 @@
                 <small>{{ title }}</small>
             </h1>
 
-                <div class="modal-links">
+            <div class="modal-links">
 
-                    {% if USING_NOTIFICATIONS %}
+                {% if USING_NOTIFICATIONS %}
 
-                        {% if user_subscribed %}
-                        <a href="#" class="removeSubscription" title="remove alert" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
-                            <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
-                        </a>
-                        {% else %}
-                            {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' RSS_href='rss/' RSS_for='RSS feed for Sponsored Legislation by '|add:person.name %}
-                                {% include 'partials/subscription_modal.html' %}
-                            {% endwith %}
-                        {% endif %}
-
+                    {% if user_subscribed %}
+                    <a href="#" class="removeSubscription" title="remove alert" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
+                        <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
+                    </a>
                     {% else %}
-                        <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
+                        {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' RSS_href='rss/' RSS_for='RSS feed for Sponsored Legislation by '|add:person.name %}
+                            {% include 'partials/subscription_modal.html' %}
+                        {% endwith %}
                     {% endif %}
 
-                    <!-- Embed -->
-                    {% with slug=person.slug widget='person_widget' frameheight='460px' %}
-                        {% include 'partials/widget_modal.html' %}
-                    {% endwith %}
+                {% else %}
+                    <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
+                {% endif %}
 
-                </div>
+                <!-- Embed -->
+                {% with slug=person.slug widget='person_widget' frameheight='460px' %}
+                    {% include 'partials/widget_modal.html' %}
+                {% endwith %}
+
+                <!-- View on legistar -->
+                <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website</a>
+
+            </div>
 
         </div>
     </div>
@@ -86,9 +89,6 @@
                     <i class='fa fa-fw fa-camera'></i> Credit: {{person.headshot_source}}
                 </p>
             {% endif %}
-            <p class='small'>
-                <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website</a>
-            </p>
         </div>
 
         <div class="col-sm-4 mobile-only">
