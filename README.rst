@@ -25,11 +25,10 @@ Want to build your own Councilmatic? Check out our `Starter Template <https://gi
 Team
 ----
 
--  David Moore - project manager
--  Forest Gregg - Open Civic Data (OCD) and Legistar scraping
--  Cathy Deng - data models and loading
--  Derek Eder - front end
--  Eric van Zanten - search and dev ops
+-  Forest Gregg, DataMade - Open Civic Data (OCD) and Legistar scraping
+-  Cathy Deng, DataMade - data models and loading
+-  Derek Eder, DataMade - front end
+-  Eric van Zanten, DataMade - search and dev ops
 
 Patches and Contributions
 -------------
