@@ -12,9 +12,9 @@ django-councilmatic includes:
 The `Councilmatic family <http://www.councilmatic.org/>`_ includes:
 
 - Philly Councilmatic (the original and first Councilmatic, by Mjumbe Poe, an important predecessor to DataMade's django-councilmatic)
-- Chicago Councilmatic (launched and built on django-councilmatic)
-- New York City Councilmatic (launched and built on django-councilmatic)
-- Los Angeles Metro Board (launched and built on django-councilmatic)
+- Chicago Councilmatic
+- New York City Councilmatic
+- Los Angeles Metro Board
 
 Councilmatic in your city
 ----
@@ -39,12 +39,12 @@ How to contribute code:
 
 - Fork the project.
 - Make your feature addition or bug fix.
-- Bonus points for running tests to check python style (:code:`pip install flake8` and then :code:`flake8 .`)
-- Send us a pull request with a description of your work! Don't worry if it isn't perfect - think of a PR as a start of a conversation, rather than a finished product
+- Bonus points for running tests to check python style (:code:`pip install flake8` and then :code:`flake8 .`).
+- Send us a pull request with a description of your work! Don't worry if it isn't perfect - think of a PR as a start of a conversation, rather than a finished product.
 
 Copyright
 ---------
 
 Copyright (c) 2015 Participatory Politics Foundation and DataMade.
 Released under the `MIT
-License <https://github.com/datamade/chi-councilmatic/blob/master/LICENSE>`__.
+License <https://github.com/datamade/django-councilmatic/blob/master/LICENSE>`__.
