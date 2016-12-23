@@ -12,9 +12,9 @@ django-councilmatic includes:
 The `Councilmatic family <http://www.councilmatic.org/>`_ includes:
 
 - Philly Councilmatic (the original and first Councilmatic, by Mjumbe Poe, an important predecessor to DataMade's django-councilmatic)
-- Chicago Councilmatic
-- New York City Councilmatic
-- Los Angeles Metro Board
+- `Chicago Councilmatic <https://github.com/datamade/chi-councilmatic>`_
+- `New York City Councilmatic <https://github.com/datamade/nyc-councilmatic>`_
+- `Los Angeles Metro Board <https://github.com/datamade/la-metro-councilmatic>`_
 
 Councilmatic in your city
 ----
