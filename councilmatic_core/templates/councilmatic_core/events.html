@@ -11,7 +11,7 @@
 
             <select id="month-dropdown" class="dropdown-target">
                 {% for name, num in month_options %}
-                    {% if this_month = num %}
+                    {% if this_month == num %}
                         <option value="{{num}}" selected>{{name}}</option>
                     {% else %}
                         <option value="{{num}}">{{name}}</option>
@@ -21,7 +21,7 @@
 
             <select id="year-dropdown" class="dropdown-target">
                 {% for year in year_range %}
-                    {% if this_year = year %}
+                    {% if this_year == year %}
                         <option value="{{year}}" selected>{{year}}</option>
                     {% else %}
                         <option value="{{year}}">{{year}}</option>
