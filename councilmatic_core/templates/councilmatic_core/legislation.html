@@ -18,7 +18,7 @@
                         {% if user_subscribed %}
                         <a href="#" id="billSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{legislation.friendly_name}}! <br>Visit your accounts page to unsubscribe.">
                             <i class="fa fa-envelope"></i>
-                            Subscriptions
+                            Subscribe
                         </a>
                         {% else %}
 
@@ -219,6 +219,7 @@
             {% endif %}
 
             {% if legislation.full_text != "" %}
+                {% if legislation.full_text|clean_html|length > 65 %}
                 <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
                     Legislation text
@@ -230,6 +231,7 @@
                 </div>
 
                 <div class="divider"></div>
+                {% endif %}
             {% elif legislation.full_text_doc_url %}
                 <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
@@ -318,7 +320,7 @@
             var bullHorn    = $(this).parents().find(".createSubscription");
             var bullHornNew = $(this).parents().find(".removeSubscription");
 
-            if ('{{ request.user.is_authenticated }}'== 'True') {
+            if ('{{ request.user }}' != 'AnonymousUser') {
                 posturl = "/legislation/" + "{{legislation.slug}}" + "/subscribe/";
                 $.post(posturl, function(data) {
                 }).then(function() {

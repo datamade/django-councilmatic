@@ -11,7 +11,7 @@
 
             <select id="month-dropdown" class="dropdown-target">
                 {% for name, num in month_options %}
-                    {% if this_month = num %}
+                    {% if this_month == num %}
                         <option value="{{num}}" selected>{{name}}</option>
                     {% else %}
                         <option value="{{num}}">{{name}}</option>
@@ -21,7 +21,7 @@
 
             <select id="year-dropdown" class="dropdown-target">
                 {% for year in year_range %}
-                    {% if this_year = year %}
+                    {% if this_year == year %}
                         <option value="{{year}}" selected>{{year}}</option>
                     {% else %}
                         <option value="{{year}}">{{year}}</option>
@@ -57,7 +57,7 @@
                         {% if USING_NOTIFICATIONS %}
                             {% if user_subscribed %}
                             <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
+                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscribe
                             </a>
                             {% else %}
                                 {% with link_id='eventsSubscribe' modal_id='meetings' custom_text='meetings' href='#' RSS_href='rss/' RSS_for='RSS feed for Upcoming and Recent Events' %}
@@ -85,7 +85,7 @@
                         {% if USING_NOTIFICATIONS %}
                             {% if user_subscribed %}
                             <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" title="Unsubscribe from events">
-                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
+                                <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscribe
                             </a>
                             {% else %}
 
@@ -131,7 +131,7 @@
             var bullHorn    = $(this).parents().find(".createSubscription");
             var bullHornNew = $(this).parents().find(".removeSubscription");
 
-            if ('{{ request.user.is_authenticated }}'== 'True') {
+            if ('{{ request.user }}' != 'AnonymousUser') {
 			    posturl = "/events/subscribe/";
 			    $.post(posturl, function(data) {
 			    }).then( function() {

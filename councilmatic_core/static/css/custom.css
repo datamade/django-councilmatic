@@ -478,6 +478,10 @@ div.order-nav { margin-top: 21px; }
     display: inline;
 }
 
+.getModal:hover {
+    cursor: pointer;
+}
+
 /* pdf */
 .pdf-viewer{
     max-width: 700px;

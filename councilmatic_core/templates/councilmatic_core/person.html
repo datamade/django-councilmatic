@@ -28,7 +28,7 @@
 
                     {% if user_subscribed %}
                     <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{person.name}}!<br> Visit your accounts page to unsubscribe.">
-                        <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscriptions
+                        <i class="fa fa-envelope fa-fw" aria-hidden="true"></i> Subscribe
                     </a>
                     {% else %}
                         {% with link_id='personSubscribe' modal_id='Person' custom_text=person.name href='#' RSS_href='rss/' RSS_for='RSS feed for Sponsored Legislation by '|add:person.name %}
@@ -226,8 +226,8 @@
         $("#personSubscribe").click(function() {
             var bullHorn    = $(this).parents().find(".createSubscription");
             var bullHornNew = $(this).parents().find(".removeSubscription");
-
-            if ('{{ request.user.is_authenticated }}'== 'True') {
+            console.log('{{ request.user }}')
+            if ('{{ request.user }}' != 'AnonymousUser') {
                 posturl = "/person/" + "{{person.slug}}" + "/subscribe/";
                 $.post(posturl, function(data) {
                 }).then(function() {

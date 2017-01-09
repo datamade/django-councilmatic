@@ -1,6 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
-from django.utils.html import strip_entities, strip_tags
+from django.utils.html import strip_tags
 import re
 
 from django.utils.safestring import mark_safe
@@ -94,7 +94,8 @@ def committee_topic_only(committee_name):
 @register.filter
 @stringfilter
 def clean_html(text):
-    return strip_entities(strip_tags(text)).replace('\n', '')
+    value = strip_tags(text).replace('\n', '')
+    return re.sub(r'&(?:\w+|#\d+);', '', value)
 
 
 @register.filter
@@ -124,6 +125,7 @@ def format_url_parameters(url):
     params = ["?&sort_by=date", "?&sort_by=title", "?&sort_by=relevance", "?&ascending=true", "?&descending=true", "&sort_by=date", "&sort_by=title", "&sort_by=relevance", "&ascending=true", "&descending=true", "sort_by=date", "sort_by=title", "sort_by=relevance", "ascending=true", "descending=true"]
 
     paramsDict = dict((re.escape(el), "") for el in params)
+
     pattern = re.compile("|".join(paramsDict.keys()))
 
     return pattern.sub(lambda m: paramsDict[re.escape(m.group(0))], url)
