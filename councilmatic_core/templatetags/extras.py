@@ -119,16 +119,13 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
     else:
         return '0'
 
-# @register.filter
-# def no_space(text):
-#     return text.strip()
-
 
 @register.filter
 def format_url_parameters(url):
     params = ["?&sort_by=date", "?&sort_by=title", "?&sort_by=relevance", "?&ascending=true", "?&descending=true", "&sort_by=date", "&sort_by=title", "&sort_by=relevance", "&ascending=true", "&descending=true", "sort_by=date", "sort_by=title", "sort_by=relevance", "ascending=true", "descending=true"]
 
     paramsDict = dict((re.escape(el), "") for el in params)
+
     pattern = re.compile("|".join(paramsDict.keys()))
 
     return pattern.sub(lambda m: paramsDict[re.escape(m.group(0))], url)
