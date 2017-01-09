@@ -1,6 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
-from django.utils.html import strip_entities, strip_tags
+from django.utils.html import strip_tags
 import re
 
 from django.utils.safestring import mark_safe
@@ -94,7 +94,8 @@ def committee_topic_only(committee_name):
 @register.filter
 @stringfilter
 def clean_html(text):
-    return strip_entities(strip_tags(text)).replace('\n', '')
+    value = strip_tags(text).replace('\n', '')
+    return re.sub(r'&(?:\w+|#\d+);', '', value)
 
 
 @register.filter
@@ -117,6 +118,10 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
         return s.strftime(fmt)
     else:
         return '0'
+
+# @register.filter
+# def no_space(text):
+#     return text.strip()
 
 
 @register.filter

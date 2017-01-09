@@ -219,6 +219,7 @@
             {% endif %}
 
             {% if legislation.full_text != "" %}
+                {% if legislation.full_text|clean_html|length > 65 %}
                 <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
                     Legislation text
@@ -230,6 +231,7 @@
                 </div>
 
                 <div class="divider"></div>
+                {% endif %}
             {% elif legislation.full_text_doc_url %}
                 <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
