@@ -838,6 +838,9 @@ class Command(BaseCommand):
 
                 inserts.append(insert)
 
+                if post_id is None:
+                    self.log_message('A person does not have a post_id. Check on this. Is it okay?')
+
         if inserts:
             self.executeTransaction(sa.text(insert_query), *inserts)
 
