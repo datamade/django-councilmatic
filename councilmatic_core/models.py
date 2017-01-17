@@ -93,13 +93,14 @@ class Person(models.Model):
         m = self.latest_council_membership
         if m and m.post:
             if self == m.post.current_member.person:
-                return m.post.label
+                if m.post:
+                    return m.post.label
         return ''
 
     @property
     def latest_council_seat(self):
         m = self.latest_council_membership
-        if m:
+        if m and m.post:
             return m.post.label
         return ''
 

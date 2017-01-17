@@ -395,7 +395,7 @@ class PersonDetailView(DetailView):
 
         context['map_geojson'] = None
 
-        if settings.MAP_CONFIG and person.latest_council_membership and person.latest_council_membership.post.shape:
+        if settings.MAP_CONFIG and person.latest_council_membership and person.latest_council_membership.post and person.latest_council_membership.post.shape:
             map_geojson = {
                 'type': 'FeatureCollection',
                 'features': []
