@@ -54,4 +54,4 @@ urlpatterns = [
 if (settings.USING_NOTIFICATIONS):
     urlpatterns.extend([
         url(r'', include('notifications.urls')),
-])
+    ])
