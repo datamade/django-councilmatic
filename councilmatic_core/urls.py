@@ -1,9 +1,11 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.views.generic import RedirectView
 
 # use never_cache wrapper for class-based Views which need to reflect current subscription status
 from django.views.decorators.cache import never_cache
 from django.contrib import admin
+
+from django.conf import settings
 
 from . import views
 from . import feeds
@@ -48,3 +50,8 @@ urlpatterns = [
     url(r'^flush-cache/(.*)/$', views.flush, name='flush'),
     url(r'^pdfviewer/$', views.pdfviewer, name='pdfviewer'),
 ]
+
+if (settings.USING_NOTIFICATIONS):
+    urlpatterns.extend([
+        url(r'', include('notifications.urls')),
+])
