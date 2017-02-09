@@ -154,7 +154,10 @@
             <hr>
 
             {% if query or selected_facets %}
-            <h3 class="modal-links">{{ paginator.count }} legislation result{{ paginator.count|pluralize }} {% if query %}for '{{ request.GET.q }}'{% endif %}
+            <h3 class="modal-links">
+
+                {% include 'partials/search_results_header.html' %}
+
                 <small>
                 {% if USING_NOTIFICATIONS %}
                     {% if user_subscribed %}
