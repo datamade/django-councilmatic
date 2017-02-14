@@ -231,29 +231,6 @@
                 {% include 'partials/search_result.html' %}
             {% endwith %}
 
-            <div class="row">
-                <div class="col-xs-11">
-
-                    {% if query %}
-                        <p class="search-result">
-                {{ result.highlighted.text.0|safe  }}
-                        </p>
-                    {% else %}
-                        <p>
-                {{result.object.listing_description | short_blurb}}
-                        </p>
-                    {% endif %}
-
-                </div>
-                <div class='col-xs-1 no-pad-mobile'>
-                    <div>
-                        <a class='btn-bill-detail' href='/legislation/{{ result.object.slug }}/'>
-                            <i class="fa fa-fw fa-chevron-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
             {% if result.last_action_date %}
                 <p class="small text-muted condensed">
                     <i class="fa fa-fw fa-calendar-o"></i> {{result.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
