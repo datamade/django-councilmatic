@@ -1068,76 +1068,75 @@ class Command(BaseCommand):
             )
             '''
 
-        read_connection = engine.connect()
-        actions = read_connection.execute('''
-            SELECT id, bill_id, "order" FROM councilmatic_core_action
-        ''')
-
         counter = 0
-        for action in actions:
+        for bill_json in os.listdir(self.bills_folder):
+            with open(os.path.join(self.bills_folder, bill_json)) as f:
+                bill_info = json.load(f)
 
-            action_id, bill_id, order = action
+            db_actions = self.connection.execute(sa.text("""
+                                SELECT id
+                                FROM councilmatic_core_action
+                                WHERE bill_id = :bill_id
+                                ORDER by "order"
+                                """), bill_id=bill_info["id"])
 
-            ocd_uuid = bill_id.split('/')[-1]
-            bill_filename = '{}.json'.format(ocd_uuid)
+            actions = zip((action.id for action in db_actions),
+                          bill_info['actions'])
 
-            with open(os.path.join(self.bills_folder, bill_filename)) as f:
-                bill_info = json.loads(f.read())
-
-            action = bill_info['actions'][order]
-
-            for related_entity in action['related_entities']:
-
-                person_id = None
-                organization_id = None
-
-                if related_entity['entity_type'] == 'organization':
-
-                    organization_id = related_entity['organization_id']
-
-                    if not organization_id:
-                        org_id = self.connection.execute(sa.text("""
-                            SELECT ocd_id
-                            FROM councilmatic_core_organization
-                            WHERE name = :name
-                            LIMIT 1
-                        """), name=related_entity['name']).first()
-
-                        if org_id:
-                            organization_id = org_id.ocd_id
-
-                elif related_entity['entity_type'] == 'person':
-
-                    person_id = related_entity['person_id']
-
-                    if not person_id:
-                        person_id = self.connection.execute(sa.text("""
-                            SELECT ocd_id
-                            FROM councilmatic_core_person
-                            WHERE name = :name
-                            LIMIT 1
-                        """), name=related_entity['name']).first()
-
-                        if person_id:
-                            person_id = person_id.ocd_id
-
-                insert = {
-                    'entity_type': related_entity['entity_type'],
-                    'entity_name': related_entity['name'],
-                    'organization_ocd_id': organization_id,
-                    'person_ocd_id': person_id,
-                    'action_id': action_id,
-                }
-
-                inserts.append(insert)
-
-                if inserts and len(inserts) % 10000 == 0:
-                    self.executeTransaction(sa.text(insert_query), *inserts)
-
-                    counter += 10000
-                    self.log_message('Inserted {0} action related entities'.format(counter))
-
-                    inserts = []
+            for action_id, action in actions:
+                
+                for related_entity in action['related_entities']:
+                
+                    person_id = None
+                    organization_id = None
+                
+                    if related_entity['entity_type'] == 'organization':
+                
+                        organization_id = related_entity['organization_id']
+                
+                        if not organization_id:
+                            org_id = self.connection.execute(sa.text("""
+                                SELECT ocd_id
+                                FROM councilmatic_core_organization
+                                WHERE name = :name
+                                LIMIT 1
+                            """), name=related_entity['name']).first()
+                
+                            if org_id:
+                                organization_id = org_id.ocd_id
+                
+                    elif related_entity['entity_type'] == 'person':
+                
+                        person_id = related_entity['person_id']
+                
+                        if not person_id:
+                            person_id = self.connection.execute(sa.text("""
+                                SELECT ocd_id
+                                FROM councilmatic_core_person
+                                WHERE name = :name
+                                LIMIT 1
+                            """), name=related_entity['name']).first()
+                
+                            if person_id:
+                                person_id = person_id.ocd_id
+                
+                    insert = {
+                        'entity_type': related_entity['entity_type'],
+                        'entity_name': related_entity['name'],
+                        'organization_ocd_id': organization_id,
+                        'person_ocd_id': person_id,
+                        'action_id': action_id,
+                    }
+                
+                    inserts.append(insert)
+                
+                    if inserts and len(inserts) % 10000 == 0:
+                        self.executeTransaction(sa.text(insert_query), *inserts)
+                
+                        counter += 10000
+                        self.log_message('Inserted {0} action related entities'.format(counter))
+                
+                        inserts = []
 
         if inserts:
             self.executeTransaction(sa.text(insert_query), *inserts)
