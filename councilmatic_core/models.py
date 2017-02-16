@@ -74,7 +74,6 @@ class Person(models.Model):
     def __str__(self):
         return self.name
 
-    @property
     def latest_council_membership(self):
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
             filter_kwarg = {'_organization__ocd_id': settings.OCD_CITY_COUNCIL_ID}
@@ -88,7 +87,6 @@ class Person(models.Model):
 
         return None
 
-    @property
     def current_council_seat(self):
         m = self.latest_council_membership
         if m and m.post:
@@ -97,18 +95,15 @@ class Person(models.Model):
                     return m.post.label
         return ''
 
-    @property
     def latest_council_seat(self):
         m = self.latest_council_membership
         if m and m.post:
             return m.post.label
         return ''
 
-    @property
     def is_speaker(self):
         return True if self.memberships.filter(role='Speaker').first() else False
 
-    @property
     def headshot_url(self):
         if self.slug in MANUAL_HEADSHOTS:
             return '/static/images/' + MANUAL_HEADSHOTS[self.slug]['image']
@@ -117,7 +112,6 @@ class Person(models.Model):
         else:
             return '/static/images/headshot_placeholder.png'
 
-    @property
     def headshot_source(self):
         if self.slug in MANUAL_HEADSHOTS:
             return MANUAL_HEADSHOTS[self.slug]['source']
@@ -126,7 +120,6 @@ class Person(models.Model):
         else:
             return None
 
-    @property
     def link_html(self):
 
         if self.ocd_id and self.slug:
@@ -141,18 +134,15 @@ class Person(models.Model):
 
         return self.name
 
-    @property
     def primary_sponsorships(self):
         return self.sponsorships.filter(is_primary=True)
 
-    @property
     def chair_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
             return []
 
-    @property
     def member_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
@@ -190,18 +180,15 @@ class Bill(models.Model):
 
     slug = models.CharField(max_length=255, unique=True)
 
-    @property
     def from_organization(self):
         return override_relation(self._from_organization)
 
-    @property
     def legislative_session(self):
         return override_relation(self._legislative_session)
 
     def __str__(self):
         return self.friendly_name
 
-    @property
     def controlling_body(self):
         """
         grabs the organization that's currently 'responsible' for a bill
@@ -225,39 +212,33 @@ class Bill(models.Model):
         else:
             return None
 
-    @property
     def last_action_org(self):
         """
         grabs whatever organization performed the most recent action
         """
         return self.current_action.organization if self.current_action else None
 
-    @property
     def ordered_actions(self):
         """
         returns all actions ordered by date in descending order
         """
         return self.actions.all().order_by('-order')
 
-    @property
     def current_action(self):
         """
         grabs the most recent action on a bill
         """
         return self.actions.all().order_by('-order').first() if self.actions.all() else None
 
-    @property
     def first_action(self):
         """
         grabs the first action on a bill
         """
         return self.actions.all().order_by('order').first() if self.actions.all() else None
 
-    @property
     def date_passed(self):
         return self.actions.filter(classification='passage').order_by('-order').first().date if self.actions.all() else None
 
-    @property
     def friendly_name(self):
         """
         the bill title/headers displayed throughout the site (bill listings, bill detail pages)
@@ -267,14 +248,12 @@ class Bill(models.Model):
         """
         return self.identifier
 
-    @property
     def primary_sponsor(self):
         """
         grabs the primary sponsorship for a bill
         """
         return self.sponsorships.filter(is_primary=True).first()
 
-    @property
     def pseudo_topics(self):
         """
         returns a list of artificial topics for a bill, from the committees
@@ -298,7 +277,6 @@ class Bill(models.Model):
         else:
             return []
 
-    @property
     def topics(self):
         """
         returns a list of topics for a bill
@@ -307,7 +285,6 @@ class Bill(models.Model):
         """
         return []
 
-    @property
     def addresses(self):
         """
         returns a list of relevant addresses for a bill
@@ -316,7 +293,6 @@ class Bill(models.Model):
         """
         return []
 
-    @property
     def inferred_status(self):
         """
         infers bill status, to be displayed in colored labels next to bill names
@@ -326,13 +302,11 @@ class Bill(models.Model):
         """
         return None
 
-    @property
     def listing_description(self):
         if self.abstract:
             return self.abstract
         return self.description
 
-    @property
     def full_text_doc_url(self):
         """
         override this if instead of having full text as string stored in
@@ -340,7 +314,6 @@ class Bill(models.Model):
         """
         return None
 
-    @property
     def attachments(self):
         """
         grabs that documents that are attachments (as opposed to versions)
@@ -382,7 +355,6 @@ class Bill(models.Model):
             b for b in all_bills_since if b.first_action.date < date_cutoff]
         return updated_bills_since
 
-    @property
     def unique_related_upcoming_events(self):
         events = [r.agenda_item.event for r in self.related_agenda_items.filter(
             agenda_item__event__start_time__gte=timezone.now(app_timezone)).all()]
@@ -399,7 +371,6 @@ class Organization(models.Model):
     slug = models.CharField(max_length=255, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
     def parent(self):
         return override_relation(self._parent)
 
@@ -413,20 +384,17 @@ class Organization(models.Model):
         """
         return cls.objects.filter(classification='committee').order_by('name').filter(memberships__isnull=False).distinct()
 
-    @property
     def recent_activity(self):
         # setting arbitrary max of 300 b/c otherwise page will take forever to
         # load
         return self.actions.order_by('-date', '-_bill__identifier', '-order')[:300]
 
-    @property
     def recent_events(self):
         # need to look up event participants by name
         events = Event.objects.filter(participants__entity_type='organization', participants__entity_name=self.name)
         events = events.order_by('-start_time').all()
         return events
 
-    @property
     def upcoming_events(self):
         """
         grabs events in the future
@@ -439,21 +407,18 @@ class Organization(models.Model):
                       .all()
         return events
 
-    @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
             return []
 
-    @property
     def non_chair_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
             return []
 
-    @property
     def link_html(self):
         link_fmt = '<a href="{0}">{1}</a>'
 
@@ -496,15 +461,12 @@ class Action(models.Model):
     order = models.IntegerField()
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
     def bill(self):
         return override_relation(self._bill)
 
-    @property
     def organization(self):
         return override_relation(self._organization)
 
-    @property
     def related_organization(self):
         r = self.related_entities.first()
         if r and r.entity_type == 'organization':
@@ -514,7 +476,6 @@ class Action(models.Model):
         else:
             return None
 
-    @property
     def label(self):
         c = self.classification
 
@@ -561,7 +522,6 @@ class ActionRelatedEntity(models.Model):
     person_ocd_id = models.CharField(max_length=100, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
     def action(self):
         return override_relation(self._action)
 
@@ -576,11 +536,9 @@ class Post(models.Model):
     division_ocd_id = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
     def organization(self):
         return override_relation(self._organization)
 
-    @property
     def current_member(self):
         if self.memberships.all():
             most_recent_member = self.memberships.order_by(
@@ -606,15 +564,12 @@ class Membership(models.Model):
     end_date = models.DateField(default=None, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
     def organization(self):
         return override_relation(self._organization)
 
-    @property
     def person(self):
         return override_relation(self._person)
 
-    @property
     def post(self):
         return override_relation(self._post)
 
@@ -628,11 +583,9 @@ class Sponsorship(models.Model):
     is_primary = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
     def bill(self):
         return override_relation(self._bill)
 
-    @property
     def person(self):
         return override_relation(self._person)
 
@@ -658,7 +611,6 @@ class Event(models.Model):
     slug = models.CharField(max_length=255, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
     def event_page_url(self):
 
         try:
@@ -668,11 +620,9 @@ class Event(models.Model):
 
         return link
 
-    @property
     def link_html(self):
         return '<a href="{0}" title="View Event Details">{1}</a>'.format(self.event_page_url, self.name)
 
-    @property
     def clean_agenda_items(self):
         agenda_items = self.agenda_items.order_by('order').all()
         agenda_deduped = []
