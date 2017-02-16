@@ -217,8 +217,7 @@
                 </ul>
                 <div class="divider"></div>
             {% endif %}
-
-            {% if legislation.full_text != "" %}
+            {% if legislation.full_text %}
                 {% if legislation.full_text|clean_html|length > 65 %}
                 <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
