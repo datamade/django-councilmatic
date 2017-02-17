@@ -7,7 +7,7 @@ addons:
 
 install:
     - pip install -r requirements-test.txt
-    - python setup.py install
+    - pip install -e .
 script:
     - flake8 ./councilmatic_core/*.py
     - python runtests.py
