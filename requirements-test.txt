@@ -1,1 +1,2 @@
 flake8
+django-adv-cache-tag==1.1.0

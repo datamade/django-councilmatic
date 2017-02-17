@@ -3,6 +3,7 @@
 {% load staticfiles %}
 {% block title %}{{ legislation.friendly_name }}{% endblock %}
 {% block content %}
+
     {% if legislation %}
         <div class="row-fluid">
             <div class="col-sm-12">
@@ -303,7 +304,6 @@
     "text": "{% firstof legislation.full_text legislation.ocr_full_text %}"
     }
     </script>
-
 
 {% endblock %}
 

@@ -1,8 +1,11 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
 {% load staticfiles %}
+{% load adv_cache %}
 {% block title %}{{committee.name}}{% endblock %}
 {% block content %}
+
+{% cache 600 committee_wrapper committee.ocd_id %}
 
     <div class="row-fluid">
         <div class="col-sm-8">
@@ -116,6 +119,7 @@
                     {% else %}
                         <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
                     {% endif %}
+
                 </h4>
 
                 <div class='row'>
@@ -185,6 +189,8 @@
             </table>
         </div>
     </div>
+
+{% endcache %}
 
 {% endblock %}
 
