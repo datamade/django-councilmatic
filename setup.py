@@ -26,7 +26,6 @@ setup(
                       'python-dateutil==2.4.2',
                       'SQLAlchemy==1.1.2',
                       'psycopg2==2.6.2',
-                      'django_rq',
                       'django-password-reset==0.9',
                       'django-councilmatic-notifications<0.2',
                       'django-adv-cache-tag'],
