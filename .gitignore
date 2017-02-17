@@ -4,3 +4,4 @@ dist/*
 django-councilmatic.egg-info/*
 *.egg-info
 .DS_STORE
+build/*
