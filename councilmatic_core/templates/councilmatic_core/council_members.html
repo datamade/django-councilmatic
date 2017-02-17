@@ -1,7 +1,7 @@
 {% extends "base_no_footer.html" %}
 {% load staticfiles %}
+{% load adv_cache %}
 {% block title %}{{CITY_COUNCIL_NAME}} Members{% endblock %}
-
 
 {% block extra_css %}
     {% if map_geojson %}
@@ -9,8 +9,10 @@
     {% endif %}
 {% endblock %}
 
-
 {% block full_content %}
+
+{% cache 600 members_wrapper %}
+
 <div class="container-fluid">
     {% if map_geojson %}
     <div class="row">
@@ -63,6 +65,9 @@
         {% endif %}
     </div>
 </div>
+
+{% endcache %}
+
 {% endblock %}
 
 

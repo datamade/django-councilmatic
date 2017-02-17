@@ -1,6 +1,9 @@
 {% extends "base_with_margins.html" %}
+{% load adv_cache %}
 {% block title %}About{% endblock %}
 {% block content %}
+
+{% cache 600 about_wrapper %}
 
     <div class="row-fluid clearfix">
         <div class="col-sm-8 no-pad-mobile">
@@ -37,11 +40,12 @@
         <div class="col-sm-8 no-pad-mobile" id="about-city-council">
 
             <p>Below are the primary types of city council activity.</p>
-        
+
             {% include 'partials/component_bill_type_table.html' %}
 
         </div>
     </div>
 
+{% endcache %}
 
 {% endblock %}

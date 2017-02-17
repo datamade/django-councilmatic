@@ -1,8 +1,11 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
 {% load staticfiles %}
+{% load adv_cache %}
 {% block title %}{{CITY_COUNCIL_NAME}} Committees{% endblock %}
 {% block content %}
+
+{% cache 600 committees_wrapper %}
 
     <div class="row-fluid">
         <div class="col-sm-12">
@@ -113,7 +116,7 @@
         <div class="col-sm-4">
             <div class='well info-blurb'>
                 <h4><i class='fa fa-fw fa-info-circle'></i> What do committees do?</h4>
-                
+
                 {{ ABOUT_BLURBS.COMMITTEES | safe }}
 
                 {% if taskforces %}
@@ -126,6 +129,8 @@
             </div>
         </div>
     </div>
+
+{% endcache %}
 
 {% endblock %}
 {% block extra_js %}

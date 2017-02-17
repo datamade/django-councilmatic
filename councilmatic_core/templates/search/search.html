@@ -1,5 +1,6 @@
 {% extends 'base_with_margins.html' %}
 {% load extras %}
+{% load adv_cache %}
 {% load highlight %}
 {% block title %}
     {% if request.GET.q %}
@@ -9,6 +10,9 @@
     {% endif %}
 {% endblock %}
 {% block content %}
+
+{% cache 600 search_wrapper %}
+
     <br/>
     <div class='jumbotron' id='search-jumbotron'>
         <!-- Add partial, so the title above search can be easily customized for site. -->
@@ -317,6 +321,9 @@
             </div>
         </div>
     {% endif %}
+
+{% endcache %}
+
 {% endblock %}
 
 {% block extra_js %}

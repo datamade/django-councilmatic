@@ -1,8 +1,12 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
 {% load staticfiles %}
+{% load adv_cache %}
 {% block title %}{{ legislation.friendly_name }}{% endblock %}
 {% block content %}
+
+{% cache 600 legislation_wrapper %}
+
     {% if legislation %}
         <div class="row-fluid">
             <div class="col-sm-12">
@@ -14,6 +18,7 @@
 
                 <div class="modal-links">
                     <!-- Subscribe -->
+                    {% nocache %}
                     {% if USING_NOTIFICATIONS %}
                         {% if user_subscribed %}
                         <a href="#" id="billSubscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to {{legislation.friendly_name}}! <br>Visit your accounts page to unsubscribe.">
@@ -30,6 +35,7 @@
                     {% else %}
                         <a href="rss/" title="RSS feed for Legislation {{legislation.friendly_name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
                     {% endif %}
+                    {% endnocache %}
 
                     <!-- Embed -->
                     {% with slug=legislation.slug widget='bill_widget' frameheight='260px' %}
@@ -305,6 +311,8 @@
     }
     </script>
 
+
+{% endcache %}
 
 {% endblock %}
 

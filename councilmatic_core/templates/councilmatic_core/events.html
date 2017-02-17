@@ -1,6 +1,9 @@
 {% extends "base_with_margins.html" %}
+{% load adv_cache %}
 {% block title %}Events{% endblock %}
 {% block content %}
+
+{% cache 600 events_wrapper %}
 
     <div class="row-fluid">
         <div class='col-sm-12' id="event-menu">
@@ -111,6 +114,8 @@
             {% include 'partials/events_info_blurb.html' %}
         </div>
     </div>
+
+{% endcache %}
 
 {% endblock %}
 
