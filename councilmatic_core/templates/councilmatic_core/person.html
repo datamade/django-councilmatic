@@ -12,7 +12,7 @@
 
 {% block content %}
 
-{% cache 600 person_wrapper %}
+{% cache 600 person_wrapper person.ocd_id %}
 
     <div class="row-fluid">
         <div class="col-sm-12">
@@ -26,8 +26,6 @@
             </h1>
 
             <div class="modal-links">
-
-                {% nocache %}
 
                 {% if USING_NOTIFICATIONS %}
 
@@ -44,8 +42,6 @@
                 {% else %}
                     <a href="rss/" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
                 {% endif %}
-
-                {% endnocache %}
 
                 <!-- Embed -->
                 {% with slug=person.slug widget='person_widget' frameheight='460px' %}

@@ -11,7 +11,7 @@
 
 {% block full_content %}
 
-{% cache 600 members_wrapper %}
+{% cache 600 members_wrapper 'members' %}
 
 <div class="container-fluid">
     {% if map_geojson %}

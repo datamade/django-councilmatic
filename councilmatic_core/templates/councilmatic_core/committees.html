@@ -5,7 +5,7 @@
 {% block title %}{{CITY_COUNCIL_NAME}} Committees{% endblock %}
 {% block content %}
 
-{% cache 600 committees_wrapper %}
+{% cache 600 committees_wrapper 'committees' %}
 
     <div class="row-fluid">
         <div class="col-sm-12">

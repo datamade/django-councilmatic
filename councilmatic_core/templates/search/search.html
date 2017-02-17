@@ -1,6 +1,5 @@
 {% extends 'base_with_margins.html' %}
 {% load extras %}
-{% load adv_cache %}
 {% load highlight %}
 {% block title %}
     {% if request.GET.q %}
@@ -10,8 +9,6 @@
     {% endif %}
 {% endblock %}
 {% block content %}
-
-{% cache 600 search_wrapper %}
 
     <br/>
     <div class='jumbotron' id='search-jumbotron'>
@@ -321,8 +318,6 @@
             </div>
         </div>
     {% endif %}
-
-{% endcache %}
 
 {% endblock %}
 

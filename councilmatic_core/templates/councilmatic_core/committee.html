@@ -5,7 +5,7 @@
 {% block title %}{{committee.name}}{% endblock %}
 {% block content %}
 
-{% cache 600 committee_wrapper %}
+{% cache 600 committee_wrapper committee.ocd_id %}
 
     <div class="row-fluid">
         <div class="col-sm-8">
@@ -34,8 +34,6 @@
 
             <h4 class="modal-links"><i class='fa fa-fw fa-list-ul'></i> Recent Legislative Activity&nbsp;
 
-            {% nocache %}
-
             {% if USING_NOTIFICATIONS %}
                 {% if user_subscribed_actions %}
                     <a href="#" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Recent Legislative Activity!<br> Visit your accounts page to unsubscribe.">
@@ -51,8 +49,6 @@
                 <a href="actions/rss/" title="RSS feed for Recent Legislative Activity by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
 
             {% endif %}
-
-            {% endnocache %}
 
             </h4>
 
@@ -110,8 +106,6 @@
                 <h4 class="modal-links">
                     <i class='fa fa-fw fa-calendar-o'></i> Committee {{ CITY_VOCAB.EVENTS }}&nbsp;
 
-                    {% nocache %}
-
                     {% if USING_NOTIFICATIONS %}
                         {% if user_subscribed_events %}
                             <a href="#committeeEvents" id="committee_events_Subscribe" class="removeSubscription" data-toggle="tooltip" data-placement="top" data-html="true" title="You are subscribed to Committee Meetings!<br> Visit your accounts page to unsubscribe.">
@@ -125,8 +119,6 @@
                     {% else %}
                         <a href="events/rss/" title="RSS feed for Committee Events by {{committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i> RSS</a>
                     {% endif %}
-
-                    {% endnocache %}
 
                 </h4>
 

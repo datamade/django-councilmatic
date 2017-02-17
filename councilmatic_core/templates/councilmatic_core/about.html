@@ -3,14 +3,14 @@
 {% block title %}About{% endblock %}
 {% block content %}
 
-{% cache 600 about_wrapper %}
+{% cache 600 about_wrapper 'about' %}
 
     <div class="row-fluid clearfix">
         <div class="col-sm-8 no-pad-mobile">
             <br class="non-mobile-only"/>
             <h1 id='about'>About</h1>
 
-            <p><strong>{{ CITY_NAME_SHORT }} Councilmatic</strong> is a tool for understanding and tracking what’s happening in {{ CITY_COUNCIL_NAME }}.</p>
+            <p><strong>{{ CITY_NAME_SHORT }} Councilmatic</strong> is a tool for understanding and tracking what’s happening in {{ CITY_COUNCIL_NAME }}:</p>
             <p>This site connects {{ CITY_NAME_SHORT }} residents to local city council offices, for greater online public dialogue about issues in their communities.</p>
 
             <p>Councilmatic helps you:</p>
