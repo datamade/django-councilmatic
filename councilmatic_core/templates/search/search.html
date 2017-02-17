@@ -170,27 +170,15 @@
                         <!-- Monstrous code for using modal partials with three different RSS links -->
                         {% if query and selected_facets %}
 
-                            {% for key, values in selected_facets.items %}
-                                {% for value in values %}
-
-                                {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' RSS_href='/search/rss/?q='|add:request.GET.q|add:'&selected_facets='|add:key|add:':'|add:value RSS_for='RSS feed' %}
-                                    {% include 'partials/subscription_modal.html' %}
-                                {% endwith %}
-
-                                {% endfor %}
-                            {% endfor %}
+                            {% with link_id='searchSubscribe' modal_id='Search' custom_text='searches for '|add:request.GET.q href='#' RSS_href=selected_facets.items|create_facet_string:request.GET.q RSS_for='RSS feed' %}
+                                {% include 'partials/subscription_modal.html' %}
+                            {% endwith %}
 
                         {% elif selected_facets %}
 
-                            {% for key, values in selected_facets.items %}
-                                {% for value in values %}
-
-                                {% with link_id='searchSubscribe' modal_id='Search' custom_text='filters for '|add:value href='#' RSS_href='/search/rss/?&selected_facets='|add:key|add:':'|add:value RSS_for='RSS feed' %}
-                                    {% include 'partials/subscription_modal.html' %}
-                                {% endwith %}
-
-                                {% endfor %}
-                            {% endfor %}
+                            {% with link_id='searchSubscribe' modal_id='Search' custom_text='filters for '|add:'your filtered search' href='#' RSS_href=selected_facets.items|create_facet_string RSS_for='RSS feed' %}
+                                {% include 'partials/subscription_modal.html' %}
+                            {% endwith %}
 
                         {% else %}
 

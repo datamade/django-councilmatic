@@ -90,6 +90,20 @@
         </div>
     </nav>
 
+    {% if messages %}
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    {% for message in messages %}
+                        <div {% if message.tags %}class="alert-signup alert alert-info {{ message.tags }}"{% endif %} role="alert">
+                                {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     {% endcache %}
 
     {% block full_content %}
@@ -100,15 +114,15 @@
             <div class='clearfix'></div>
 
             {% if FOOTER_CREDITS %}
-                <p>Part of the <a href='https://www.councilmatic.org'>Councilmatic family</a>. Proudly brought to you by</p>
+                <p>Part of the <a href='https://www.councilmatic.org' target="_blank">Councilmatic family</a>. Proudly brought to you by</p>
 
                 {% for credit in FOOTER_CREDITS %}
 
-                    <a href='{{credit.url}}' title='{{credit.name}}'><img src='/static/images/{{credit.image}}' /></a>
+                    <a href='{{credit.url}}' title='{{credit.name}}' target="_blank"><img src='/static/images/{{credit.image}}' /></a>
 
                 {% endfor %}
             {% else %}
-                <p>Part of the <a href='https://www.councilmatic.org'>Councilmatic family</a>.</p>
+                <p>Part of the <a href='https://www.councilmatic.org' target="_blank">Councilmatic family</a>.</p>
             {% endif %}
 
         </div>

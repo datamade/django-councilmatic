@@ -149,3 +149,17 @@ def format_url_parameters(url):
 #     updated['selected_facets'] = selected_facet_names
 
 #     return updated.urlencode()
+
+
+@register.filter
+def create_facet_string(selected_facets, query=None):
+    facet_string = "/search/rss/?"
+
+    if query:
+        facet_string = "/search/rss/?q=" + query
+
+    for key, values in selected_facets:
+        for value in values:
+            facet_string += "&selected_facets=" + key + ":" + value
+
+    return facet_string
