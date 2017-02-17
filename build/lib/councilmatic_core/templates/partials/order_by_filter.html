@@ -1,0 +1,49 @@
+{% load extras %}
+
+{% if 'sort_by='|add:order_name in request.get_full_path %}
+    <a class="sort-by nav-link" href="{{ request.get_full_path | format_url_parameters }}" data='sort_by='|add:order_name>
+        <strong>{{order_name|title}}</strong>
+    </a>
+
+    {% if 'sort_by=date' in request.get_full_path %}
+        {% if 'ascending' in request.get_full_path %}
+            {% if 'page=' in request.get_full_path %}
+                <a class="nav-link assort" href="{{ request.get_full_path | format_url_parameters }}&amp;sort_by=date" data="sort_by=date">
+                    <i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+                </a>
+            {% else %}
+                <a class="nav-link assort" href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=date" data="sort_by=date">
+                    <i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+                </a>
+            {% endif %}
+        {% else %}
+            <a class="nav-link assort" href="{{ request.get_full_path }}&amp;ascending=true" data="ascending=true">
+                <i class="fa fa-sort-amount-desc" aria-hidden="true"></i>
+            </a>
+        {% endif %}
+    {% elif 'sort_by=title' in request.get_full_path%}
+        {% if 'descending' in request.get_full_path %}
+            {% if 'page=' in request.get_full_path %}
+                <a class="nav-link assort" href="{{ request.get_full_path | format_url_parameters }}&amp;sort_by=title" data='sort_by=title'>
+                    <i class="fa fa-sort-amount-desc" aria-hidden="true"></i>
+                </a>
+            {% else %}
+                <a class="nav-link assort" href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by=title" data="sort_by=title">
+                    <i class="fa fa-sort-amount-desc" aria-hidden="true"></i>
+                </a>
+            {% endif %}
+        {% else %}
+            <a class="nav-link assort" href="{{ request.get_full_path }}&amp;descending=true" data="descending=true">
+                 <i class="fa fa-sort-amount-asc" aria-hidden="true"></i>
+            </a>
+        {% endif %}
+    {% endif %}
+{% elif 'page=' in request.get_full_path %}
+    <a class="sort-by nav-link" href="{{ request.get_full_path | format_url_parameters }}&amp;sort_by={{ order_name }}" data='sort_by='|add:order_name>
+        {{order_name|title}}
+    </a>
+{% else %}
+    <a class="sort-by nav-link" href="{{ request.get_full_path | format_url_parameters }}?&amp;sort_by={{ order_name }}" data='sort_by='|add:order_name>
+        {{order_name|title}}
+    </a>
+{% endif %}

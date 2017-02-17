@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load adv_cache %}
+{% block title %}Home{% endblock %}
+{% block full_content %}
+
+{% cache 600 index_wrapper 'index' %}
+
+    <div class="container-fluid" id="section-photo">
+        <div class="row-fluid">
+            <div class='col-sm-10 col-sm-offset-1'>
+                <br/>
+                <h2>
+                    <h1>{{ CITY_COUNCIL_NAME }}, demystified</h1>
+                </h2>
+                <br/>
+                <p class="h3">
+                    <span class="text-bg">Search {{CITY_NAME}} legislation</span>
+                </p>
+                <form class="search form-search=" action="/search/" method="GET">
+                    <div class="input-group site-intro-search">
+                        <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}">
+                        <div class='input-group-btn'>
+                            <button type="submit" class="btn btn-lg btn-primary">
+                                <i class='fa fa-fw fa-search'></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if next_council_meeting or upcoming_committee_meetings %}
+    <div class="container-fluid" id="section-events">
+        <div class="row-fluid">
+            <div class='col-sm-10 col-sm-offset-1'>
+                {% include "partials/component_upcoming_events.html" %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
+    {% if recently_passed %}
+    <div class="container-fluid" id="section-recently-passed">
+        <div class="row-fluid">
+            <div class='col-sm-8 col-sm-offset-1'>
+                {% include "partials/component_recently_passed.html" %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+{% endcache %}
+
+{% endblock %}

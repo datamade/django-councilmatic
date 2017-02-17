@@ -1,0 +1,28 @@
+{% load extras %}
+
+<p>
+    <a class="small" href="{% url 'bill_detail' r.object.slug %}">{{ r.object.friendly_name }}</a>
+    {{ r.object.inferred_status | inferred_status_label | safe }}
+</p>
+
+
+<div class="row">
+    <div class="col-xs-11">
+        {% if query %}
+            <p class="search-result">
+              {{ r.highlighted.text.0|safe  }}
+            </p>
+        {% else %}
+            <p>
+              {{r.object.listing_description | short_blurb}}
+            </p>
+        {% endif %}
+    </div>
+    <div class='col-xs-1 no-pad-mobile'>
+        <div>
+            <a class='btn-bill-detail' href='/legislation/{{ r.object.slug }}/'>
+                <i class="fa fa-fw fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</div>

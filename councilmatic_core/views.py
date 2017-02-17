@@ -14,7 +14,6 @@ from django.core.cache import cache
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.utils import timezone
-from django.views.decorators.cache import never_cache
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
@@ -28,6 +27,7 @@ if (settings.USING_NOTIFICATIONS):
     from notifications.models import BillSearchSubscription
 
 app_timezone = pytz.timezone(settings.TIME_ZONE)
+
 
 class CouncilmaticFacetedSearchView(FacetedSearchView):
 
