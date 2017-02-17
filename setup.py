@@ -28,7 +28,7 @@ setup(
                       'psycopg2==2.6.2',
                       'django_rq',
                       'django-password-reset==0.9',
-                      'notifications'],
+                      'django-councilmatic-notifications<0.2'],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
