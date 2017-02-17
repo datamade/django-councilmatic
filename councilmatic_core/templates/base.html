@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load adv_cache %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -19,6 +20,8 @@
 
 </head>
 <body>
+
+    {% cache 600 nav_wrapper %}
 
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container-fluid container-fluid-nav">
@@ -44,44 +47,50 @@
                 <li>
                     <a href="{% url 'search' %}">Legislation</a>
                 </li>
-        {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
-        <li>
-            <div class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" title="Account">
-                    <i class="fa fa-user" aria-hidden="true"></i>
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-right">
-                    <li class="non-link text-muted small">{{request.user.email}}</li>
-                    <li role="separator" class="divider"></li>
-                    <li>
-                        <a href="/account/subscriptions">
-                            <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
-                            Manage Alerts
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/logout/">
-                            <i class="fa fa-sign-out fa-fw" aria-hidden="true"></i>
-                            Sign out
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </li>
-        </div>
-        {% endif %}
-        {% if USING_NOTIFICATIONS and not request.user.is_authenticated %}
-        <li>
-            <a href="/login/" title="Sign in">
-                <i class="fa fa-sign-in" aria-hidden="true"></i>
-            </a>
-        </li>
-        {% endif %}
-            </ul>
 
+                {% nocache %}
+
+                {% if USING_NOTIFICATIONS and request.user.is_authenticated %}
+                <li>
+                    <div class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" title="Account">
+                            <i class="fa fa-user" aria-hidden="true"></i>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <li class="non-link text-muted small">{{request.user.email}}</li>
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <a href="/account/subscriptions">
+                                    <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+                                    Manage Alerts
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/logout/">
+                                    <i class="fa fa-sign-out fa-fw" aria-hidden="true"></i>
+                                    Sign out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                {% endif %}
+
+                {% if USING_NOTIFICATIONS and not request.user.is_authenticated %}
+                <li>
+                    <a href="/login/" title="Sign in">
+                        <i class="fa fa-sign-in" aria-hidden="true"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% endnocache %}
+            </ul>
         </div>
     </nav>
+
+    {% endcache %}
 
     {% block full_content %}
     {% endblock %}
