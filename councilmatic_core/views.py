@@ -227,7 +227,6 @@ class CouncilMembersView(ListView):
 
         return json.dumps(map_geojson)
 
-
     def get_queryset(self):
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
             get_kwarg = {'ocd_id': settings.OCD_CITY_COUNCIL_ID}
