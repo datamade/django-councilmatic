@@ -197,6 +197,37 @@ class CouncilMembersView(ListView):
     template_name = 'councilmatic_core/council_members.html'
     context_object_name = 'posts'
 
+    def map(self):
+        map_geojson = {
+            'type': 'FeatureCollection',
+            'features': []
+        }
+
+        for post in self.object_list:
+            if post.shape:
+
+                council_member = "Vacant"
+                detail_link = ""
+                if post.current_member:
+                    council_member = post.current_member.person.name
+                    detail_link = post.current_member.person.slug
+
+                feature = {
+                    'type': 'Feature',
+                    'geometry': json.loads(post.shape),
+                    'properties': {
+                        'district': post.label,
+                        'council_member': council_member,
+                        'detail_link': '/person/' + detail_link,
+                        'select_id': 'polygon-{}'.format(slugify(post.label)),
+                    }
+                }
+
+                map_geojson['features'].append(feature)
+
+        return json.dumps(map_geojson)
+
+
     def get_queryset(self):
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
             get_kwarg = {'ocd_id': settings.OCD_CITY_COUNCIL_ID}
@@ -209,37 +240,10 @@ class CouncilMembersView(ListView):
         context = super(CouncilMembersView, self).get_context_data(**kwargs)
         context['seo'] = self.get_seo_blob()
 
-        context['map_geojson'] = None
-
         if settings.MAP_CONFIG:
-            map_geojson = {
-                'type': 'FeatureCollection',
-                'features': []
-            }
-
-            for post in self.object_list:
-                if post.shape:
-
-                    council_member = "Vacant"
-                    detail_link = ""
-                    if post.current_member:
-                        council_member = post.current_member.person.name
-                        detail_link = post.current_member.person.slug
-
-                    feature = {
-                        'type': 'Feature',
-                        'geometry': json.loads(post.shape),
-                        'properties': {
-                            'district': post.label,
-                            'council_member': council_member,
-                            'detail_link': '/person/' + detail_link,
-                            'select_id': 'polygon-{}'.format(slugify(post.label)),
-                        }
-                    }
-
-                    map_geojson['features'].append(feature)
-
-            context['map_geojson'] = json.dumps(map_geojson)
+            context['map_geojson'] = self.map
+        else:
+            context['map_geojson'] = None
 
         return context
 

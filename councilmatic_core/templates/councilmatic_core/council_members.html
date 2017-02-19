@@ -4,14 +4,16 @@
 {% block title %}{{CITY_COUNCIL_NAME}} Members{% endblock %}
 
 {% block extra_css %}
+    {% cache 86400 leaflet_wrapper 'leaflet' %}
     {% if map_geojson %}
         <link rel="stylesheet" href="{% static 'css/leaflet.css' %}" />
     {% endif %}
+    {% endcache %}	
 {% endblock %}
 
 {% block full_content %}
 
-{% cache 600 members_wrapper 'members' %}
+{% cache 86400 members_wrapper 'members' %}
 
 <div class="container-fluid">
     {% if map_geojson %}
@@ -72,6 +74,7 @@
 
 
 {% block extra_js %}
+    {% cache 86400 js_wrapper 'js' %}
     {% include 'partials/map.html' %}
     <script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
@@ -98,7 +101,7 @@
             });
         });
 
-
+        
         {% if map_geojson %}
         $('tbody tr').on( 'mouseover', function () {
             hoverOnRow(this.id);
@@ -136,7 +139,8 @@
         }
 
         {% endif %}
+	
     </script>
 
-
+   {% endcache %}
 {% endblock %}
