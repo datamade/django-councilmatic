@@ -452,6 +452,7 @@ class Organization(models.Model):
             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date__gt=datetime.now(app_timezone))
         else:
             return []
+
     @property
     def all_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
