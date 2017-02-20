@@ -461,6 +461,13 @@ class Organization(models.Model):
             return []
 
     @property
+    def vice_chairs(self):
+        if hasattr(settings, 'COMMITTEE_VICE_CHAIR_TITLE'):
+            return self.memberships.filter(role=settings.COMMITTEE_VICE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+        else:
+            return []
+
+    @property
     def link_html(self):
         link_fmt = '<a href="{0}">{1}</a>'
 
