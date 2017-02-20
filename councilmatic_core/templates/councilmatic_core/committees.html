@@ -38,7 +38,7 @@
                                         {{ chair.person.link_html | safe }}<br />
                                     {% endfor %}
                                 </td>
-                                <td>{{ committee.memberships.all | length }}</td>
+                                <td>{{ committee.all_members | length }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
