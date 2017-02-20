@@ -92,8 +92,8 @@ class Person(models.Model):
     def current_council_seat(self):
         m = self.latest_council_membership
         if m and m.post:
-            if self == m.post.current_member.person:
-                if m.post:
+            if m.post.current_member:
+                if self == m.post.current_member.person:
                     return m.post.label
         return ''
 
@@ -411,7 +411,7 @@ class Organization(models.Model):
         """
         grabs all organizations (1) classified as a committee & (2) with at least one member
         """
-        return cls.objects.filter(classification='committee').order_by('name').filter(memberships__isnull=False).distinct()
+        return cls.objects.filter(classification='committee').order_by('name').filter(memberships__end_date__gt=datetime.now(app_timezone)).distinct()
 
     @property
     def recent_activity(self):
@@ -442,14 +442,21 @@ class Organization(models.Model):
     @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
+            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
         else:
             return []
 
     @property
     def non_chair_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
+            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+        else:
+            return []
+
+    @property
+    def all_members(self):
+        if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
+            return self.memberships.filter(end_date__gt=datetime.now(app_timezone))
         else:
             return []
 
@@ -586,9 +593,12 @@ class Post(models.Model):
             most_recent_member = self.memberships.order_by(
                 '-end_date', '-start_date').first()
             if most_recent_member.end_date:
-                return None
+                if most_recent_member.end_date < timezone.now().date():
+                    return None
+                else:
+                    return most_recent_member
             else:
-                return most_recent_member
+                return None
         else:
             return None
 
