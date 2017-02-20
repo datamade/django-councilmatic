@@ -92,8 +92,8 @@ class Person(models.Model):
     def current_council_seat(self):
         m = self.latest_council_membership
         if m and m.post:
-            if self == m.post.current_member.person:
-                if m.post:
+            if m.post.current_member:
+                if self == m.post.current_member.person:
                     return m.post.label
         return ''
 
