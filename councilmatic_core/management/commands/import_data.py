@@ -1084,16 +1084,16 @@ class Command(BaseCommand):
                           bill_info['actions'])
 
             for action_id, action in actions:
-                
+
                 for related_entity in action['related_entities']:
-                
+
                     person_id = None
                     organization_id = None
-                
+
                     if related_entity['entity_type'] == 'organization':
-                
+
                         organization_id = related_entity['organization_id']
-                
+
                         if not organization_id:
                             org_id = self.connection.execute(sa.text("""
                                 SELECT ocd_id
@@ -1101,14 +1101,14 @@ class Command(BaseCommand):
                                 WHERE name = :name
                                 LIMIT 1
                             """), name=related_entity['name']).first()
-                
+
                             if org_id:
                                 organization_id = org_id.ocd_id
-                
+
                     elif related_entity['entity_type'] == 'person':
-                
+
                         person_id = related_entity['person_id']
-                
+
                         if not person_id:
                             person_id = self.connection.execute(sa.text("""
                                 SELECT ocd_id
@@ -1116,10 +1116,10 @@ class Command(BaseCommand):
                                 WHERE name = :name
                                 LIMIT 1
                             """), name=related_entity['name']).first()
-                
+
                             if person_id:
                                 person_id = person_id.ocd_id
-                
+
                     insert = {
                         'entity_type': related_entity['entity_type'],
                         'entity_name': related_entity['name'],
@@ -1127,15 +1127,15 @@ class Command(BaseCommand):
                         'person_ocd_id': person_id,
                         'action_id': action_id,
                     }
-                
+
                     inserts.append(insert)
-                
+
                     if inserts and len(inserts) % 10000 == 0:
                         self.executeTransaction(sa.text(insert_query), *inserts)
-                
+
                         counter += 10000
                         self.log_message('Inserted {0} action related entities'.format(counter))
-                
+
                         inserts = []
 
         if inserts:
