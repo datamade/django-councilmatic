@@ -591,10 +591,13 @@ class Post(models.Model):
         if self.memberships.all():
             most_recent_member = self.memberships.order_by(
                 '-end_date', '-start_date').first()
-            if most_recent_member.end_date < timezone.now().date():
-                return None
+            if most_recent_member.end_date:
+                if most_recent_member.end_date < timezone.now().date():
+                    return None
+                else:
+                    return most_recent_member
             else:
-                return most_recent_member
+                return None
         else:
             return None
 
