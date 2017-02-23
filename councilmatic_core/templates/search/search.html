@@ -316,7 +316,7 @@
             var bullHorn    = $(this).parents().find(".createSubscription");
             var bullHornNew = $(this).parents().find(".removeSubscription");
 
-            if ('{{ request.user.is_authenticated }}'== 'True') {
+            if ('{{ request.user }}' != 'AnonymousUser') {
                 posturl2 = "/search_check_subscription/"
                 facets2 = JSON.stringify({{selected_facets|safe}});
                 stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
