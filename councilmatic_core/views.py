@@ -443,46 +443,63 @@ class EventsView(ListView):
     def get_context_data(self, **kwargs):
         context = super(EventsView, self).get_context_data(**kwargs)
 
-        aggregates = Event.objects.aggregate(
-            Min('start_time'), Max('start_time'))
-        min_year, max_year = aggregates[
-            'start_time__min'].year, aggregates['start_time__max'].year
-        context['year_range'] = list(reversed(range(min_year, max_year + 1)))
+        # Did the user set date boundaries?
+        date_str               = self.request.GET.get('form_datetime')
+        day_grouper            = lambda x: (x.start_time.year, x.start_time.month, x.start_time.day)
+        context['select_date'] = ''
 
-        context['month_options'] = []
-        for index in range(1, 13):
-            month_name = datetime(datetime.now(app_timezone).date().year, index, 1).strftime('%B')
-            context['month_options'].append([month_name, index])
+        # If yes: dates...
+        if date_str:
+            context['date'] = date_str
+            date_time       = parser.parse(date_str)
 
-        context['show_upcoming'] = True
-        context['this_month'] = datetime.now(app_timezone).date().month
-        context['this_year'] = datetime.now(app_timezone).date().year
-        events_key = 'upcoming_events'
+            select_events = Event.objects.filter(start_time__gt=date_time)\
+                          .filter(start_time__lt=(date_time + relativedelta(months=1)))\
+                          .order_by('start_time')
 
-        upcoming_dates = Event.objects.filter(start_time__gt=datetime.now(app_timezone).date())
+            org_select_events = []
 
-        current_year = self.request.GET.get('year')
-        current_month = self.request.GET.get('month')
+            for event_date, events in itertools.groupby(select_events, key=day_grouper):
+                events = sorted(events, key=attrgetter('start_time'))
+                org_select_events.append([date(*event_date), events])
 
-        # if there are no upcoming events, show the most recent month
-        # that has events populated
-        if not upcoming_dates and not current_year and not current_month:
+            context['select_events'] = org_select_events
+            context['select_date']   = date_time.strftime("%B") + " " + date_time.strftime("%Y")
 
-            most_recent_past_starttime = Event.objects.order_by(
-                '-start_time').first().start_time
-            current_year = most_recent_past_starttime.year
-            current_month = most_recent_past_starttime.month
+        # If no...
+        else:
+            # Upcoming events for the current month.
+            future_events = Event.objects.filter(start_time__gt=timezone.now())\
+                  .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month+1, 1))\
+                  .order_by('start_time')
 
-        if current_year and current_month:
-            events_key = 'month_events'
-            upcoming_dates = Event.objects\
-                                  .filter(start_time__year=int(current_year))\
-                                  .filter(start_time__month=int(current_month))
+            if not future_events:
+                # Upcoming events for the next month.
+                future_events = Event.objects.filter(start_time__gt=timezone.now())\
+                      .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month+2, 1))\
+                      .order_by('start_time')
 
-            context['show_upcoming'] = False
-            context['this_month'] = int(current_month)
-            context['this_year'] = int(current_year)
-            context['this_start_date'] = datetime(year=int(current_year), month=int(current_month), day=1)
+            org_future_events = []
+
+            for event_date, events in itertools.groupby(future_events, key=day_grouper):
+                events = sorted(events, key=attrgetter('start_time'))
+                org_future_events.append([date(*event_date), events])
+
+            context['future_events'] = org_future_events
+
+            # Last ten past events
+            past_events = Event.objects.filter(start_time__lt=datetime.now(app_timezone))\
+                          .order_by('-start_time')[:10]
+
+            org_past_events = []
+
+            for event_date, events in itertools.groupby(past_events, key=day_grouper):
+                events = sorted(events, key=attrgetter('start_time'))
+                org_past_events.append([date(*event_date), events])
+
+            org_past_events.reverse()
+
+            context['past_events'] = org_past_events
 
         context['user_subscribed'] = False
         if self.request.user.is_authenticated():
@@ -493,15 +510,67 @@ class EventsView(ListView):
                 if (len(user.eventssubscriptions.all()) > 0):
                     context['user_subscribed'] = True
 
-        upcoming_dates = upcoming_dates.order_by('start_time')
+        # context = super(EventsView, self).get_context_data(**kwargs)
 
-        day_grouper = lambda x: (
-            x.start_time.year, x.start_time.month, x.start_time.day)
-        context[events_key] = []
+        # aggregates = Event.objects.aggregate(
+        #     Min('start_time'), Max('start_time'))
+        # min_year, max_year = aggregates[
+        #     'start_time__min'].year, aggregates['start_time__max'].year
+        # context['year_range'] = list(reversed(range(min_year, max_year + 1)))
 
-        for event_date, events in itertools.groupby(upcoming_dates, key=day_grouper):
-            events = sorted(events, key=attrgetter('start_time'))
-            context[events_key].append([date(*event_date), events])
+        # context['month_options'] = []
+        # for index in range(1, 13):
+        #     month_name = datetime(datetime.now(app_timezone).date().year, index, 1).strftime('%B')
+        #     context['month_options'].append([month_name, index])
+
+        # context['show_upcoming'] = True
+        # context['this_month'] = datetime.now(app_timezone).date().month
+        # context['this_year'] = datetime.now(app_timezone).date().year
+        # events_key = 'upcoming_events'
+
+        # upcoming_dates = Event.objects.filter(start_time__gt=datetime.now(app_timezone).date())
+
+        # current_year = self.request.GET.get('year')
+        # current_month = self.request.GET.get('month')
+
+        # # if there are no upcoming events, show the most recent month
+        # # that has events populated
+        # if not upcoming_dates and not current_year and not current_month:
+
+        #     most_recent_past_starttime = Event.objects.order_by(
+        #         '-start_time').first().start_time
+        #     current_year = most_recent_past_starttime.year
+        #     current_month = most_recent_past_starttime.month
+
+        # if current_year and current_month:
+        #     events_key = 'month_events'
+        #     upcoming_dates = Event.objects\
+        #                           .filter(start_time__year=int(current_year))\
+        #                           .filter(start_time__month=int(current_month))
+
+        #     context['show_upcoming'] = False
+        #     context['this_month'] = int(current_month)
+        #     context['this_year'] = int(current_year)
+        #     context['this_start_date'] = datetime(year=int(current_year), month=int(current_month), day=1)
+
+        # context['user_subscribed'] = False
+        # if self.request.user.is_authenticated():
+        #     user = self.request.user
+        #     context['user'] = user
+
+        #     if settings.USING_NOTIFICATIONS:
+        #         if (len(user.eventssubscriptions.all()) > 0):
+        #             context['user_subscribed'] = True
+
+        # upcoming_dates = upcoming_dates.order_by('start_time')
+
+        # day_grouper = lambda x: (
+        #     x.start_time.year, x.start_time.month, x.start_time.day)
+        # context[events_key] = []
+
+        # for event_date, events in itertools.groupby(upcoming_dates, key=day_grouper):
+        #     events = sorted(events, key=attrgetter('start_time'))
+        #     context[events_key].append([date(*event_date), events])
 
         return context
 
