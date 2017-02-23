@@ -1080,8 +1080,8 @@ class Command(BaseCommand):
                                 ORDER by "order"
                                 """), bill_id=bill_info["id"])
 
-            actions = zip((action.id for action in db_actions),
-                          bill_info['actions'])
+            actions = list(zip((action.id for action in db_actions),
+                               bill_info['actions']))
 
             for action_id, action in actions:
 
