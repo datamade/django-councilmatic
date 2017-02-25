@@ -932,9 +932,7 @@ class Command(BaseCommand):
             if 'subject' in bill_info and bill_info['subject']:
                 subject = bill_info['subject'][0]
 
-
-            ocd_part = bill_info['id'].rsplit('-', 1)[1]
-            slug = '{0}-{1}'.format(slugify(bill_info['identifier']),ocd_part)
+            slug = slugify(bill_info['identifier'])
 
             insert = {
                 'ocd_id': bill_info['id'],
