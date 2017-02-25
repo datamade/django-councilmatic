@@ -94,6 +94,12 @@ class Command(BaseCommand):
                             default=False,
                             help='Only download OCD data')
 
+        parser.add_argument('--no_index',
+                            action='store_true',
+                            default=False,
+                            help='Only download OCD data')
+
+
     def handle(self, *args, **options):
 
         self.connection = engine.connect()
@@ -132,7 +138,7 @@ class Command(BaseCommand):
                            download_only=download_only,
                            delete=options['delete'])
 
-        if getattr(settings, 'USING_NOTIFICATIONS', None):
+        if not options['no_index'] and getattr(settings, 'USING_NOTIFICATIONS', None):
             from django.core import management
 
             management.call_command('update_index', age=24)
