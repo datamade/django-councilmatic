@@ -380,9 +380,6 @@ class Command(BaseCommand):
             with open(os.path.join(self.posts_folder, post_filename), 'w') as f:
                 f.write(json.dumps(post_json))
 
-        for child in page_json['children']:
-            self.grab_organization_posts({'id': child['id']})
-
         return len(page_json['posts'] + page_json['children'])
 
     def grab_people(self):
