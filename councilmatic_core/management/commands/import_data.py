@@ -30,6 +30,8 @@ from councilmatic_core.models import Person, Bill, Organization, Action, ActionR
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+session = requests.Session()
+
 for configuration in ['OCD_JURISDICTION_ID',
                       'HEADSHOT_PATH',
                       'LEGISLATIVE_SESSIONS'
@@ -321,7 +323,7 @@ class Command(BaseCommand):
         # jurisdiction
         orgs_url = base_url + '/organizations/?jurisdiction_id=' + \
             settings.OCD_JURISDICTION_ID
-        r = requests.get(orgs_url)
+        r = session.get(orgs_url)
         page_json = json.loads(r.text)
 
         org_counter = 0
@@ -329,7 +331,7 @@ class Command(BaseCommand):
 
         for i in range(page_json['meta']['max_page']):
 
-            r = requests.get(orgs_url + '&page=' + str(i + 1))
+            r = session.get(orgs_url + '&page=' + str(i + 1))
             page_json = json.loads(r.text)
 
             org_counter += len(page_json['results'])
@@ -353,12 +355,12 @@ class Command(BaseCommand):
     def grab_organization_posts(self, org_dict):
         url = base_url + '/organizations/'
 
-        r = requests.get(url, params=org_dict)
+        r = session.get(url, params=org_dict)
         page_json = json.loads(r.text)
         organization_ocd_id = page_json['results'][0]['id']
 
         url = base_url + '/' + organization_ocd_id + '/'
-        r = requests.get(url)
+        r = session.get(url)
         page_json = json.loads(r.text)
 
         if page_json.get('error'):
@@ -387,14 +389,19 @@ class Command(BaseCommand):
 
         os.makedirs(self.people_folder, exist_ok=True)
 
-
+        seen_person = set()
         counter = 0
         for organization_json in os.listdir(self.organizations_folder):
 
             org_info = json.load(open(os.path.join(self.organizations_folder, organization_json)))
 
             for membership_json in org_info['memberships']:
-                person_json = self.grab_person_memberships(membership_json['person']['id'])
+                person_id = membership_json['person']['id']
+                if person_id in seen_person:
+                    continue
+
+                seen_person.add(person_id)
+                person_json = self.grab_person_memberships(person_id)
 
                 person_uuid = person_json['id'].split('/')[-1]
                 person_filename = '{}.json'.format(person_uuid)
@@ -413,12 +420,12 @@ class Command(BaseCommand):
         # this grabs a person and all their memberships
 
         url = base_url + '/' + person_id + '/'
-        r = requests.get(url)
+        r = session.get(url)
         page_json = json.loads(r.text)
 
         # save image to disk
         if page_json['image']:
-            r = requests.get(page_json['image'], verify=False)
+            r = session.get(page_json['image'], verify=False)
             if r.status_code == 200:
                 with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
                     for chunk in r.iter_content(1000):
@@ -462,20 +469,20 @@ class Command(BaseCommand):
         self.log_message('Getting bills since {}'.format(query_params['updated_at__gte']), style='NOTICE')
 
         search_url = '{}/bills/'.format(base_url)
-        search_results = requests.get(search_url, params=query_params)
+        search_results = session.get(search_url, params=query_params)
         page_json = search_results.json()
 
         counter = 0
         for page_num in range(page_json['meta']['max_page']):
 
             query_params['page'] = int(page_num) + 1
-            result_page = requests.get(search_url, params=query_params)
+            result_page = session.get(search_url, params=query_params)
 
             for result in result_page.json()['results']:
 
                 bill_url = '{base}/{bill_id}/'.format(
                     base=base_url, bill_id=result['id'])
-                bill_detail = requests.get(bill_url)
+                bill_detail = session.get(bill_url)
 
                 bill_json = bill_detail.json()
                 ocd_uuid = bill_json['id'].split('/')[-1]
@@ -514,14 +521,14 @@ class Command(BaseCommand):
 
         params['updated_at__gte'] = max_updated.isoformat()
 
-        r = requests.get(events_url, params=params)
+        r = session.get(events_url, params=params)
         page_json = json.loads(r.text)
 
         counter = 0
         for i in range(page_json['meta']['max_page']):
 
             params['page'] = str(i + 1)
-            r = requests.get(events_url, params=params)
+            r = session.get(events_url, params=params)
             page_json = json.loads(r.text)
 
             for event in page_json['results']:
@@ -530,7 +537,7 @@ class Command(BaseCommand):
                 event_filename = '{}.json'.format(ocd_uuid)
 
                 event_url = base_url + '/' + event['id'] + '/'
-                r = requests.get(event_url)
+                r = session.get(event_url)
 
                 if r.status_code == 200:
                     page_json = json.loads(r.text)
@@ -599,7 +606,7 @@ class Command(BaseCommand):
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
             url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
-            r = requests.get(url)
+            r = session.get(url)
             page_json = json.loads(r.text)
             session_ids = [session['identifier']
                            for session in page_json['legislative_sessions']]
@@ -2800,14 +2807,14 @@ class Command(BaseCommand):
         # grab boundary listing
         for boundary in settings.BOUNDARY_SET:
             bndry_set_url = bndry_base_url + '/boundaries/' + boundary
-            r = requests.get(bndry_set_url + '/?limit=0')
+            r = session.get(bndry_set_url + '/?limit=0')
             page_json = json.loads(r.text)
 
             # loop through boundary listing
             for bndry_json in page_json['objects']:
                 # grab boundary shape
                 shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-                r = requests.get(shape_url)
+                r = session.get(shape_url)
                 # update the right post(s) with the shape
                 if 'ocd-division' in bndry_json['external_id']:
                     division_ocd_id = bndry_json['external_id']
