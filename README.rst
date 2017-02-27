@@ -22,6 +22,20 @@ If you're interested in bringing Councilmatic to your city, `contact us <mailto:
 
 Want to build your own Councilmatic? Check out our `Starter Template <https://github.com/datamade/councilmatic-starter-template>`_. It contains everything you need to create your own Councilmatic from scratch.
 
+Running tests
+----
+Did you make changes to django-councilmatic? Before you make a pull request, run some tests. We test for style with `flake8 <http://flake8.pycqa.org/en/latest/>`_:
+
+```bash
+flake8 ./councilmatic_core/*.py
+```
+
+We test for functionality with a custom-made `TestCase`. Be sure to specify the owner of your psql databse in the export command:
+
+```bash
+export db_user='yourusername' && python runtests.py
+```
+
 Team
 ----
 

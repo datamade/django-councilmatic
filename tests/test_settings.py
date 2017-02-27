@@ -19,7 +19,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'councilmatic',
-        'USER': 'postgres',
+        'USER': os.environ['db_user'],
         'PASSWORD': '',
         'HOST': '',
         'PORT': '5432',
