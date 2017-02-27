@@ -453,18 +453,18 @@ class EventsView(ListView):
         context['year_range_max'] = aggregates['start_time__max'].year
 
         # Did the user set date boundaries?
-        date_str               = self.request.GET.get('form_datetime')
-        day_grouper            = lambda x: (x.start_time.year, x.start_time.month, x.start_time.day)
+        date_str = self.request.GET.get('form_datetime')
+        day_grouper = lambda x: (x.start_time.year, x.start_time.month, x.start_time.day)
         context['select_date'] = ''
 
         # If yes, then filter for dates.
         if date_str:
             context['date'] = date_str
-            date_time       = parser.parse(date_str)
+            date_time = parser.parse(date_str)
 
             select_events = Event.objects.filter(start_time__gt=date_time)\
-                          .filter(start_time__lt=(date_time + relativedelta(months=1)))\
-                          .order_by('start_time')
+                            .filter(start_time__lt=(date_time + relativedelta(months=1)))\
+                            .order_by('start_time')
 
             org_select_events = []
 
@@ -473,14 +473,14 @@ class EventsView(ListView):
                 org_select_events.append([date(*event_date), events])
 
             context['select_events'] = org_select_events
-            context['select_date']   = date_time.strftime("%B") + " " + date_time.strftime("%Y")
+            context['select_date'] = date_time.strftime("%B") + " " + date_time.strftime("%Y")
 
         # If no, then return upcoming events.
         else:
             # Upcoming events for the current month.
             upcoming_events = Event.objects.filter(start_time__gt=timezone.now())\
-                  .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month+1, 1))\
-                  .order_by('start_time')
+                              .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month+1, 1))\
+                              .order_by('start_time')
 
             if len(upcoming_events) < 3:
                 # Upcoming events for the next month, plus two or three from previous months.
@@ -506,6 +506,7 @@ class EventsView(ListView):
                     context['user_subscribed'] = True
 
         return context
+
 
 class EventDetailView(DetailView):
     template_name = 'councilmatic_core/event.html'
