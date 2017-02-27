@@ -2,12 +2,16 @@ language: python
 
 python: '3.4'
 
+env:
+    - db_user=postgres
+
 addons:
   postgresql: '9.4'
 
 install:
     - pip install -r requirements-test.txt
     - pip install -e .
+
 script:
     - flake8 ./councilmatic_core/*.py
     - python runtests.py

@@ -463,8 +463,8 @@ class EventsView(ListView):
             date_time = parser.parse(date_str)
 
             select_events = Event.objects.filter(start_time__gt=date_time)\
-                            .filter(start_time__lt=(date_time + relativedelta(months=1)))\
-                            .order_by('start_time')
+                .filter(start_time__lt=(date_time + relativedelta(months=1)))\
+                .order_by('start_time')
 
             org_select_events = []
 
@@ -479,14 +479,14 @@ class EventsView(ListView):
         else:
             # Upcoming events for the current month.
             upcoming_events = Event.objects.filter(start_time__gt=timezone.now())\
-                              .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month+1, 1))\
-                              .order_by('start_time')
+                .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month + 1, 1))\
+                .order_by('start_time')
 
             if len(upcoming_events) < 3:
                 # Upcoming events for the next month, plus two or three from previous months.
                 upcoming_events = Event.objects.filter(start_time__gt=timezone.now())\
-                      .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month+2, 1))\
-                      .order_by('start_time')
+                    .filter(start_time__lt=datetime(timezone.now().year, timezone.now().month + 2, 1))\
+                    .order_by('start_time')
 
             org_upcoming_events = []
 
