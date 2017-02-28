@@ -142,6 +142,8 @@
                     </a>
                 </li>
             </ul>
+{% endcache  %}
+{% cache 600 bills_or_committee_wrapper request.GET %}
 
             {% if request.GET.view == 'bills' or request.GET.view == None %}
                 <h3>
@@ -197,7 +199,9 @@
                     </table>
                 </div>
                 {% endif %}
-            {% endif %}
+		{% endif %}
+		{% endcache %}
+{% cache 600 ld_json_wrapper person.ocd_id %}
 
         </div>
     </div>
