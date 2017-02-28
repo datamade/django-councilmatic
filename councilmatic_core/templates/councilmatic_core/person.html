@@ -124,7 +124,6 @@
 
         <div class='col-sm-8 no-pad-mobile'>
 {% endcache  %}
-{% cache 600 bills_or_committee_wrapper request.GET %}
 
             <ul class="nav nav-pills">
                 <li role="presentation" {% if request.GET.view == 'bills' or request.GET.view == None %}class='active' {% endif %}>
@@ -200,7 +199,6 @@
                 </div>
                 {% endif %}
 		{% endif %}
-		{% endcache %}
 {% cache 600 ld_json_wrapper person.ocd_id %}
 
         </div>
