@@ -1327,6 +1327,7 @@ class Command(BaseCommand):
                 status,
                 location_name,
                 location_url,
+                media_url,
                 source_url,
                 source_note,
                 slug
@@ -1343,6 +1344,7 @@ class Command(BaseCommand):
                 :status,
                 :location_name,
                 :location_url,
+                :media_url,
                 :source_url,
                 :source_note,
                 :slug
@@ -1375,10 +1377,13 @@ class Command(BaseCommand):
                 'status': event_info['status'],
                 'location_name': event_info['location']['name'],
                 'location_url': event_info['location']['url'],
+                'media_url': event_info['media'][0]['links'][0]['url'] if event_info['media'] else None,
                 'source_url': event_info['sources'][0]['url'],
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
             }
+
+            print("heeerrreee", insert)
 
             inserts.append(insert)
 
@@ -2043,6 +2048,7 @@ class Command(BaseCommand):
             'status',
             'location_name',
             'location_url',
+            'media_url',
             'source_url',
             'source_note',
             'slug',
@@ -2638,6 +2644,7 @@ class Command(BaseCommand):
             'status',
             'location_name',
             'location_url',
+            'media_url',
             'source_url',
             'source_note',
             'slug',

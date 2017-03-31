@@ -670,6 +670,7 @@ class Event(models.Model):
     status = models.CharField(max_length=100)
     location_name = models.CharField(max_length=255)
     location_url = models.CharField(max_length=255, blank=True)
+    media_url = models.CharField(max_length=255, null=True, default=None)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
