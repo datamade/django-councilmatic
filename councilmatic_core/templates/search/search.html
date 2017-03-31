@@ -36,7 +36,7 @@
                     <input name="sort_by" type="hidden" class="form-control" value="relevance">
                 {% endif %}
 
-                <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q}}"{% endif %}>
+                <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q|remove_question}}"{% endif %}>
                 <div class='input-group-btn'>
                     <button type="submit" class="btn btn-lg btn-primary">
                         <i class='fa fa-fw fa-search'></i>
