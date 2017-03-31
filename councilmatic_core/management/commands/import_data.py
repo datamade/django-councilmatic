@@ -1383,8 +1383,6 @@ class Command(BaseCommand):
                 'slug': slug,
             }
 
-            print("heeerrreee", insert)
-
             inserts.append(insert)
 
             if inserts and len(inserts) % 10000 == 0:
