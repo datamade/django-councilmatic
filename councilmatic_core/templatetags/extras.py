@@ -163,3 +163,7 @@ def create_facet_string(selected_facets, query=None):
             facet_string += "&selected_facets=" + key + ":" + value
 
     return facet_string
+
+@register.filter
+def remove_question(text):
+    return text.rstrip('?')
