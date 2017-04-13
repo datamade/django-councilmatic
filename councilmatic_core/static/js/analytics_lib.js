@@ -47,4 +47,16 @@ jQuery(function () {
 			_trackClickEventWithGA("Emails", "Click", href);
 		}
 	});
+
+	// track "Print Intent"
+  if (window.matchMedia) {
+      var mediaQueryList = window.matchMedia('print');
+      mediaQueryList.addListener(function(mql) {
+          // Check if print intent occurred (first 'true', then 'false')
+          if (!mql.matches)
+              _trackClickEventWithGA('Print Intent', 'Print', document.location.pathname);
+      });
+  };
+
 });
+
