@@ -109,9 +109,15 @@ class Person(models.Model):
         return True if self.memberships.filter(role='Speaker').first() else False
 
     @property
+    def default_headshot_path(self):
+        return settings.DEFAULT_HEADSHOT_PATH(self) if hasattr(settings, 'DEFAULT_HEADSHOT_PATH') else None
+
+    @property
     def headshot_url(self):
         if self.slug in MANUAL_HEADSHOTS:
             return '/static/images/' + MANUAL_HEADSHOTS[self.slug]['image']
+        elif self.default_headshot_path:
+            return self.default_headshot_path
         elif self.headshot:
             return '/static/images/' + self.ocd_id + ".jpg"
         else:
