@@ -189,17 +189,28 @@
     {% endif %}
 
     <script>
+        var ROLE_SORT_ORDER = ["Member", "Vice Chair", "Vice Chairperson", "Chair", "Chairperson"];
+        {% if COMMITTEE_MEMBER_TITLE %}ROLE_SORT_ORDER.unshift('{{COMMITTEE_MEMBER_TITLE|escapejs}}');{% endif %}
+        {% if COMMITTEE_CHAIR_TITLE %}ROLE_SORT_ORDER.pop('{{COMMITTEE_CHAIR_TITLE|escapejs}}');{% endif %}
+
+        jQuery.fn.dataTableExt.oSort["role-desc"] = function(a, b) {
+          return ROLE_SORT_ORDER.indexOf(b) - ROLE_SORT_ORDER.indexOf(a);
+        };
+        jQuery.fn.dataTableExt.oSort["role-asc"] = function(a, b) {
+          return ROLE_SORT_ORDER.indexOf(a) - ROLE_SORT_ORDER.indexOf(b);
+        };
+
         $("#council-members").DataTable({
             "info": false,
             "searching": false,
             "bLengthChange": false,
             "paging": false,
-            "aaSorting": [ [3,'asc'] ],
+            "aaSorting": [ [3,'desc'] ],
             "aoColumns": [
                 { "bSortable": false },
                 null,
                 { "sType": "num-html" },
-                null
+                { "sType": "role" }
             ]
         });
 

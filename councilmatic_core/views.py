@@ -111,6 +111,8 @@ def city_context(request):
         'CITY_NAME',
         'CITY_NAME_SHORT',
         'CITY_VOCAB',
+        'COMMITTEE_CHAIR_TITLE',
+        'COMMITTEE_MEMBER_TITLE',
         'SEARCH_PLACEHOLDER_TEXT',
         'LEGISLATION_TYPE_DESCRIPTIONS',
         'LEGISTAR_URL',
