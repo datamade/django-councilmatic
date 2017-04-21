@@ -5,6 +5,8 @@ import re
 import datetime
 import os
 import sys
+import logging
+import logging.config
 
 import requests
 import pytz
@@ -27,6 +29,10 @@ from councilmatic_core.models import Person, Bill, Organization, Action, ActionR
     Post, Membership, Sponsorship, LegislativeSession, \
     Document, BillDocument, Event, EventParticipant, EventDocument, \
     EventAgendaItem
+
+
+logging.config.dictConfig(settings.LOGGING)
+logger = logging.getLogger(__name__)
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -133,16 +139,28 @@ class Command(BaseCommand):
                     download_only = True
                     import_only = True
 
-                etl_method = getattr(self, '{}_etl'.format(endpoint))
-                etl_method(import_only=import_only,
-                           download_only=download_only,
-                           delete=options['delete'])
+                try:
+                    etl_method = getattr(self, '{}_etl'.format(endpoint))
+                    etl_method(import_only=import_only,
+                               download_only=download_only,
+                               delete=options['delete'])
+
+                except Exception as e:
+                    logger.error(e, exc_info=True)
+
 
         if not options['no_index'] and getattr(settings, 'USING_NOTIFICATIONS', None):
             from django.core import management
 
-            management.call_command('update_index', age=24)
-            management.call_command('send_notifications')
+            try:
+                management.call_command('update_index', age=24)
+            except Exception as e:
+                logger.error(e, exc_info=True)
+
+            try:
+                management.call_command('send_notifications')
+            except Exception as e:
+                logger.error(e, exc_info=True)
 
 
     def log_message(self,
@@ -1364,6 +1382,13 @@ class Command(BaseCommand):
             ocd_part = ocd_id.rsplit('-', 1)[1]
             slug = '{0}-{1}'.format(slugify(truncator.words(5)), ocd_part)
 
+            for el in event_info['sources']:
+                if el['note'] == 'web':
+                    source_url = el['url']
+                    break
+                else:
+                    source_url = el['url']
+
             insert = {
                 'ocd_id': ocd_id,
                 'ocd_created_at': event_info['created_at'],
@@ -1378,7 +1403,7 @@ class Command(BaseCommand):
                 'location_name': event_info['location']['name'],
                 'location_url': event_info['location']['url'],
                 'media_url': event_info['media'][0]['links'][0]['url'] if event_info['media'] else None,
-                'source_url': event_info['sources'][0]['url'],
+                'source_url': source_url,
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
             }
