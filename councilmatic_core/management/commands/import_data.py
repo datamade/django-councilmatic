@@ -1550,14 +1550,15 @@ class Command(BaseCommand):
                 description,
                 event_id,
                 bill_id,
-                note
+                note,
+                notes
             ) VALUES (
                 :order,
                 :description,
                 :event_id,
                 :bill_id,
-                :note
-
+                :note,
+                :notes
             )
             '''
 
@@ -1577,7 +1578,6 @@ class Command(BaseCommand):
                     related_entity = item['related_entities'][0]
 
                     # Only capture related entities when they are bills
-
                     if related_entity['entity_type'] == 'bill':
                         bill_id = related_entity['entity_id']
                         note = related_entity['note']
@@ -1585,12 +1585,17 @@ class Command(BaseCommand):
                 except IndexError:
                     pass
 
+                notes = ''
+                if item['notes']:
+                    notes = item['notes'][0]
+
                 insert = {
                     'order': item['order'],
                     'description': item['description'],
                     'event_id': event_info['id'],
                     'bill_id': bill_id,
                     'note': note,
+                    'notes': notes,
                 }
 
                 inserts.append(insert)
@@ -2204,6 +2209,7 @@ class Command(BaseCommand):
             'event_id',
             'bill_id',
             'note',
+            'notes',
         ]
 
         where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
@@ -2799,6 +2805,7 @@ class Command(BaseCommand):
             'event_id',
             'bill_id',
             'note',
+            'notes',
         ]
 
         find_new = '''

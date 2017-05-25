@@ -743,6 +743,7 @@ class EventAgendaItem(models.Model):
     description = models.TextField()
     bill = models.ForeignKey('Bill', related_name='related_agenda_items', null=True)
     note = models.CharField(max_length=255, null=True)
+    notes = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
