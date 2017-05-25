@@ -1550,14 +1550,15 @@ class Command(BaseCommand):
                 description,
                 event_id,
                 bill_id,
-                note
+                note,
+                notes
             ) VALUES (
                 :order,
                 :description,
                 :event_id,
                 :bill_id,
-                :note
-
+                :note,
+                :notes
             )
             '''
 
@@ -1591,6 +1592,7 @@ class Command(BaseCommand):
                     'event_id': event_info['id'],
                     'bill_id': bill_id,
                     'note': note,
+                    'notes': item['notes'],
                 }
 
                 inserts.append(insert)
@@ -2204,6 +2206,7 @@ class Command(BaseCommand):
             'event_id',
             'bill_id',
             'note',
+            'notes',
         ]
 
         where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
@@ -2799,6 +2802,7 @@ class Command(BaseCommand):
             'event_id',
             'bill_id',
             'note',
+            'notes',
         ]
 
         find_new = '''
