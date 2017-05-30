@@ -1,0 +1,19 @@
+{% load extras %}
+
+{% if result.object.topics %}
+    <i class="fa fa-fw fa-tag"></i>
+    {% for tag in result.object.topics %}
+        <span class="badge badge-muted pseudo-topic-tag">
+            <a href='/search/?q={{request.GET.q}}&selected_facets=topics_exact%3A{{ tag }}'>{{tag}}</a>
+        </span>&nbsp;
+    {% endfor %}
+    <br/>
+{% elif result.object.pseudo_topics %}
+    <i class="fa fa-fw fa-tag"></i>
+    {% for tag in result.object.pseudo_topics %}
+        <span class="badge badge-muted pseudo-topic-tag">
+            <a href='/search/?q={{request.GET.q}}&selected_facets=controlling_body_exact%3A{{ tag }}'>{{ tag | committee_topic_only }}</a>
+        </span>&nbsp;
+    {% endfor %}
+    <br/>
+{% endif %}
