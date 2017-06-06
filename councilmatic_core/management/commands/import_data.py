@@ -1393,8 +1393,8 @@ class Command(BaseCommand):
                 'name': event_info['name'],
                 'description': event_info['description'],
                 'classification': event_info['classification'],
-                'start_time': parse_datetime(event_info['start_time']),
-                'end_time': parse_datetime(event_info['end_time']) if event_info['end_time'] else None,
+                'start_time': parse_datetime(event_info['start_date']),
+                'end_time': parse_datetime(event_info['end_date']) if event_info['end_date'] else None,
                 'all_day': event_info['all_day'],
                 'status': event_info['status'],
                 'location_name': event_info['location']['name'],
@@ -1585,7 +1585,6 @@ class Command(BaseCommand):
                 notes = ''
                 if item['notes']:
                     notes = item['notes'][0]
-                    print(notes)
 
                 insert = {
                     'order': item['order'],
