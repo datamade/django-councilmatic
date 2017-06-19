@@ -333,7 +333,6 @@ class Command(BaseCommand):
     #########################
 
     def grab_organizations(self):
-
         os.makedirs(self.organizations_folder, exist_ok=True)
         os.makedirs(self.posts_folder, exist_ok=True)
 
@@ -343,11 +342,9 @@ class Command(BaseCommand):
         else:
             self.grab_organization_posts({'name': settings.OCD_CITY_COUNCIL_NAME})
 
-        # this grabs a paginated listing of all organizations within a
-        # jurisdiction
-        orgs_url = base_url + '/organizations/?jurisdiction_id=' + \
-            settings.OCD_JURISDICTION_ID
+        orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
         r = session.get(orgs_url)
+
         page_json = json.loads(r.text)
 
         org_counter = 0
@@ -479,8 +476,7 @@ class Command(BaseCommand):
             query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
 
         if self.update_since is None:
-            max_updated = Bill.objects.all().aggregate(
-                Max('ocd_updated_at'))['ocd_updated_at__max']
+            max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
 
             if max_updated is None:
                 max_updated = datetime.datetime(1900, 1, 1)
@@ -544,6 +540,7 @@ class Command(BaseCommand):
             max_updated = self.update_since
 
         params['updated_at__gte'] = max_updated.isoformat()
+        params['sort'] = 'updated_at'
 
         r = session.get(events_url, params=params)
         page_json = json.loads(r.text)
