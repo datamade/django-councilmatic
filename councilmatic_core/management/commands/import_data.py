@@ -1478,7 +1478,6 @@ class Command(BaseCommand):
     def insert_raw_eventdocuments(self, delete=False):
         pk_cols = ['event_id', 'url']
 
-        # STEP ONE
         self.setup_raw('eventdocument',
                        delete=delete,
                        pk_cols=pk_cols,
