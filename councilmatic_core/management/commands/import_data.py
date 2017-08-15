@@ -1478,10 +1478,16 @@ class Command(BaseCommand):
     def insert_raw_eventdocuments(self, delete=False):
         pk_cols = ['event_id', 'url']
 
+        # STEP ONE
         self.setup_raw('eventdocument',
                        delete=delete,
                        pk_cols=pk_cols,
-                       updated_at=False)
+                       updated_at=True)
+
+        self.executeTransaction('''
+                ALTER TABLE raw_eventdocument
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
 
         inserts = []
 
@@ -2768,9 +2774,9 @@ class Command(BaseCommand):
 
         insert_new = '''
             INSERT INTO councilmatic_core_eventdocument (
-              {insert_fields}
+              {insert_fields}, updated_at
             )
-              SELECT {select_fields}
+              SELECT {select_fields}, updated_at
               FROM raw_eventdocument AS raw
               JOIN new_eventdocument AS new
                 ON (raw.event_id = new.event_id
