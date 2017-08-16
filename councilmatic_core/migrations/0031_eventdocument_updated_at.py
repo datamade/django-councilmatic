@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='eventdocument',
             name='updated_at',
-            field=models.DateTimeField(auto_now=True, default=datetime.datetime(2017, 8, 15, 21, 18, 48, 36616, tzinfo=utc)),
+            field=models.DateTimeField(default=None),
             preserve_default=False,
         ),
     ]
