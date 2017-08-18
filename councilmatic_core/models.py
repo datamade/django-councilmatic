@@ -774,7 +774,7 @@ class BillDocument(Document):
 
 class EventDocument(Document):
     event = models.ForeignKey('Event', related_name='documents')
-    updated_at = models.DateTimeField(default=None)
+    updated_at = models.DateTimeField(default=None, null=True)
 
     def __init__(self, *args, **kwargs):
         super(EventDocument, self).__init__(*args, **kwargs)

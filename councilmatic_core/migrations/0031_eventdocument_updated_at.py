@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='eventdocument',
             name='updated_at',
-            field=models.DateTimeField(default=None),
+            field=models.DateTimeField(default=None, null=True),
             preserve_default=False,
         ),
     ]
