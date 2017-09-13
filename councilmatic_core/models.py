@@ -170,7 +170,6 @@ class Bill(models.Model):
     classification = models.CharField(max_length=100)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
-    subject = models.CharField(max_length=255, blank=True, null=True)
 
     _from_organization = models.ForeignKey('Organization',
                                            related_name='bills',
@@ -786,3 +785,8 @@ class LegislativeSession(models.Model):
     jurisdiction_ocd_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class Subject(models.Model):
+    bill = models.ForeignKey('Bill', related_name='subjects')
+    subject = models.CharField(max_length=255)
