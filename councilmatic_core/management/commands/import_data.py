@@ -951,10 +951,6 @@ class Command(BaseCommand):
             else:
                 raise Exception(bill_info['classification'])
 
-            # subject = None
-            # if 'subject' in bill_info and bill_info['subject']:
-            #     subject = bill_info['subject'][0]
-
             slug = slugify(bill_info['identifier'])
 
             insert = {
