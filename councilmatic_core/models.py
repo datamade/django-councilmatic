@@ -790,3 +790,10 @@ class LegislativeSession(models.Model):
 class Subject(models.Model):
     bill = models.ForeignKey('Bill', related_name='subjects')
     subject = models.CharField(max_length=255)
+
+
+class RelatedBill(models.Model):
+    # primary key ... default, as added to the database.
+    # ocd_id .... do we have or need this?
+    related_bill_identifier = models.CharField(max_length=100)
+    central_bill = models.ForeignKey('Bill', related_name='related_bills')
