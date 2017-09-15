@@ -284,16 +284,19 @@ class Command(BaseCommand):
             self.insert_raw_sponsorships(delete=delete)
             self.insert_raw_billdocuments(delete=delete)
             self.insert_raw_subjects(delete=delete)
+            self.insert_raw_relatedbills(delete=delete)
 
             self.update_existing_action_related_entity()
             self.update_existing_sponsorships()
             self.update_existing_billdocuments()
             self.update_existing_subjects()
+            self.update_existing_relatedbills()
 
             self.add_new_action_related_entity()
             self.add_new_sponsorships()
             self.add_new_billdocuments()
             self.add_new_subjects()
+            self.add_new_relatedbills()
 
         self.log_message('Bills Complete!', fancy=True, style='SUCCESS', center=True)
 
@@ -1365,6 +1368,55 @@ class Command(BaseCommand):
 
         self.log_message('Inserted {0} raw subjects\n'.format(counter), style='SUCCESS')
 
+    def insert_raw_relatedbills(self, delete=False):
+        pk_cols = ['related_bill_identifier', 'central_bill_id']
+
+        self.setup_raw('relatedbill', 
+                       delete=delete, 
+                       updated_at=False,
+                       pk_cols=pk_cols)
+
+        inserts = []
+
+        insert_query = '''
+            INSERT INTO raw_relatedbill (
+                related_bill_identifier,
+                central_bill_id
+            ) VALUES (
+                :related_bill_identifier,
+                :central_bill_id
+            )
+        '''
+
+        counter = 0
+        for bill_json in os.listdir(self.bills_folder):
+
+            with open(os.path.join(self.bills_folder, bill_json)) as f:
+                bill_info = json.loads(f.read())
+
+            if 'related_bills' in bill_info and bill_info['related_bills']:
+                for related_bill in bill_info['related_bills']:
+                    insert = {
+                        'related_bill_identifier': related_bill['identifier'],
+                        'central_bill_id': bill_info['id'],
+                    }
+
+                    inserts.append(insert)
+
+                if inserts and len(inserts) % 10000 == 0:
+                    self.executeTransaction(sa.text(insert_query), *inserts)
+
+                    counter += 10000
+
+                    self.log_message('Inserted {} raw related bills'.format(counter))
+
+                    inserts = []
+
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+            counter += len(inserts)
+
+        self.log_message('Inserted {0} raw related bills\n'.format(counter), style='SUCCESS')
 
     def insert_raw_events(self, delete=False):
         self.setup_raw('event', delete=delete)
@@ -2158,6 +2210,56 @@ class Command(BaseCommand):
 
         self.log_message('Found {0} changed subjects'.format(change_count), style='SUCCESS')
 
+    def update_existing_relatedbills(self):
+        self.executeTransaction('DROP TABLE IF EXISTS change_relatedbill')
+        self.executeTransaction('''
+            CREATE TABLE change_relatedbill (
+                related_bill_identifier VARCHAR,
+                central_bill_id VARCHAR
+            )
+        ''')
+
+        cols = [
+            'related_bill_identifier',
+            'central_bill_id',
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, [])
+
+        find_changes = '''
+            INSERT INTO change_relatedbill
+              SELECT
+                raw.related_bill_identifier,
+                raw.central_bill_id
+              FROM raw_relatedbill AS raw
+              JOIN councilmatic_core_relatedbill AS dat
+                ON (raw.related_bill_identifier = dat.related_bill_identifier
+                    AND raw.central_bill_id = dat.central_bill_id)
+              WHERE {}
+        '''.format(where_clause)
+
+        update_dat = '''
+            UPDATE councilmatic_core_relatedbill SET
+              {set_values}
+            FROM (
+              SELECT
+                {fields}
+              FROM raw_relatedbill AS raw
+              JOIN change_relatedbill AS change
+                ON (raw.related_bill_identifier = change.related_bill_identifier
+                    AND raw.central_bill_id = change.central_bill_id)
+            ) AS s
+            WHERE councilmatic_core_relatedbill.related_bill_identifier = s.related_bill_identifier
+              AND councilmatic_core_relatedbill.central_bill_id = s.central_bill_id
+        '''.format(set_values=set_values,
+                   fields=fields)
+
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+
+        change_count = self.connection.execute('select count(*) from change_relatedbill').first().count
+
+        self.log_message('Found {0} changed related bills'.format(change_count), style='SUCCESS')        
 
     def update_existing_events(self):
         cols = [
@@ -2804,6 +2906,58 @@ class Command(BaseCommand):
         new_count = self.connection.execute('select count(*) from new_subject').first().count
 
         self.log_message('Found {0} new subjects'.format(new_count), style='SUCCESS')
+
+
+    def add_new_relatedbills(self):
+        self.executeTransaction('DROP TABLE IF EXISTS new_relatedbill')
+        self.executeTransaction('''
+            CREATE TABLE new_relatedbill (
+                related_bill_identifier VARCHAR,
+                central_bill_id VARCHAR
+            )
+        ''')
+
+        cols = [
+            'related_bill_identifier',
+            'central_bill_id',
+        ]
+
+        find_new = '''
+            INSERT INTO new_relatedbill
+              SELECT
+                raw.related_bill_identifier,
+                raw.central_bill_id
+              FROM raw_relatedbill AS raw
+              LEFT JOIN councilmatic_core_relatedbill AS dat
+                ON (raw.related_bill_identifier = dat.related_bill_identifier
+                    AND raw.central_bill_id = dat.central_bill_id)
+              WHERE dat.related_bill_identifier IS NULL
+                    AND dat.central_bill_id IS NULL
+        '''
+
+        self.executeTransaction(find_new)
+
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = '''
+            INSERT INTO councilmatic_core_relatedbill (
+              {insert_fields}
+            )
+              SELECT {select_fields}
+              FROM raw_relatedbill AS raw
+              JOIN new_relatedbill AS new
+                ON (raw.related_bill_identifier = new.related_bill_identifier
+                    AND raw.central_bill_id = new.central_bill_id)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+
+        self.executeTransaction(insert_new)
+
+        new_count = self.connection.execute('select count(*) from new_relatedbill').first().count
+
+        self.log_message('Found {0} new related bills'.format(new_count), style='SUCCESS')
+
 
     def add_new_events(self):
         cols = [
