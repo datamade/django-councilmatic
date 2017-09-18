@@ -3091,14 +3091,9 @@ class Command(BaseCommand):
     def executeTransactionList(self, query_list, args_list, **kwargs):
         trans = self.connection.begin()
 
-        raise_exc = kwargs.get('raise_exc', True)
+        with trans:
+            raise_exc = kwargs.get('raise_exc', True)
 
-        self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-        for query, args in zip(query_list, args_list):
-            self.connection.execute(query, *args)
-        try:
-            trans.commit()
-        except sa.exc.ProgrammingError as e:
-            trans.rollback()
-            if raise_exc:
-                raise e
+            self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+            for query, args in zip(query_list, args_list):
+                self.connection.execute(query, *args)
