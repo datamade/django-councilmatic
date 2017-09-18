@@ -2957,6 +2957,12 @@ class Command(BaseCommand):
     def insert_event_agenda_items(self):
         inserts = []
 
+        # We do not want to import redundant or obsolete event agenda items: before importing new items, delete existing ones (with the specified ocd_id).
+        delete_statement = '''
+            DELETE FROM councilmatic_core_eventagendaitem 
+            WHERE event_id in ({})
+        '''
+
         insert_query = '''
             INSERT INTO councilmatic_core_eventagendaitem (
                 "order",
@@ -2977,6 +2983,7 @@ class Command(BaseCommand):
             )
             '''
 
+        event_ids = []
         counter = 0
 
         for event_json in os.listdir(self.events_folder):
@@ -2984,14 +2991,8 @@ class Command(BaseCommand):
             with open(os.path.join(self.events_folder, event_json)) as f:
                 event_info = json.loads(f.read())
 
-            # We do not want to import redundant or obsolete event agenda items: before importing new items, delete existing ones (with the specified ocd_id).
             ocd_id = event_info['id']
-            delete_statement = '''
-                DELETE FROM councilmatic_core_eventagendaitem
-                WHERE event_id='{}'
-            '''.format(ocd_id)
-
-            self.executeTransaction(delete_statement)
+            event_ids.append(ocd_id)
 
             for item in event_info['agenda']:
 
@@ -3013,7 +3014,6 @@ class Command(BaseCommand):
                 if item['notes']:
                     notes = item['notes'][0]
 
-
                 # Add all items!
                 insert = {
                     'order': item['order'],
@@ -3026,17 +3026,11 @@ class Command(BaseCommand):
                 }
 
                 inserts.append(insert)
-                if inserts and len(inserts) % 10000 == 0:
-                    self.executeTransaction(sa.text(insert_query), *inserts)
-
-                    counter += 10000
-
-                    self.log_message('Added {} event agenda items'.format(counter))
-
-                    inserts = []
 
         if inserts:
-            self.executeTransaction(sa.text(insert_query), *inserts)
+            queries_list = [delete_statement.format(','.join(["'{}'".format(e) for e in event_ids])), sa.text(insert_query)]
+            params_list = [[], inserts]
+            self.executeTransactionList(queries_list, params_list)
 
             counter += len(inserts)
 
@@ -3087,6 +3081,24 @@ class Command(BaseCommand):
         except sa.exc.ProgrammingError as e:
             # TODO: Make some kind of logger
             # logger.error(e, exc_info=True)
+            trans.rollback()
+            if raise_exc:
+                raise e
+
+    # Call this function when consolidating multiple queries into a single transaction!
+    # This function iterates over a list of queries and a list of params, and executes those queries.
+    # It, then, tries to commit the results of the execution and rolls back, if unable to do so.
+    def executeTransactionList(self, query_list, args_list, **kwargs):
+        trans = self.connection.begin()
+
+        raise_exc = kwargs.get('raise_exc', True)
+
+        self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+        for query, args in zip(query_list, args_list):
+            self.connection.execute(query, *args)
+        try:
+            trans.commit()
+        except sa.exc.ProgrammingError as e:
             trans.rollback()
             if raise_exc:
                 raise e
