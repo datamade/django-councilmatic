@@ -3088,11 +3088,10 @@ class Command(BaseCommand):
     # Call this function when consolidating multiple queries into a single transaction!
     # This function iterates over a list of queries and a list of params, and executes those queries.
     # It, then, tries to commit the results of the execution and rolls back, if unable to do so.
-    def executeTransactionList(self, query_list, args_list, **kwargs):
-        trans = self.connection.begin()
+    def executeTransactionList(self, query_list, args_list):
+        with self.connection.begin() as trans:
 
-        with trans:
-            raise_exc = kwargs.get('raise_exc', True)
+            # raise_exc = kwargs.get('raise_exc', True)
 
             self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
             for query, args in zip(query_list, args_list):
