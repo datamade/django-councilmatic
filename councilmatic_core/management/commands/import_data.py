@@ -318,17 +318,16 @@ class Command(BaseCommand):
             self.insert_raw_events(delete=delete)
             self.insert_raw_eventparticipants(delete=delete)
             self.insert_raw_eventdocuments(delete=delete)
-            self.insert_raw_event_agenda_items(delete=delete)
 
             self.update_existing_events()
             self.update_existing_eventparticipants()
             self.update_existing_eventdocuments()
-            self.update_existing_event_agenda_items()
 
             self.add_new_events()
             self.add_new_eventparticipants()
             self.add_new_eventdocuments()
-            self.add_new_event_agenda_items()
+
+            self.insert_event_agenda_items()
 
         self.log_message('Events Complete!', fancy=True, style='SUCCESS', center=True)
 
@@ -1632,86 +1631,6 @@ class Command(BaseCommand):
 
         self.log_message('Inserted {0} event documents\n'.format(counter), style='SUCCESS')
 
-    def insert_raw_event_agenda_items(self, delete=False):
-        pk_cols = ['event_id', '"order"']
-
-        self.setup_raw('eventagendaitem',
-                       delete=delete,
-                       pk_cols=pk_cols)
-
-        inserts = []
-
-        insert_query = '''
-            INSERT INTO raw_eventagendaitem (
-                "order",
-                description,
-                event_id,
-                bill_id,
-                note,
-                notes
-            ) VALUES (
-                :order,
-                :description,
-                :event_id,
-                :bill_id,
-                :note,
-                :notes
-            )
-            '''
-
-        counter = 0
-
-        for event_json in os.listdir(self.events_folder):
-
-            with open(os.path.join(self.events_folder, event_json)) as f:
-                event_info = json.loads(f.read())
-
-            for item in event_info['agenda']:
-
-                bill_id = None
-                note = None
-
-                try:
-                    related_entity = item['related_entities'][0]
-
-                    # Only capture related entities when they are bills
-                    if related_entity['entity_type'] == 'bill':
-                        bill_id = related_entity['entity_id']
-                        note = related_entity['note']
-
-                except IndexError:
-                    pass
-
-                notes = ''
-                if item['notes']:
-                    notes = item['notes'][0]
-
-                insert = {
-                    'order': item['order'],
-                    'description': item['description'],
-                    'event_id': event_info['id'],
-                    'bill_id': bill_id,
-                    'note': note,
-                    'notes': notes,
-                }
-
-                inserts.append(insert)
-                if inserts and len(inserts) % 10000 == 0:
-                    self.executeTransaction(sa.text(insert_query), *inserts)
-
-                    counter += 10000
-
-                    self.log_message('Inserted {} raw event agenda items'.format(counter))
-
-                    inserts = []
-
-        if inserts:
-            self.executeTransaction(sa.text(insert_query), *inserts)
-
-            counter += len(inserts)
-
-        self.log_message('Inserted {0} raw event agenda items\n'.format(counter), style='SUCCESS')
-
     ################################
     ###                          ###
     ### UPDATE EXISTING ENTITIES ###
@@ -2393,61 +2312,6 @@ class Command(BaseCommand):
 
         self.log_message('Found {0} changed event documents'.format(change_count), style='SUCCESS')
 
-    def update_existing_event_agenda_items(self):
-        self.executeTransaction('DROP TABLE IF EXISTS change_eventagendaitem')
-        self.executeTransaction('''
-            CREATE TABLE change_eventagendaitem (
-                event_id VARCHAR,
-                "order" INTEGER
-            )
-        ''')
-
-        cols = [
-            'order',
-            'description',
-            'event_id',
-            'bill_id',
-            'note',
-            'notes',
-        ]
-
-        where_clause, set_values, fields = self.get_update_parts(cols, ['updated_at'])
-
-        find_changes = '''
-            INSERT INTO change_eventagendaitem
-              SELECT
-                raw.event_id,
-                raw."order"
-              FROM raw_eventagendaitem AS raw
-              JOIN councilmatic_core_eventagendaitem AS dat
-                ON (raw.event_id = dat.event_id
-                    AND raw."order" = dat."order")
-              WHERE {}
-        '''.format(where_clause)
-
-        update_dat = '''
-            UPDATE councilmatic_core_eventagendaitem SET
-              {set_values}
-            FROM (
-              SELECT
-                {fields}
-              FROM raw_eventagendaitem AS raw
-              JOIN change_eventagendaitem AS change
-                ON (raw.event_id = change.event_id
-                    AND raw."order" = change."order")
-            ) AS s
-            WHERE councilmatic_core_eventagendaitem.event_id = s.event_id
-              AND councilmatic_core_eventagendaitem."order" = s."order"
-        '''.format(set_values=set_values,
-                   fields=fields)
-
-        self.executeTransaction(find_changes)
-        self.executeTransaction(update_dat)
-
-        change_count = self.connection.execute('select count(*) from change_eventagendaitem').first().count
-
-        self.log_message('Found {0} changed event agenda items'.format(change_count), style='SUCCESS')
-
     ########################
     ###                  ###
     ### ADD NEW ENTITIES ###
@@ -3089,60 +2953,88 @@ class Command(BaseCommand):
         new_count = self.connection.execute('select count(*) from new_eventdocument').first().count
 
         self.log_message('Found {0} new event documents'.format(new_count), style='SUCCESS')
+    
+    def insert_event_agenda_items(self):
+        inserts = []
 
-    def add_new_event_agenda_items(self):
-        self.executeTransaction('DROP TABLE IF EXISTS new_eventagendaitem')
-        self.executeTransaction('''
-            CREATE TABLE new_eventagendaitem (
-                event_id VARCHAR,
-                "order" INTEGER
-            )
-        ''')
-
-        cols = [
-            'order',
-            'description',
-            'event_id',
-            'bill_id',
-            'note',
-            'notes',
-        ]
-
-        find_new = '''
-            INSERT INTO new_eventagendaitem
-              SELECT
-                raw.event_id,
-                raw."order"
-              FROM raw_eventagendaitem AS raw
-              LEFT JOIN councilmatic_core_eventagendaitem AS dat
-                ON (raw.event_id = dat.event_id
-                    AND raw."order" = dat."order")
-              WHERE dat.event_id IS NULL
-                    AND dat."order" IS NULL
+        # We do not want to import redundant or obsolete event agenda items: before importing new items, delete existing ones (with the specified ocd_id).
+        delete_statement = '''
+            DELETE FROM councilmatic_core_eventagendaitem 
+            WHERE event_id in ({})
         '''
 
-        self.executeTransaction(find_new)
-
-        insert_fields = ', '.join('"{}"'.format(c) for c in cols)
-        select_fields = ', '.join('raw."{}"'.format(c) for c in cols)
-
-        insert_new = '''
+        insert_query = '''
             INSERT INTO councilmatic_core_eventagendaitem (
-              {insert_fields}, updated_at
+                "order",
+                description,
+                event_id,
+                bill_id,
+                note,
+                notes,
+                updated_at
+            ) VALUES (
+                :order,
+                :description,
+                :event_id,
+                :bill_id,
+                :note,
+                :notes,
+                :updated_at
             )
-              SELECT {select_fields}, updated_at
-              FROM raw_eventagendaitem AS raw
-              JOIN new_eventagendaitem AS new
-                ON (raw.event_id = new.event_id
-                    AND raw."order" = new."order")
-        '''.format(insert_fields=insert_fields,
-                   select_fields=select_fields)
+            '''
 
-        self.executeTransaction(insert_new)
-        new_count = self.connection.execute('select count(*) from new_eventagendaitem').first().count
+        event_ids = []
+        counter = 0
 
-        self.log_message('Found {0} new event agenda items'.format(new_count), style='SUCCESS')
+        for event_json in os.listdir(self.events_folder):
 
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
+
+            ocd_id = event_info['id']
+            event_ids.append(ocd_id)
+
+            for item in event_info['agenda']:
+
+                bill_id = None
+                note = None
+
+                try:
+                    related_entity = item['related_entities'][0]
+
+                    # Only capture related entities when they are bills
+                    if related_entity['entity_type'] == 'bill':
+                        bill_id = related_entity['entity_id']
+                        note = related_entity['note']
+
+                except IndexError:
+                    pass
+
+                notes = ''
+                if item['notes']:
+                    notes = item['notes'][0]
+
+                # Add all items!
+                insert = {
+                    'order': item['order'],
+                    'description': item['description'],
+                    'event_id': event_info['id'],
+                    'bill_id': bill_id,
+                    'note': note,
+                    'notes': notes,
+                    'updated_at': event_info['updated_at']
+                }
+
+                inserts.append(insert)
+
+        if inserts:
+            queries_list = [delete_statement.format(','.join(["'{}'".format(e) for e in event_ids])), sa.text(insert_query)]
+            params_list = [[], inserts]
+            self.executeTransactionList(queries_list, params_list)
+
+            counter += len(inserts)
+
+        self.log_message('Added {0} event agenda items\n'.format(counter), style='SUCCESS')
 
     def populate_council_district_shapes(self):
 
@@ -3192,3 +3084,13 @@ class Command(BaseCommand):
             trans.rollback()
             if raise_exc:
                 raise e
+
+    # Call this function when consolidating multiple queries into a single transaction!
+    # This function iterates over a list of queries and a list of params, and executes those queries.
+    # It, then, tries to commit the results of the execution and rolls back, if unable to do so.
+    def executeTransactionList(self, query_list, args_list):
+        with self.connection.begin() as trans:
+            self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+            
+            for query, args in zip(query_list, args_list):
+                self.connection.execute(query, *args)
