@@ -237,10 +237,12 @@
                 </p>
             {% endif %}
 
-            <p class="condensed">
-                {% include 'partials/tags.html' %}
-                <br/>
-            </p>
+            <div class="row">
+                <div class="col-xs-11">
+                    {% include 'partials/tags.html' %}
+                    <br/>
+                </div>
+            </div>
 
         {% empty %}
             {% include 'partials/empty_search_message.html' %}
