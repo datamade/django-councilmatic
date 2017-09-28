@@ -220,29 +220,9 @@
                 {% include 'partials/search_result.html' %}
             {% endwith %}
 
-            {% if result.last_action_date %}
-                <p class="small text-muted condensed">
-                    <i class="fa fa-fw fa-calendar-o"></i> {{result.last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
-                </p>
-            {% elif result.object.get_last_action_date %}
-                 <p class="small text-muted condensed">
-                    <i class="fa fa-fw fa-calendar-o"></i> {{result.object.get_last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }}
-                </p>
-            {% endif %}
 
-            {% if result.object.primary_sponsor %}
-                <p class="small text-muted condensed">
-                    <i class="fa fa-fw fa-user"></i>
-                    {{result.object.primary_sponsor.person.name}}
-                </p>
-            {% endif %}
+            {% include 'partials/tags.html' %}
 
-            <div class="row">
-                <div class="col-xs-11">
-                    {% include 'partials/tags.html' %}
-                    <br/>
-                </div>
-            </div>
 
         {% empty %}
             {% include 'partials/empty_search_message.html' %}
