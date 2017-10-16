@@ -3078,7 +3078,7 @@ class Command(BaseCommand):
             else:
                 self.connection.execute(query, *args)
             trans.commit()
-        except sa.exc.ProgrammingError as e:
+        except (sa.exc.ProgrammingError, sa.exc.IntegrityError) as e:
             # TODO: Make some kind of logger
             # logger.error(e, exc_info=True)
             trans.rollback()
