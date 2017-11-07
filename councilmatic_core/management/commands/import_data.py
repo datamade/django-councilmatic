@@ -3049,22 +3049,23 @@ class Command(BaseCommand):
             for bndry_json in page_json['objects']:
                 # grab boundary shape
                 shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-                r = session.get(shape_url)
+                r = self._get_response(shape_url)
                 # update the right post(s) with the shape
-                if 'ocd-division' in bndry_json['external_id']:
-                    division_ocd_id = bndry_json['external_id']
+                if r:
+                    if 'ocd-division' in bndry_json['external_id']:
+                        division_ocd_id = bndry_json['external_id']
 
-                    Post.objects.filter(
-                        division_ocd_id=division_ocd_id).update(shape=r.text)
-                else:
-                    # Represent API doesn't use OCD id as external_id,
-                    # so we must work around that
-                    division_ocd_id_fragment = ':' + bndry_json['external_id']
-                    Post.objects.filter(
-                        division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
+                        Post.objects.filter(
+                            division_ocd_id=division_ocd_id).update(shape=r.text)
+                    else:
+                        # Represent API doesn't use OCD id as external_id,
+                        # so we must work around that
+                        division_ocd_id_fragment = ':' + bndry_json['external_id']
+                        Post.objects.filter(
+                            division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
 
-                print('.', end='')
-                sys.stdout.flush()
+                    print('.', end='')
+                    sys.stdout.flush()
 
     def executeTransaction(self, query, *args, **kwargs):
         trans = self.connection.begin()
@@ -3094,3 +3095,12 @@ class Command(BaseCommand):
             
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
+
+    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status 
+    def _get_response(self, url):
+        response = session.get(url)
+        if response.ok:
+            return response
+        else: 
+            self.log_message('WARNING: {url} returned a bad response - {status}'.format(url=url, status=response.status_code), style='ERROR')
+            return None
