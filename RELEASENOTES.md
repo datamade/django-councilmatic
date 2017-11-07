@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.8.3
+
+**Release date:** 11-7-2017
+
+*Changes*
+
+Ammends `import_data` codebase: imports shape data, only when the response from the OCD API returns an 'ok' status code. 
+
 ## Version 0.8.2
 
 **Release date:** 11-6-2017
