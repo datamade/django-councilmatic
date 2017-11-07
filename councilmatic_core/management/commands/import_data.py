@@ -3049,10 +3049,9 @@ class Command(BaseCommand):
             for bndry_json in page_json['objects']:
                 # grab boundary shape
                 shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-                r = session.get(shape_url)
-                # OCD API has intermittently thrown 502 errors; only proceed with boundary import when receiving a 200 status.
-                if r.status_code == 200:
-                    # update the right post(s) with the shape
+                r = self._get_response(shape_url)
+                # update the right post(s) with the shape
+                if r:
                     if 'ocd-division' in bndry_json['external_id']:
                         division_ocd_id = bndry_json['external_id']
 
@@ -3096,3 +3095,12 @@ class Command(BaseCommand):
             
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
+
+    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status 
+    def _get_response(self, url):
+        response = session.get(url)
+        if response.ok:
+            return response
+        else: 
+            self.log_message('WARNING: {url} returned a bad response - {status}'.format(url=url, status=response.status_code), style='ERROR')
+            return None
