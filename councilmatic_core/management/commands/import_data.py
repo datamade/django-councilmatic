@@ -3050,21 +3050,23 @@ class Command(BaseCommand):
                 # grab boundary shape
                 shape_url = bndry_base_url + bndry_json['url'] + 'shape'
                 r = session.get(shape_url)
-                # update the right post(s) with the shape
-                if 'ocd-division' in bndry_json['external_id']:
-                    division_ocd_id = bndry_json['external_id']
+                # OCD API has intermittently thrown 502 errors; only proceed with boundary import when receiving a 200 status.
+                if r.status_code == 200:
+                    # update the right post(s) with the shape
+                    if 'ocd-division' in bndry_json['external_id']:
+                        division_ocd_id = bndry_json['external_id']
 
-                    Post.objects.filter(
-                        division_ocd_id=division_ocd_id).update(shape=r.text)
-                else:
-                    # Represent API doesn't use OCD id as external_id,
-                    # so we must work around that
-                    division_ocd_id_fragment = ':' + bndry_json['external_id']
-                    Post.objects.filter(
-                        division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
+                        Post.objects.filter(
+                            division_ocd_id=division_ocd_id).update(shape=r.text)
+                    else:
+                        # Represent API doesn't use OCD id as external_id,
+                        # so we must work around that
+                        division_ocd_id_fragment = ':' + bndry_json['external_id']
+                        Post.objects.filter(
+                            division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
 
-                print('.', end='')
-                sys.stdout.flush()
+                    print('.', end='')
+                    sys.stdout.flush()
 
     def executeTransaction(self, query, *args, **kwargs):
         trans = self.connection.begin()
