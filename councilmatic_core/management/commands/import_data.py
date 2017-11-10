@@ -17,6 +17,8 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from dateutil import parser as date_parser
 
+from raven import Client
+
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
@@ -33,6 +35,7 @@ from councilmatic_core.models import Person, Bill, Organization, Action, ActionR
 
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger(__name__)
+client = Client(settings.RAVEN_CONFIG['dsn'])
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -146,6 +149,7 @@ class Command(BaseCommand):
                                delete=options['delete'])
 
                 except Exception as e:
+                    client.captureException()
                     logger.error(e, exc_info=True)
 
 
@@ -155,11 +159,13 @@ class Command(BaseCommand):
             try:
                 management.call_command('update_index', age=24)
             except Exception as e:
+                client.captureException()
                 logger.error(e, exc_info=True)
 
             try:
                 management.call_command('send_notifications')
             except Exception as e:
+                client.captureException()
                 logger.error(e, exc_info=True)
 
 
@@ -3080,8 +3086,7 @@ class Command(BaseCommand):
                 self.connection.execute(query, *args)
             trans.commit()
         except (sa.exc.ProgrammingError, sa.exc.IntegrityError) as e:
-            # TODO: Make some kind of logger
-            # logger.error(e, exc_info=True)
+            client.captureException()
             trans.rollback()
             if raise_exc:
                 raise e
