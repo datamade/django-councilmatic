@@ -17,7 +17,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from dateutil import parser as date_parser
 
-from raven import Client
+from raven.contrib.django.raven_compat.models import client
 
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ImproperlyConfigured
@@ -35,7 +35,6 @@ from councilmatic_core.models import Person, Bill, Organization, Action, ActionR
 
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger(__name__)
-client = Client(settings.RAVEN_CONFIG['dsn'])
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
