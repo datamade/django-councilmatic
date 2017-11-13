@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.8.4
+
+**Release date:** 11-13-2017
+
+*Changes*
+
+Adds a client for improved Sentry logging when import_data fails or rolls back a transaction. 
+
 ## Version 0.8.3
 
 **Release date:** 11-7-2017
