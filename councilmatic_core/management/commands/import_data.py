@@ -571,35 +571,36 @@ class Command(BaseCommand):
 
             counter = 0
             for i in range(page_json['meta']['max_page']):
-
                 params['page'] = str(i + 1)
-                r = session.get(events_url, params=params)
-                page_json = json.loads(r.text)
+                r = self._get_response(events_url, params=params)
 
-                for event in page_json['results']:
+                if r:
+                    page_json = json.loads(r.text)
 
-                    ocd_uuid = event['id'].split('/')[-1]
-                    event_filename = '{}.json'.format(ocd_uuid)
+                    for event in page_json['results']:
 
-                    event_url = base_url + '/' + event['id'] + '/'
-                    r = self._get_response(event_url)
+                        ocd_uuid = event['id'].split('/')[-1]
+                        event_filename = '{}.json'.format(ocd_uuid)
 
-                    if r:
-                        page_json = json.loads(r.text)
+                        event_url = base_url + '/' + event['id'] + '/'
+                        r = self._get_response(event_url)
 
-                        with open(os.path.join(self.events_folder, event_filename), 'w') as f:
-                            f.write(json.dumps(page_json))
+                        if r:
+                            page_json = json.loads(r.text)
 
-                        counter += 1
+                            with open(os.path.join(self.events_folder, event_filename), 'w') as f:
+                                f.write(json.dumps(page_json))
 
-                        print('.', end='')
-                        sys.stdout.flush()
+                            counter += 1
 
-                        if counter % 1000 == 0:
-                            print('\n')
-                            self.log_message('Downloaded {} events'.format(counter))
+                            print('.', end='')
+                            sys.stdout.flush()
 
-            self.log_message('Downloaded {} events'.format(counter), fancy=True)
+                            if counter % 1000 == 0:
+                                print('\n')
+                                self.log_message('Downloaded {} events'.format(counter))
+
+                self.log_message('Downloaded {} events'.format(counter), fancy=True)
 
     ###########################
     ###                     ###
