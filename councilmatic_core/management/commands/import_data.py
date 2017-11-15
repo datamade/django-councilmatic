@@ -464,7 +464,7 @@ class Command(BaseCommand):
 
             # save image to disk
             if page_json['image']:
-                r = session.get(page_json['image'], verify=False)
+                r = self._get_response(page_json['image'], verify=False)
                 if r.status_code == 200:
                     with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
                         for chunk in r.iter_content(1000):
@@ -3117,9 +3117,9 @@ class Command(BaseCommand):
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
 
-    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status 
-    def _get_response(self, url, params=None):
-        response = session.get(url, params=params)
+    # OCD API has intermittently thrown 502 and 504 errors; only proceed when receiving an 'ok' status 
+    def _get_response(self, url, params=None, **kwargs):
+        response = session.get(url, params=params, **kwargs)
         if response.ok:
             return response
         else: 
