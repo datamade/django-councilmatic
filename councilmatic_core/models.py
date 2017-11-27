@@ -673,6 +673,7 @@ class Event(models.Model):
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
+    guid = models.CharField(max_length=255, unique=True, null=True, default=None)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
