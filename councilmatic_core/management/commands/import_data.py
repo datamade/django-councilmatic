@@ -1487,6 +1487,10 @@ class Command(BaseCommand):
                 else:
                     source_url = el['url']
 
+            guid = None
+            if 'guid' in event_info['extras']:
+                guid = event_info['extras']['guid']
+
             insert = {
                 'ocd_id': ocd_id,
                 'ocd_created_at': event_info['created_at'],
@@ -1504,7 +1508,7 @@ class Command(BaseCommand):
                 'source_url': source_url,
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
-                'guid': event_info['extras']['guid']
+                'guid': guid
             }
 
             inserts.append(insert)
