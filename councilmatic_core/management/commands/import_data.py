@@ -1444,7 +1444,8 @@ class Command(BaseCommand):
                 media_url,
                 source_url,
                 source_note,
-                slug
+                slug,
+                guid
             ) VALUES (
                 :ocd_id,
                 :ocd_created_at,
@@ -1461,7 +1462,8 @@ class Command(BaseCommand):
                 :media_url,
                 :source_url,
                 :source_note,
-                :slug
+                :slug,
+                :guid
             )
         '''
 
@@ -1502,6 +1504,7 @@ class Command(BaseCommand):
                 'source_url': source_url,
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
+                'guid': event_info['extras']['guid']
             }
 
             inserts.append(insert)
@@ -2203,6 +2206,7 @@ class Command(BaseCommand):
             'source_url',
             'source_note',
             'slug',
+            'guid'
         ]
         self.update_entity_type('event', cols=cols)
 
@@ -2846,6 +2850,7 @@ class Command(BaseCommand):
             'source_url',
             'source_note',
             'slug',
+            'guid'
         ]
 
         self.add_entity_type('event', cols=cols)
