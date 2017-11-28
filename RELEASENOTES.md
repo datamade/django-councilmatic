@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.8.5
+
+**Release date:** 11-28-2017
+
+*Changes*
+
+Adds a `guid` field in the Event model, and imports it when available in the OCD API.
+
 ## Version 0.8.4
 
 **Release date:** 11-13-2017
