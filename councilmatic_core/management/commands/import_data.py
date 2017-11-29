@@ -3082,22 +3082,17 @@ class Command(BaseCommand):
                     sys.stdout.flush()
 
     def executeTransaction(self, query, *args, **kwargs):
-        trans = self.connection.begin()
-
-        raise_exc = kwargs.get('raise_exc', True)
-
-        try:
-            self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-            if kwargs:
-                self.connection.execute(query, **kwargs)
-            else:
-                self.connection.execute(query, *args)
-            trans.commit()
-        except (sa.exc.ProgrammingError, sa.exc.IntegrityError) as e:
-            client.captureException()
-            trans.rollback()
-            if raise_exc:
-                raise e
+        with self.connection.begin() as trans:
+            try:
+                self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+                if kwargs:
+                    self.connection.execute(query, **kwargs)
+                else:
+                    self.connection.execute(query, *args)
+            except:
+                client.captureException()
+                raise
+                
 
     # Call this function when consolidating multiple queries into a single transaction!
     # This function iterates over a list of queries and a list of params, and executes those queries.
