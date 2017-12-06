@@ -36,9 +36,9 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
 
     def extra_context(self):
 
-        # Raise an error if Councilmatic cannot connect to Solr. 
-        # Most likely, Solr is down and needs restarting.  
-        try: 
+        # Raise an error if Councilmatic cannot connect to Solr.
+        # Most likely, Solr is down and needs restarting.
+        try:
             solr_url = settings.HAYSTACK_CONNECTIONS['default']['URL']
             requests.get(solr_url)
         except requests.ConnectionError:
