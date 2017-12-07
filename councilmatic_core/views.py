@@ -3,6 +3,7 @@ import json
 import itertools
 from operator import attrgetter
 import urllib
+import requests
 from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
@@ -34,6 +35,14 @@ app_timezone = pytz.timezone(settings.TIME_ZONE)
 class CouncilmaticFacetedSearchView(FacetedSearchView):
 
     def extra_context(self):
+
+        # Raise an error if Councilmatic cannot connect to Solr.
+        # Most likely, Solr is down and needs restarting.
+        try:
+            solr_url = settings.HAYSTACK_CONNECTIONS['default']['URL']
+            requests.get(solr_url)
+        except requests.ConnectionError:
+            raise Exception("ConnectionError: Unable to connect to Solr at {}. Is Solr running?".format(solr_url))
 
         extra = super(FacetedSearchView, self).extra_context()
         extra['request'] = self.request
