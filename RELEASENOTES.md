@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.8.6
+
+**Release date:** 12-07-2017
+
+*Changes*
+
+Raises an error on the legislation search page when Councilmatic cannot connect to Solr.
+
 ## Version 0.8.5
 
 **Release date:** 11-28-2017
@@ -47,3 +55,7 @@ Add a RelatedBill model. This facilitates the creation of relations among bills,
 Better management of AgendaItems to prevent duplicates: in this relese, import_data deletes old agenda items, before importing new ones.
 
 Enforce a rollback in the event of an IntegrityError.
+
+## Prior versions
+
+**See [commit history][https://github.com/datamade/django-councilmatic/commits/master] for prior changes.**
