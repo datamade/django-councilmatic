@@ -58,4 +58,4 @@ Enforce a rollback in the event of an IntegrityError.
 
 ## Prior versions
 
-**See [commit history][https://github.com/datamade/django-councilmatic/commits/master] for prior changes.**
+See [commit history](https://github.com/datamade/django-councilmatic/commits/master) for prior changes.
