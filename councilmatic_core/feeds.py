@@ -27,6 +27,7 @@ class CouncilmaticFacetedSearchFeed(Feed):
 
     def get_object(self, request):
         self.queryDict = request.GET
+
         all_results = SearchQuerySet().all()
         facets = None
 
@@ -75,13 +76,13 @@ class CouncilmaticFacetedSearchFeed(Feed):
     def description(self, obj):
         return "Bills returned from search"
 
-    def items(self, searchresults):
-        l_items = list(searchresults)[:20]
+    def items(self, query):
+        l_items = query[:20]
         # turn these into bills. XXX: should override in subclasses, e.g. NYCCouncilmaticFacetedSearchFeed,
         # to access methods like inferred_status()
         pks = [i.pk for i in l_items]
         bills = self.bill_model.objects.filter(pk__in=pks).order_by('-last_action_date')
-        return list(bills)
+        return bills
 
 
 class PersonDetailFeed(Feed):
@@ -156,9 +157,7 @@ class CommitteeDetailEventsFeed(Feed):
         return "Events for committee %s" % obj.name
 
     def items(self, obj):
-        events = obj.recent_events.all()[:self.NUM_RECENT_COMMITTEE_EVENTS]
-        levents = list(events)
-        return levents
+        return obj.recent_events.all()[:self.NUM_RECENT_COMMITTEE_EVENTS]
 
 
 class CommitteeDetailActionFeed(Feed):
@@ -194,9 +193,7 @@ class CommitteeDetailActionFeed(Feed):
         return "Actions for committee %s" % obj.name
 
     def items(self, obj):
-        actions = obj.recent_activity[:self.NUM_RECENT_COMMITTEE_ACTIONS]
-        actions_list = list(actions)
-        return actions_list
+        return obj.recent_activity[:self.NUM_RECENT_COMMITTEE_ACTIONS]
 
 
 class BillDetailActionFeed(Feed):
@@ -232,9 +229,7 @@ class BillDetailActionFeed(Feed):
         return "Actions for bill %s" % obj.friendly_name
 
     def items(self, obj):
-        actions = obj.ordered_actions[:self.NUM_RECENT_BILL_ACTIONS]
-        actions_list = list(actions)
-        return actions_list
+        return obj.ordered_actions[:self.NUM_RECENT_BILL_ACTIONS]
 
 
 class EventsFeed(Feed):
@@ -261,6 +256,4 @@ class EventsFeed(Feed):
         return "Events"
 
     def items(self, obj):
-        events = Event.objects.all()[:self.NUM_RECENT_EVENTS]
-        levents = list(events)
-        return levents
+        return Event.objects.all()[:self.NUM_RECENT_EVENTS]
