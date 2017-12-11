@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.8.7
+
+**Release date:** 12-11-2017
+
+*Changes*
+
+Speeds up RSS feed load by removing unneeded list evaluations and minimizing object size.
+
 ## Version 0.8.6
 
 **Release date:** 12-07-2017
