@@ -155,6 +155,10 @@ h1, h2, h3, h4 {
     vertical-align: top;
 }
 
+.text-muted {
+    color: #858585;
+}
+
 /* map */
 #map {
     height: 500px;
