@@ -218,7 +218,7 @@
                                 "name": "{{ CITY_COUNCIL_NAME }}"
                             },
           "name": "{{person.name}}",
-          "url": "{{person.website_url}}"
+          "url": "{{SITE_META.site_url}}/person/{{person.slug}}"
         }
     </script>
 
@@ -229,6 +229,7 @@
 {% block extra_js %}
     {% if USING_NOTIFICATIONS %}
     <script>
+    console.log("{{person.ocd_id}}")
     $(document).ready(function() {
         $("#personSubscribe").click(function() {
             var bullHorn    = $(this).parents().find(".createSubscription");

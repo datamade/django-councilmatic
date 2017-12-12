@@ -83,7 +83,7 @@
       },
       "name": "{{event.name}}",
       "startDate": "{{ event.start_time.isoformat }}",
-      "url" : "{{ event.source_url }}"
+      "url" : "{{SITE_META.site_url}}/event/{{event.slug}}"
     }
     </script>
 
