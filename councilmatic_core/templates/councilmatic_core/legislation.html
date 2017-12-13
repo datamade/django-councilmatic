@@ -218,21 +218,7 @@
                 </ul>
                 <div class="divider"></div>
             {% endif %}
-            {% if legislation.full_text %}
-                {% if legislation.full_text|clean_html|length > 65 %}
-                <h3>
-                    <i class='fa fa-fw fa-file-text-o'></i>
-                    Legislation text
-                </h3>
-                <div class='panel panel-default'>
-                    <div class='panel-body'>
-                        {{ legislation.full_text|safe }}
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-                {% endif %}
-            {% elif legislation.full_text_doc_url %}
+            {% if legislation.full_text_doc_url %}
                 <h3>
                     <i class='fa fa-fw fa-file-text-o'></i>
                     Legislation text
@@ -250,7 +236,22 @@
                 </iframe>
 
                 <div class="divider"></div>
+            {% elif legislation.full_text %}
+                {% if legislation.full_text|clean_html|length > 65 %}
+                <h3>
+                    <i class='fa fa-fw fa-file-text-o'></i>
+                    Legislation text
+                </h3>
+                <div class='panel panel-default'>
+                    <div class='panel-body'>
+                        {{ legislation.full_text|safe }}
+                    </div>
+                </div>
             {% endif %}
+
+                <div class="divider"></div>
+                {% endif %}
+
         </div>
 
 
