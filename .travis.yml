@@ -10,7 +10,6 @@ addons:
 
 install:
     - pip install -r requirements-test.txt
-    - pip install -e .
 
 script:
     - flake8 ./councilmatic_core/*.py
