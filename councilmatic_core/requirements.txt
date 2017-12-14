@@ -1,6 +1,6 @@
-psycopg2==2.7.3.2
 requests==2.7.0
 -e git://github.com/datamade/django-haystack.git#egg=django-haystack
 pysolr==3.3.2
 python-dateutil==2.4.2
 django-rq==0.9.1
+psycopg2==2.7.3.2
