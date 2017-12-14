@@ -12,6 +12,10 @@ install:
     - pip install -r requirements-test.txt
     - pip install -e .
 
+sudo: required 
+dist: trusty 
+group: deprecated-2017Q4
+
 script:
     - flake8 ./councilmatic_core/*.py
     - python runtests.py

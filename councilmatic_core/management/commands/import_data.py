@@ -934,15 +934,13 @@ class Command(BaseCommand):
                 if source['note'] == 'web':
                     source_url = source['url']
 
+            # The OCD API for NYC, Chicago, and Metro only include 'rtf_text' and 'plain_text', never 'ocr_full_text'
             full_text = None
-            if 'full_text' in bill_info['extras']:
-                full_text = bill_info['extras']['full_text']
+            if 'rtf_text' in bill_info['extras']:
+                full_text = bill_info['extras']['rtf_text']
 
             ocr_full_text = None
-            if 'ocr_full_text' in bill_info['extras']:
-                ocr_full_text = bill_info['extras']['ocr_full_text']
-
-            elif 'plain_text' in bill_info['extras']:
+            if 'plain_text' in bill_info['extras']:
                 ocr_full_text = bill_info['extras']['plain_text']
 
             abstract = None
