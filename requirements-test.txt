@@ -1,1 +1,2 @@
 flake8
+psycopg2==2.7.3.2
