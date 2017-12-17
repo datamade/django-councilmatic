@@ -1,5 +1,11 @@
 # Release notes for django-councilmatic
 
+## Next version
+
+*Changes*
+
+Responsive table for legislation types on About page.
+
 ## Version 0.8.7
 
 **Release date:** 12-11-2017
