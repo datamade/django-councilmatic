@@ -4,7 +4,7 @@ import itertools
 from operator import attrgetter
 import urllib
 import requests
-from datetime import date, timedelta, datetime
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
 
@@ -173,6 +173,7 @@ class IndexView(TemplateView):
         # Example: https://github.com/datamade/django-councilmatic/blob/154028d1bc4639fa1ec1af75139cab544abdd315/councilmatic_core/views.py#L139
 
         return recently_passed
+
 
 class AboutView(TemplateView):
     template_name = 'councilmatic_core/about.html'
