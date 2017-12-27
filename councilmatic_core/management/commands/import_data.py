@@ -2551,9 +2551,26 @@ class Command(BaseCommand):
 
         self.executeTransaction(insert_new)
 
-        new_count = self.connection.execute('select count(*) from new_action').first().count
+        # At this point, the database has bills and actions related to those bills.
+        # Create last_action_date for bills.
+        insert_last_action_date = '''
+        UPDATE councilmatic_core_bill 
+        SET last_action_date = s.last_action_date
+        FROM (
+            SELECT (array_agg(action.date order by action.date desc))[1] as last_action_date, bill.ocd_id
+            FROM councilmatic_core_action AS action
+            JOIN councilmatic_core_bill AS bill 
+            ON action.bill_id=bill.ocd_id 
+            GROUP BY bill.ocd_id
+            ) AS s
+        WHERE councilmatic_core_bill.ocd_id = s.ocd_id
+        '''
 
+        self.executeTransaction(insert_last_action_date)
+
+        new_count = self.connection.execute('select count(*) from new_action').first().count
         self.log_message('Found {0} new action'.format(new_count), style='SUCCESS')
+
 
     def add_new_action_related_entity(self):
         self.executeTransaction('DROP TABLE IF EXISTS new_actionrelatedentity')
