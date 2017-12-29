@@ -934,10 +934,20 @@ class Command(BaseCommand):
                 if source['note'] == 'web':
                     source_url = source['url']
 
-            # The OCD API for NYC, Chicago, and Metro only include 'rtf_text' and 'plain_text', never 'ocr_full_text'
+            # The OCD API for NYC, Chicago, and Metro only include 'rtf_text' and 'plain_text', never 'ocr_full_text'.
+            # Convert the RTF to HTML, so that we can more easily render it server-side. 
+            import subprocess
+            import tempfile
+
             full_text = None
             if 'rtf_text' in bill_info['extras']:
-                full_text = bill_info['extras']['rtf_text']
+                rtf_string = bill_info['extras']['rtf_text']
+
+                with tempfile.NamedTemporaryFile(dir=settings.BASE_DIR) as fp:
+                    fp.write(rtf_string.encode())
+                    process = subprocess.run(['unrtf', '--html', fp.name], stdout=subprocess.PIPE)
+
+                    full_text = process.stdout.decode('utf-8')
 
             ocr_full_text = None
             if 'plain_text' in bill_info['extras']:
