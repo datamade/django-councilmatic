@@ -7,6 +7,7 @@ import os
 import sys
 import logging
 import logging.config
+import subprocess
 
 import requests
 import pytz
@@ -936,18 +937,13 @@ class Command(BaseCommand):
 
             # The OCD API for NYC, Chicago, and Metro only include 'rtf_text' and 'plain_text', never 'ocr_full_text'.
             # Convert the RTF to HTML, so that we can more easily render it server-side. 
-            import subprocess
-            import tempfile
-
             full_text = None
             if 'rtf_text' in bill_info['extras']:
                 rtf_string = bill_info['extras']['rtf_text']
 
-                with tempfile.NamedTemporaryFile(dir=settings.BASE_DIR) as fp:
-                    fp.write(rtf_string.encode())
-                    process = subprocess.run(['unrtf', '--html', fp.name], stdout=subprocess.PIPE)
+                process = subprocess.run(["unrtf"], input=rtf_string.encode('ascii'), stdout=subprocess.PIPE)
 
-                    full_text = process.stdout.decode('utf-8')
+                full_text = process.stdout.decode()
 
             ocr_full_text = None
             if 'plain_text' in bill_info['extras']:
