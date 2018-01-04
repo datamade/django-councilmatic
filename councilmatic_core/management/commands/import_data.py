@@ -278,7 +278,7 @@ class Command(BaseCommand):
                              center=True,
                              art_file='bills.txt')
             
-            # TODO: Add an argument for using unoconv (since we may not want this for Metro and Chicago)
+            # TODO: Put the unoconv logic inside a separate script
             listener = subprocess.Popen(['unoconv', '--listener'])
             try:
                 self.insert_raw_bills(delete=delete)
@@ -947,35 +947,10 @@ class Command(BaseCommand):
             full_text = None
             if 'rtf_text' in bill_info['extras']:
                 rtf_string = bill_info['extras']['rtf_text']
-
-                # process = subprocess.run(["unrtf"], input=rtf_string.encode('ascii'), stdout=subprocess.PIPE)
-
-                # Saves an html file...despite the stdout arg.
-                # process = subprocess.run(["unoconv", "-f", "html", fp.name], stdout=subprocess.PIPE)
-
-                print('Start unoconv...', slugify(bill_info['identifier']))
-
-                # unoconv creates an html file: read it, save it as full_text, and delete it.
-                # subprocess.run(["unoconv", "-f", "html", fp.name], stdout=subprocess.PIPE, timeout=15)
+                
                 process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
 
                 full_text = process.stdout.decode('utf-8')
-
-                    # with open(fp.name + '.html', 'r') as bill_html:
-                    #     full_text = bill_html.read()
-
-                    # subprocess.run(['rm', fp.name + '.html'])
-
-
-            # Some issues:
-            # (1) unoconv seems unable to read all temp file - returns "Document is empty," though the bill has rtf_text
-            # (2) unoconv freezes regularly: this may resolve itself on the server, since LibreOffice tends to be fussy on MacOs
-            # (3) the subprocess call for running unoconv in the background freezes
-
-            # Next steps:
-            # Try this locally with a smaller bathc of bills.
-            # Try it on the staging server with a larger batch of bills – does the process freeze as consistently?
-
 
             ocr_full_text = None
             if 'plain_text' in bill_info['extras']:
