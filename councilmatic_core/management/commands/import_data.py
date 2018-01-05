@@ -7,7 +7,6 @@ import os
 import sys
 import logging
 import logging.config
-import subprocess
 
 import requests
 import pytz
@@ -278,13 +277,8 @@ class Command(BaseCommand):
                              center=True,
                              art_file='bills.txt')
             
-            # TODO: Put the unoconv logic inside a separate script
-            listener = subprocess.Popen(['unoconv', '--listener'])
-            try:
-                self.insert_raw_bills(delete=delete)
-            finally:
-                listener.kill()
 
+            self.insert_raw_bills(delete=delete)
             self.insert_raw_actions(delete=delete)
 
             self.update_existing_bills()
@@ -941,16 +935,10 @@ class Command(BaseCommand):
             for source in bill_info['sources']:
                 if source['note'] == 'web':
                     source_url = source['url']
-
-            # The OCD API for NYC, Chicago, and Metro only include 'rtf_text' and 'plain_text', never 'ocr_full_text'.
-            # Convert the RTF to HTML, so that we can more easily render it server-side. 
+ 
             full_text = None
             if 'rtf_text' in bill_info['extras']:
-                rtf_string = bill_info['extras']['rtf_text']
-                
-                process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
-
-                full_text = process.stdout.decode('utf-8')
+                full_text = bill_info['extras']['rtf_text']
 
             ocr_full_text = None
             if 'plain_text' in bill_info['extras']:
