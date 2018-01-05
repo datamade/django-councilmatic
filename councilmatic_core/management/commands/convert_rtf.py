@@ -37,8 +37,7 @@ class Command(BaseCommand):
         '''
         listener = subprocess.Popen(['unoconv', '--listener'])
         try:
-            # self.add_html()
-            self.convert_rtf()
+            self.add_html()
         finally:
             listener.kill()
 
@@ -75,6 +74,9 @@ class Command(BaseCommand):
             rtf_string = bill_data['full_text']
             
             process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
+            # The error output remains noisy...I tried a few configurations, including the below.
+            # process = subprocess.Popen(['unoconv', '--stdin', '--stdout', '-f', 'html'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            # html, err = process.communicate(input=rtf_string.encode())
 
             html = process.stdout.decode('utf-8')
             inserts += "('" + ocd_id + "'" + ',' + "'" + html + "'),"
@@ -106,32 +108,22 @@ class Command(BaseCommand):
                          fancy=True,
                          center=True,
                          style='SUCCESS')
-
-    # This function logs a message about successful data imports - put this in a utils file. 
+ 
     def log_message(self,
                     message,
                     fancy=False,
                     style='HTTP_SUCCESS',
-                    art_file=None,
-                    center=False,
-                    timestamp=True):
+                    center=False):
 
-        if timestamp:
-            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            message = '{0} {1}'.format(now, message)
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        message = '{0} {1}'.format(timestamp, message)
 
-        if len(message) < 70 and center:
+        if center:
             padding = (70 - len(message)) / 2
             message = '{0}{1}{0}'.format(' ' * int(padding), message)
 
-        if fancy and not art_file:
-            thing_count = len(message) + 2
-
+        if fancy:
             message = '\n{0}\n  {1}  \n{0}'.format('-' * 70, message)
-
-        elif art_file:
-            art = open(os.path.join(self.this_folder, 'art', art_file)).read()
-            message = '\n{0} \n {1}'.format(art, message)
 
         style = getattr(self.style, style)
         self.stdout.write(style('{}\n'.format(message)))
