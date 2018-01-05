@@ -24,10 +24,15 @@ engine = sa.create_engine(DB_CONN.format(**settings.DATABASES['default']),
 class Command(BaseCommand):
     help = 'Converts rtf-formatted legislative text to valid html'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--update_all',
+            default=False,
+            help='Update full_text in all bills: can be set to True.')
+
     def handle(self, *args, **options):
-
         self.connection = engine.connect()
-
+        self.update_all = options['update_all']
         '''
         This command converts RTF from Legistar into valid HTML.
         The conversion employs "unoconv" - a CLI tool that imports and exports documents in LibreOffice. We run unoconv as a daemon process and kill it when the conversions finish.
@@ -35,18 +40,20 @@ class Command(BaseCommand):
         (2) iteration over the query results, conversion to html, and creation of an inserts string,
         (3) updating the full_text field with new html.
         '''
-        listener = subprocess.Popen(['unoconv', '--listener'])
+        listener = subprocess.Popen(['unoconv', '--listener'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
             self.add_html()
         finally:
             listener.kill()
 
     def get_rtf(self):
-        with self.connection.begin() as trans:
-            self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE)) 
+        self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+        with engine.begin() as connection:
+             
             # Only apply this query to most recently updated (or created) bills.
             max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
-            if max_updated is None:
+            # if max_updated is None or options['update_all']:
+            if max_updated is None or self.update_all:
                 max_updated = datetime.datetime(1900, 1, 1)    
 
             query = '''
@@ -54,19 +61,17 @@ class Command(BaseCommand):
             FROM councilmatic_core_bill
             WHERE updated_at >= '{}'
             AND full_text is not null
+            ORDER BY updated_at DESC
             '''.format(max_updated)
 
-            query_results = self.connection.execute(query).fetchall()
+            result = connection.execution_options(stream_results=True).execute(query)
 
-            self.log_message('Found {} bills with rtf to convert...'.format(len(query_results)),
-                             style='SUCCESS')
-
-            return query_results
+            yield from result
 
     def convert_rtf(self):
         rtf_results = self.get_rtf()
 
-        self.log_message('Ready to convert RTF....')
+        self.log_message('Converting RTF to HTML....')
 
         inserts = ''
         for bill_data in rtf_results:
@@ -74,41 +79,44 @@ class Command(BaseCommand):
             rtf_string = bill_data['full_text']
             
             process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
-            # The error output remains noisy...I tried a few configurations, including the below.
-            # process = subprocess.Popen(['unoconv', '--stdin', '--stdout', '-f', 'html'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            # html, err = process.communicate(input=rtf_string.encode())
 
             html = process.stdout.decode('utf-8')
-            inserts += "('" + ocd_id + "'" + ',' + "'" + html + "'),"
 
             print('.', end='')
             sys.stdout.flush()
-        
-        self.log_message('Conversions complete!')      
-        return inserts[:-1] # Remove trailing comma
+
+            yield html, ocd_id
+           
 
     def add_html(self):
-        inserts = self.convert_rtf()
+        html_results = self.convert_rtf()
 
-        with self.connection.begin() as trans:
-            self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+        self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
+        query = '''
+            UPDATE councilmatic_core_bill as bills
+            SET full_text = :html
+            WHERE bills.ocd_id = :ocd_id  
+        '''
 
-            query = '''
-                UPDATE councilmatic_core_bill as bills
-                SET full_text = new_data.html
-                from (values
-                    {}
-                ) as new_data(ocd_id, html)
-                WHERE new_data.ocd_id = bills.ocd_id  
-            '''.format(inserts)
+        chunk = []
+        for html, ocd_id in html_results:
+          chunk.append({'html': html, 'ocd_id': ocd_id})
+          if len(chunk) == 1000:
+            with self.connection.begin() as trans:
+                self.connection.execute(query, chunk)
+                
+                chunk = []
 
-            self.connection.execute(query)
+        # Update bills when less than 1,000 elements in a chunk. 
+        if chunk:
+            with self.connection.begin() as trans:
+                self.connection.execute(sa.text(query), *chunk)
 
         self.log_message('Bills have valid, viewable HTML!',
                          fancy=True,
                          center=True,
                          style='SUCCESS')
- 
+            
     def log_message(self,
                     message,
                     fancy=False,
