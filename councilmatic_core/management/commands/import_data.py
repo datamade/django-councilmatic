@@ -277,7 +277,6 @@ class Command(BaseCommand):
                              center=True,
                              art_file='bills.txt')
             
-
             self.insert_raw_bills(delete=delete)
             self.insert_raw_actions(delete=delete)
 
