@@ -103,7 +103,7 @@ class Command(BaseCommand):
           chunk.append({'html': html, 'ocd_id': ocd_id})
           if len(chunk) == 1000:
             with self.connection.begin() as trans:
-                self.connection.execute(query, chunk)
+                self.connection.execute(query, *chunk)
                 
                 chunk = []
 
