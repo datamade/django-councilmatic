@@ -82,7 +82,11 @@ class Command(BaseCommand):
             ocd_id = bill_data['ocd_id']
             rtf_string = bill_data['full_text']
             
-            process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
+            try:
+                process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
+            except subprocess.TimeoutExpired as e:
+                logger.error(e)
+                continue
 
             html = process.stdout.decode('utf-8')
 
