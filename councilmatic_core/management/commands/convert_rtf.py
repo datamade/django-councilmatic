@@ -63,12 +63,12 @@ class Command(BaseCommand):
                 query = '''
                     SELECT ocd_id, full_text
                     FROM councilmatic_core_bill
-                    WHERE updated_at >= '{}'
+                    WHERE updated_at >= :max_updated
                     AND full_text is not null
                     ORDER BY updated_at DESC
-                '''.format(max_updated)
+                '''
 
-            result = connection.execution_options(stream_results=True).execute(query)
+            result = connection.execution_options(stream_results=True).execute(sa.text(query), max_updated=max_updated)
 
             yield from result
 
