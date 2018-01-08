@@ -177,6 +177,7 @@ class Bill(models.Model):
                                            db_column='from_organization_id')
 
     full_text = models.TextField(blank=True, null=True)
+    html_text = models.TextField(blank=True, null=True)
     ocr_full_text = models.TextField(blank=True, null=True)
     abstract = models.TextField(blank=True, null=True)
     last_action_date = models.DateTimeField(default=None, null=True)

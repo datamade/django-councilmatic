@@ -57,11 +57,11 @@ class Command(BaseCommand):
                 max_updated = datetime.datetime(1900, 1, 1)    
 
             query = '''
-            SELECT ocd_id, full_text
-            FROM councilmatic_core_bill
-            WHERE updated_at >= '{}'
-            AND full_text is not null
-            ORDER BY updated_at DESC
+                SELECT ocd_id, full_text
+                FROM councilmatic_core_bill
+                WHERE updated_at >= '{}'
+                AND full_text is not null
+                ORDER BY updated_at DESC
             '''.format(max_updated)
 
             result = connection.execution_options(stream_results=True).execute(query)
@@ -83,6 +83,7 @@ class Command(BaseCommand):
             html = process.stdout.decode('utf-8')
 
             print('.', end='')
+            # logger.info('.', end='')
             sys.stdout.flush()
 
             yield html, ocd_id
