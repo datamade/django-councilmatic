@@ -84,7 +84,6 @@ class Command(BaseCommand):
             rtf_string = bill_data['full_text']
             attempts = 0
             while attempts < 2:
-                print(attempts)
                 try:
                     process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
 
@@ -100,7 +99,7 @@ class Command(BaseCommand):
             html = process.stdout.decode('utf-8')
 
             logger.info('Successful conversion of {}'.format(ocd_id))
-            
+
             yield {'html': html, 'ocd_id': ocd_id}
 
 
