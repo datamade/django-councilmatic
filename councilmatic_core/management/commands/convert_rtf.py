@@ -86,7 +86,7 @@ class Command(BaseCommand):
 
             html = process.stdout.decode('utf-8')
 
-            logger.info('Successful conversion of {}!'.format(ocd_id))
+            logger.info('Successful conversion of {}'.format(ocd_id))
 
             yield {'html': html, 'ocd_id': ocd_id}
            
@@ -105,7 +105,7 @@ class Command(BaseCommand):
         # for html, ocd_id in html_results:
         for bill_dict in html_results:
             chunk.append(bill_dict)
-            if len(chunk) == 1000:
+            if len(chunk) == 20:
                 with self.connection.begin() as trans:
                     self.connection.execute(sa.text(query), chunk)
                     
