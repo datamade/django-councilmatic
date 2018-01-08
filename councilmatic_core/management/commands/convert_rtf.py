@@ -49,7 +49,6 @@ class Command(BaseCommand):
     def get_rtf(self):
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
         with engine.begin() as connection:
-             
             # Only apply this query to most recently updated (or created) bills.
             max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
             # if max_updated is None or options['update_all']:
@@ -62,7 +61,6 @@ class Command(BaseCommand):
                 WHERE updated_at >= '{}'
                 AND full_text is not null
                 ORDER BY updated_at DESC
-                LIMIT 3
             '''.format(max_updated)
 
             result = connection.execution_options(stream_results=True).execute(query)
@@ -85,8 +83,6 @@ class Command(BaseCommand):
 
             logger.info('Successful conversion of {}!'.format(ocd_id))
 
-            
-            # yield html, ocd_id
             yield {'html': html, 'ocd_id': ocd_id}
            
 
