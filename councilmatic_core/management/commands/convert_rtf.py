@@ -66,7 +66,6 @@ class Command(BaseCommand):
                     WHERE updated_at >= :max_updated
                     AND full_text is not null
                     ORDER BY updated_at DESC
-                    limit 5
                 '''
 
             result = connection.execution_options(stream_results=True).execute(sa.text(query), max_updated=max_updated)
@@ -82,19 +81,14 @@ class Command(BaseCommand):
         for bill_data in rtf_results:
             ocd_id = bill_data['ocd_id']
             rtf_string = bill_data['full_text']
-            attempts = 0
-            while attempts < 2:
-                try:
-                    process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
+           
+            try:
+                process = subprocess.run(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
 
-                    break
-                except subprocess.TimeoutExpired as e:
-                    attempts += 1
-                    logger.error(e)
-                    logger.error('Look at bill {}'.format(ocd_id))
-                
-            if attempts > 1:
-                break
+            except subprocess.TimeoutExpired as e:
+                logger.error(e)
+                logger.error('Look at bill {}'.format(ocd_id))
+                continue
 
             html = process.stdout.decode('utf-8')
 
