@@ -61,8 +61,8 @@ class Command(BaseCommand):
                 FROM councilmatic_core_bill
                 WHERE updated_at >= '{}'
                 AND full_text is not null
-                AND ocd_id='ocd-bill/32ab59fb-3246-41a0-8bf3-098adb21e8c6'
                 ORDER BY updated_at DESC
+                LIMIT 3
             '''.format(max_updated)
 
             result = connection.execution_options(stream_results=True).execute(query)
@@ -85,7 +85,9 @@ class Command(BaseCommand):
 
             logger.info('Successful conversion of {}!'.format(ocd_id))
 
-            yield html, ocd_id
+            
+            # yield html, ocd_id
+            yield {'html': html, 'ocd_id': ocd_id}
            
 
     def add_html(self):
@@ -99,17 +101,18 @@ class Command(BaseCommand):
         '''
 
         chunk = []
-        for html, ocd_id in html_results:
-          chunk.append({'html': html, 'ocd_id': ocd_id})
-          if len(chunk) == 1000:
-            with self.connection.begin() as trans:
-                self.connection.execute(sa.text(query), *chunk)
-                
-                chunk = []
+        # for html, ocd_id in html_results:
+        for bill_dict in html_results:
+            chunk.append(bill_dict)
+            if len(chunk) == 1000:
+                with self.connection.begin() as trans:
+                    self.connection.execute(sa.text(query), chunk)
+                    
+                    chunk = []
 
         # Update bills when less than 1,000 elements in a chunk. 
         if chunk:
             with self.connection.begin() as trans:
-                self.connection.execute(sa.text(query), *chunk)
+                self.connection.execute(sa.text(query), chunk)
 
         logger.info('Bills have valid, viewable HTML!')
