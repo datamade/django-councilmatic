@@ -51,17 +51,22 @@ class Command(BaseCommand):
         with engine.begin() as connection:
             # Only apply this query to most recently updated (or created) bills.
             max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
-            # if max_updated is None or options['update_all']:
-            if max_updated is None or self.update_all:
-                max_updated = datetime.datetime(1900, 1, 1)    
 
-            query = '''
-                SELECT ocd_id, full_text
-                FROM councilmatic_core_bill
-                WHERE updated_at >= '{}'
-                AND full_text is not null
-                ORDER BY updated_at DESC
-            '''.format(max_updated)
+            if max_updated is None or self.update_all:
+                query = '''
+                    SELECT ocd_id, full_text
+                    FROM councilmatic_core_bill
+                    WHERE full_text is not null
+                    ORDER BY updated_at DESC
+                '''    
+            else:
+                query = '''
+                    SELECT ocd_id, full_text
+                    FROM councilmatic_core_bill
+                    WHERE updated_at >= '{}'
+                    AND full_text is not null
+                    ORDER BY updated_at DESC
+                '''.format(max_updated)
 
             result = connection.execution_options(stream_results=True).execute(query)
 
