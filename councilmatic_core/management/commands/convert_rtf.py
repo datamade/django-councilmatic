@@ -61,6 +61,7 @@ class Command(BaseCommand):
                 FROM councilmatic_core_bill
                 WHERE updated_at >= '{}'
                 AND full_text is not null
+                AND ocd_id='ocd-bill/32ab59fb-3246-41a0-8bf3-098adb21e8c6'
                 ORDER BY updated_at DESC
             '''.format(max_updated)
 
@@ -71,7 +72,7 @@ class Command(BaseCommand):
     def convert_rtf(self):
         rtf_results = self.get_rtf()
 
-        self.log_message('Converting RTF to HTML....')
+        logger.info('Converting RTF to HTML....')
 
         inserts = ''
         for bill_data in rtf_results:
@@ -82,9 +83,7 @@ class Command(BaseCommand):
 
             html = process.stdout.decode('utf-8')
 
-            print('.', end='')
-            # logger.info('.', end='')
-            sys.stdout.flush()
+            logger.info('Successful conversion of {}!'.format(ocd_id))
 
             yield html, ocd_id
            
@@ -95,7 +94,7 @@ class Command(BaseCommand):
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
         query = '''
             UPDATE councilmatic_core_bill as bills
-            SET full_text = :html
+            SET html_text = :html
             WHERE bills.ocd_id = :ocd_id  
         '''
 
@@ -113,26 +112,4 @@ class Command(BaseCommand):
             with self.connection.begin() as trans:
                 self.connection.execute(sa.text(query), *chunk)
 
-        self.log_message('Bills have valid, viewable HTML!',
-                         fancy=True,
-                         center=True,
-                         style='SUCCESS')
-            
-    def log_message(self,
-                    message,
-                    fancy=False,
-                    style='HTTP_SUCCESS',
-                    center=False):
-
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        message = '{0} {1}'.format(timestamp, message)
-
-        if center:
-            padding = (70 - len(message)) / 2
-            message = '{0}{1}{0}'.format(' ' * int(padding), message)
-
-        if fancy:
-            message = '\n{0}\n  {1}  \n{0}'.format('-' * 70, message)
-
-        style = getattr(self.style, style)
-        self.stdout.write(style('{}\n'.format(message)))
+        logger.info('Bills have valid, viewable HTML!')
