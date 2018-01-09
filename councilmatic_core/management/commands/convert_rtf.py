@@ -44,7 +44,7 @@ class Command(BaseCommand):
         try:
             self.add_html()
         finally:
-            listener.kill()
+            listener.terminate()
 
     def get_rtf(self):
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
