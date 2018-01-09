@@ -83,23 +83,17 @@ class Command(BaseCommand):
             rtf_string = bill_data['full_text']
            
             try:
-                # For Python 3.5+
-                # process = subprocess.call(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
                 # For Python 3.4 and below
                 html = subprocess.check_output(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stderr=subprocess.DEVNULL, timeout=15)
-
 
             except subprocess.TimeoutExpired as e:
                 logger.error(e)
                 logger.error('Look at bill {}'.format(ocd_id))
                 continue
 
-            # html = process.stdout.decode('utf-8')
-            # html = process
-
             logger.info('Successful conversion of {}'.format(ocd_id))
 
-            yield {'html': html, 'ocd_id': ocd_id}
+            yield {'html': html.decode(), 'ocd_id': ocd_id}
 
 
     def add_html(self):
