@@ -84,7 +84,9 @@ class Command(BaseCommand):
            
             try:
                 # For Python 3.4 and below
-                html = subprocess.check_output(['unoconv', '--stdin', '--stdout', '-f', 'html'], input=rtf_string.encode(), stderr=subprocess.DEVNULL, timeout=15)
+                process = subprocess.Popen(['unoconv', '--stdin', '--stdout', '-f', 'html'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+                html_data, stderr_data = process.communicate(input=rtf_string.encode(), timeout=15)
 
             except subprocess.TimeoutExpired as e:
                 logger.error(e)
@@ -93,7 +95,7 @@ class Command(BaseCommand):
 
             logger.info('Successful conversion of {}'.format(ocd_id))
 
-            yield {'html': html.decode(), 'ocd_id': ocd_id}
+            yield {'html': html_data.decode('utf-8'), 'ocd_id': ocd_id}
 
 
     def add_html(self):
