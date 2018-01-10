@@ -88,15 +88,17 @@ class Command(BaseCommand):
 
                 html_data, stderr_data = process.communicate(input=rtf_string.encode(), timeout=15)
 
+                html = html_data.decode('utf-8')
             except subprocess.TimeoutExpired as e:
+                process.kill()
+
                 logger.error(e)
                 logger.error('Look at bill {}'.format(ocd_id))
                 continue
 
             logger.info('Successful conversion of {}'.format(ocd_id))
 
-            yield {'html': html_data.decode('utf-8'), 'ocd_id': ocd_id}
-
+            yield {'html': html, 'ocd_id': ocd_id}
 
     def add_html(self):
         html_results = self.convert_rtf()
