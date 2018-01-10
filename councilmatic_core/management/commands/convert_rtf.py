@@ -5,6 +5,8 @@ import logging
 import logging.config
 import sqlalchemy as sa
 import datetime
+import signal
+import os
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -84,13 +86,13 @@ class Command(BaseCommand):
            
             try:
                 # For Python 3.4 and below
-                process = subprocess.Popen(['unoconv', '--stdin', '--stdout', '-f', 'html'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                process = subprocess.Popen(['unoconv', '--stdin', '--stdout', '-f', 'html'], preexec_fn=os.setsid, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
                 html_data, stderr_data = process.communicate(input=rtf_string.encode(), timeout=15)
 
                 html = html_data.decode('utf-8')
             except subprocess.TimeoutExpired as e:
-                process.kill()
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
 
                 logger.error(e)
                 logger.error('Look at bill {}'.format(ocd_id))
