@@ -30,11 +30,19 @@ class Command(BaseCommand):
         parser.add_argument(
             '--update_all',
             default=False,
-            help='Update full_text in all bills: can be set to True.')
+            action='store_true',
+            help='Update html_text in all bills.')
+
+        parser.add_argument(
+            '--update_empty',
+            default=False,
+            action='store_true',
+            help='Update bills that currently do not have html_text.')
 
     def handle(self, *args, **options):
         self.connection = engine.connect()
         self.update_all = options['update_all']
+        self.update_empty = options['update_empty']
         '''
         This command converts RTF from Legistar into valid HTML.
         The conversion employs "unoconv" - a CLI tool that imports and exports documents in LibreOffice. We run unoconv as a daemon process and kill it when the conversions finish.
@@ -60,7 +68,15 @@ class Command(BaseCommand):
                     FROM councilmatic_core_bill
                     WHERE full_text is not null
                     ORDER BY updated_at DESC
-                '''    
+                '''
+            elif self.update_empty:
+                query = '''
+                    SELECT ocd_id, full_text
+                    FROM councilmatic_core_bill
+                    WHERE html_text is null
+                    AND full_text is not null
+                    ORDER BY updated_at DESC
+                '''   
             else:
                 query = '''
                     SELECT ocd_id, full_text
