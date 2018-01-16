@@ -276,6 +276,7 @@ class Command(BaseCommand):
             self.log_message('Importing bills ...',
                              center=True,
                              art_file='bills.txt')
+            
             self.insert_raw_bills(delete=delete)
             self.insert_raw_actions(delete=delete)
 
@@ -933,8 +934,7 @@ class Command(BaseCommand):
             for source in bill_info['sources']:
                 if source['note'] == 'web':
                     source_url = source['url']
-
-            # The OCD API for NYC, Chicago, and Metro only include 'rtf_text' and 'plain_text', never 'ocr_full_text'
+ 
             full_text = None
             if 'rtf_text' in bill_info['extras']:
                 full_text = bill_info['extras']['rtf_text']
