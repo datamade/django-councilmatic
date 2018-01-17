@@ -102,12 +102,6 @@ class Command(BaseCommand):
                             default=False,
                             help='Only download OCD data')
 
-        parser.add_argument('--no_index',
-                            action='store_true',
-                            default=False,
-                            help='Only download OCD data')
-
-
     def handle(self, *args, **options):
 
         self.connection = engine.connect()
@@ -150,22 +144,6 @@ class Command(BaseCommand):
                 except Exception as e:
                     client.captureException()
                     logger.error(e, exc_info=True)
-
-
-        if not options['no_index'] and getattr(settings, 'USING_NOTIFICATIONS', None):
-            from django.core import management
-
-            try:
-                management.call_command('update_index', age=24)
-            except Exception as e:
-                client.captureException()
-                logger.error(e, exc_info=True)
-
-            try:
-                management.call_command('send_notifications')
-            except Exception as e:
-                client.captureException()
-                logger.error(e, exc_info=True)
 
 
     def log_message(self,
