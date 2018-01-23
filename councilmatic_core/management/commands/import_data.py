@@ -332,67 +332,74 @@ class Command(BaseCommand):
             self.grab_organization_posts({'name': settings.OCD_CITY_COUNCIL_NAME})
 
         orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
-        r = session.get(orgs_url)
 
-        page_json = json.loads(r.text)
+        r = self._get_response(orgs_url)
 
-        org_counter = 0
-        post_counter = 0
-
-        for i in range(page_json['meta']['max_page']):
-
-            r = session.get(orgs_url + '&page=' + str(i + 1))
+        if r:
             page_json = json.loads(r.text)
+            org_counter = 0
+            post_counter = 0
 
-            org_counter += len(page_json['results'])
+            for i in range(page_json['meta']['max_page']):
+                r = self._get_response(orgs_url + '&page=' + str(i + 1))
 
-            for result in page_json['results']:
+                if r:
+                    page_json = json.loads(r.text)
 
-                post_count = self.grab_organization_posts({'id': result['id']})
+                    org_counter += len(page_json['results'])
 
-                post_counter += post_count
+                    for result in page_json['results']:
 
-                print('.', end='')
-                sys.stdout.flush()
+                        post_count = self.grab_organization_posts({'id': result['id']})
 
-        print('\n')
-        self.log_message('Downloaded {0} orgs and {1} posts'.format(org_counter, post_counter))
+                        post_counter += post_count
 
-        # update relevant posts with shapes
-        if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
-            self.populate_council_district_shapes()
+                        print('.', end='')
+                        sys.stdout.flush()
+
+            print('\n')
+            self.log_message('Downloaded {0} orgs and {1} posts'.format(org_counter, post_counter))
+
+            # update relevant posts with shapes
+            if hasattr(settings, 'BOUNDARY_SET') and settings.BOUNDARY_SET:
+                self.populate_council_district_shapes()
 
     def grab_organization_posts(self, org_dict):
         url = base_url + '/organizations/'
 
-        r = session.get(url, params=org_dict)
-        page_json = json.loads(r.text)
-        organization_ocd_id = page_json['results'][0]['id']
+        r = self._get_response(url, params=org_dict)
 
-        url = base_url + '/' + organization_ocd_id + '/'
-        r = session.get(url)
-        page_json = json.loads(r.text)
+        if r:
+            page_json = json.loads(r.text)
+            organization_ocd_id = page_json['results'][0]['id']
 
-        if page_json.get('error'):
-            raise DataError(page_json['error'])
+            url = base_url + '/' + organization_ocd_id + '/'
 
-        ocd_uuid = org_dict['id'].split('/')[-1]
-        organization_filename = '{}.json'.format(ocd_uuid)
+            r = self._get_response(url)
 
-        with open(os.path.join(self.organizations_folder, organization_filename), 'w') as f:
-            f.write(json.dumps(page_json))
+            if r:
+                page_json = json.loads(r.text)
+
+                if page_json.get('error'):
+                    raise DataError(page_json['error'])
+
+                ocd_uuid = org_dict['id'].split('/')[-1]
+                organization_filename = '{}.json'.format(ocd_uuid)
+
+                with open(os.path.join(self.organizations_folder, organization_filename), 'w') as f:
+                    f.write(json.dumps(page_json))
 
 
-        for post_json in page_json['posts']:
+                for post_json in page_json['posts']:
 
-            post_uuid = post_json['id'].split('/')[-1]
-            post_filename = '{}.json'.format(post_uuid)
-            post_json['org_ocd_id'] = org_dict['id']
+                    post_uuid = post_json['id'].split('/')[-1]
+                    post_filename = '{}.json'.format(post_uuid)
+                    post_json['org_ocd_id'] = org_dict['id']
 
-            with open(os.path.join(self.posts_folder, post_filename), 'w') as f:
-                f.write(json.dumps(post_json))
+                    with open(os.path.join(self.posts_folder, post_filename), 'w') as f:
+                        f.write(json.dumps(post_json))
 
-        return len(page_json['posts'] + page_json['children'])
+                return len(page_json['posts'] + page_json['children'])
 
     def grab_people(self):
         # find people associated with existing organizations & bills
@@ -428,32 +435,33 @@ class Command(BaseCommand):
 
     def grab_person_memberships(self, person_id):
         # this grabs a person and all their memberships
-
         url = base_url + '/' + person_id + '/'
-        r = session.get(url)
-        page_json = json.loads(r.text)
+        r = self._get_response(url)
 
-        # save image to disk
-        if page_json['image']:
-            r = session.get(page_json['image'], verify=False)
-            if r.status_code == 200:
-                with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
-                    for chunk in r.iter_content(1000):
-                        f.write(chunk)
-                        f.flush()
+        if r:
+            page_json = json.loads(r.text)
 
-        page_json['email'] = None
-        for contact_detail in page_json['contact_details']:
-            if contact_detail['type'] == 'email':
-                if contact_detail['value'] != 'mailto:':
-                    page_json['email'] = contact_detail['value']
+            # save image to disk
+            if page_json['image']:
+                r = self._get_response(page_json['image'], verify=False)
+                if r.status_code == 200:
+                    with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
+                        for chunk in r.iter_content(1000):
+                            f.write(chunk)
+                            f.flush()
 
-        page_json['website_url'] = None
-        for link in page_json['links']:
-            if link['note'] == "web site":
-                page_json['website_url'] = link['url']
+            page_json['email'] = None
+            for contact_detail in page_json['contact_details']:
+                if contact_detail['type'] == 'email':
+                    if contact_detail['value'] != 'mailto:':
+                        page_json['email'] = contact_detail['value']
 
-        return page_json
+            page_json['website_url'] = None
+            for link in page_json['links']:
+                if link['note'] == "web site":
+                    page_json['website_url'] = link['url']
+
+            return page_json
 
     def grab_bills(self):
 
@@ -478,38 +486,42 @@ class Command(BaseCommand):
         self.log_message('Getting bills since {}'.format(query_params['updated_at__gte']), style='NOTICE')
 
         search_url = '{}/bills/'.format(base_url)
-        search_results = session.get(search_url, params=query_params)
-        page_json = search_results.json()
+        search_results = self._get_response(search_url, params=query_params)
 
-        counter = 0
-        for page_num in range(page_json['meta']['max_page']):
+        if search_results:
+            page_json = search_results.json()
 
-            query_params['page'] = int(page_num) + 1
-            result_page = session.get(search_url, params=query_params)
+            counter = 0
+            for page_num in range(page_json['meta']['max_page']):
 
-            for result in result_page.json()['results']:
+                query_params['page'] = int(page_num) + 1
+                result_page = session.get(search_url, params=query_params)
 
-                bill_url = '{base}/{bill_id}/'.format(
-                    base=base_url, bill_id=result['id'])
-                bill_detail = session.get(bill_url)
+                for result in result_page.json()['results']:
 
-                bill_json = bill_detail.json()
-                ocd_uuid = bill_json['id'].split('/')[-1]
-                bill_filename = '{}.json'.format(ocd_uuid)
+                    bill_url = '{base}/{bill_id}/'.format(
+                        base=base_url, bill_id=result['id'])
 
-                with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
-                    f.write(json.dumps(bill_json))
+                    r = self._get_response(bill_url)
 
-                counter += 1
+                    if r:
+                        bill_json = r.json()
+                        ocd_uuid = bill_json['id'].split('/')[-1]
+                        bill_filename = '{}.json'.format(ocd_uuid)
 
-                print('.', end='')
-                sys.stdout.flush()
+                        with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
+                            f.write(json.dumps(bill_json))
 
-                if counter % 1000 == 0:
-                    print('\n')
-                    self.log_message('Downloaded {} bills'.format(counter))
+                        counter += 1
 
-        self.log_message('Downloaded {} bills'.format(counter), fancy=True)
+                        print('.', end='')
+                        sys.stdout.flush()
+
+                        if counter % 1000 == 0:
+                            print('\n')
+                            self.log_message('Downloaded {} bills'.format(counter))
+
+            self.log_message('Downloaded {} bills'.format(counter), fancy=True)
 
     def grab_events(self):
 
@@ -531,42 +543,43 @@ class Command(BaseCommand):
         params['updated_at__gte'] = max_updated.isoformat()
         params['sort'] = 'updated_at'
 
-        r = session.get(events_url, params=params)
-        page_json = json.loads(r.text)
+        r = self._get_response(events_url, params=params)
 
-        counter = 0
-        for i in range(page_json['meta']['max_page']):
-
-            params['page'] = str(i + 1)
-            r = session.get(events_url, params=params)
+        if r:
             page_json = json.loads(r.text)
 
-            for event in page_json['results']:
+            counter = 0
+            for i in range(page_json['meta']['max_page']):
+                params['page'] = str(i + 1)
+                r = self._get_response(events_url, params=params)
 
-                ocd_uuid = event['id'].split('/')[-1]
-                event_filename = '{}.json'.format(ocd_uuid)
-
-                event_url = base_url + '/' + event['id'] + '/'
-                r = session.get(event_url)
-
-                if r.status_code == 200:
+                if r:
                     page_json = json.loads(r.text)
 
-                    with open(os.path.join(self.events_folder, event_filename), 'w') as f:
-                        f.write(json.dumps(page_json))
+                    for event in page_json['results']:
 
-                    counter += 1
+                        ocd_uuid = event['id'].split('/')[-1]
+                        event_filename = '{}.json'.format(ocd_uuid)
 
-                    print('.', end='')
-                    sys.stdout.flush()
+                        event_url = base_url + '/' + event['id'] + '/'
+                        r = self._get_response(event_url)
 
-                    if counter % 1000 == 0:
-                        print('\n')
-                        self.log_message('Downloaded {} events'.format(counter))
-                else:
-                    self.log_message('Skipping event {} (cannot retrieve event data)'.format(event['id']), style='ERROR')
+                        if r:
+                            page_json = json.loads(r.text)
 
-        self.log_message('Downloaded {} events'.format(counter), fancy=True)
+                            with open(os.path.join(self.events_folder, event_filename), 'w') as f:
+                                f.write(json.dumps(page_json))
+
+                            counter += 1
+
+                            print('.', end='')
+                            sys.stdout.flush()
+
+                            if counter % 1000 == 0:
+                                print('\n')
+                                self.log_message('Downloaded {} events'.format(counter))
+
+                self.log_message('Downloaded {} events'.format(counter), fancy=True)
 
     ###########################
     ###                     ###
@@ -616,10 +629,12 @@ class Command(BaseCommand):
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
             url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
-            r = session.get(url)
-            page_json = json.loads(r.text)
-            session_ids = [session['identifier']
-                           for session in page_json['legislative_sessions']]
+            r = self._get_response(url)
+
+            if r:
+                page_json = json.loads(r.text)
+                session_ids = [session['identifier']
+                               for session in page_json['legislative_sessions']]
 
         # Sort so most recent session last
         session_ids.sort()
@@ -3049,30 +3064,32 @@ class Command(BaseCommand):
         # grab boundary listing
         for boundary in settings.BOUNDARY_SET:
             bndry_set_url = bndry_base_url + '/boundaries/' + boundary
-            r = session.get(bndry_set_url + '/?limit=0')
-            page_json = json.loads(r.text)
+            r = self._get_response(bndry_set_url + '/?limit=0')
 
-            # loop through boundary listing
-            for bndry_json in page_json['objects']:
-                # grab boundary shape
-                shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-                r = self._get_response(shape_url)
-                # update the right post(s) with the shape
-                if r:
-                    if 'ocd-division' in bndry_json['external_id']:
-                        division_ocd_id = bndry_json['external_id']
+            if r:
+                page_json = json.loads(r.text)
 
-                        Post.objects.filter(
-                            division_ocd_id=division_ocd_id).update(shape=r.text)
-                    else:
-                        # Represent API doesn't use OCD id as external_id,
-                        # so we must work around that
-                        division_ocd_id_fragment = ':' + bndry_json['external_id']
-                        Post.objects.filter(
-                            division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
+                # loop through boundary listing
+                for bndry_json in page_json['objects']:
+                    # grab boundary shape
+                    shape_url = bndry_base_url + bndry_json['url'] + 'shape'
+                    r = self._get_response(shape_url)
+                    # update the right post(s) with the shape
+                    if r:
+                        if 'ocd-division' in bndry_json['external_id']:
+                            division_ocd_id = bndry_json['external_id']
 
-                    print('.', end='')
-                    sys.stdout.flush()
+                            Post.objects.filter(
+                                division_ocd_id=division_ocd_id).update(shape=r.text)
+                        else:
+                            # Represent API doesn't use OCD id as external_id,
+                            # so we must work around that
+                            division_ocd_id_fragment = ':' + bndry_json['external_id']
+                            Post.objects.filter(
+                                division_ocd_id__endswith=division_ocd_id_fragment).update(shape=r.text)
+
+                        print('.', end='')
+                        sys.stdout.flush()
 
     def executeTransaction(self, query, *args, **kwargs):
         with self.connection.begin() as trans:
@@ -3097,9 +3114,9 @@ class Command(BaseCommand):
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
 
-    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status 
-    def _get_response(self, url):
-        response = session.get(url)
+    # OCD API has intermittently thrown 502 and 504 errors; only proceed when receiving an 'ok' status 
+    def _get_response(self, url, params=None, **kwargs):
+        response = session.get(url, params=params, **kwargs)
         if response.ok:
             return response
         else: 
