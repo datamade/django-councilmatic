@@ -1,8 +1,15 @@
 # Release notes for django-councilmatic
 
-## Next version
+## Version 0.8.8
 
 *Changes*
+
+Includes a new management command that converts bill text from RTF to HTML.
+
+Makes amendments to `import_data`:
+* Generates a `last_action_date` for bills.
+* Imports `rtf_text` rather than `ocr_full_text`.
+* Removes the integration of `send_notifications` and `update_index` at the end of a data import. (Assumes that the Councilmatic app calls these commands separately in a cronjob.)
 
 Responsive table for legislation types on About page.
 
