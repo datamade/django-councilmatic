@@ -254,7 +254,7 @@ class Command(BaseCommand):
             self.log_message('Importing bills ...',
                              center=True,
                              art_file='bills.txt')
-            
+
             self.insert_raw_bills(delete=delete)
             self.insert_raw_actions(delete=delete)
 
@@ -459,10 +459,7 @@ class Command(BaseCommand):
 
         os.makedirs(self.bills_folder, exist_ok=True)
 
-        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            query_params = {'from_organization__id': settings.OCD_CITY_COUNCIL_ID}
-        else:
-            query_params = {'from_organization__name': settings.OCD_CITY_COUNCIL_NAME}
+        organization_ids = [(o.ocd_id, o.name) for o in Organization.objects.all()]
 
         if self.update_since is None:
             max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
@@ -472,42 +469,52 @@ class Command(BaseCommand):
         else:
             max_updated = self.update_since
 
-        query_params['sort'] = 'updated_at'
-        query_params['updated_at__gte'] = max_updated.isoformat()
+        query_params = {
+            'sort': 'updated_at',
+            'updated_at__gte': max_updated.isoformat(),
+        }
 
         self.log_message('Getting bills since {}'.format(query_params['updated_at__gte']), style='NOTICE')
 
         search_url = '{}/bills/'.format(base_url)
-        search_results = session.get(search_url, params=query_params)
-        page_json = search_results.json()
 
-        counter = 0
-        for page_num in range(page_json['meta']['max_page']):
+        for organization_id, organization_name in organization_ids:
 
-            query_params['page'] = int(page_num) + 1
-            result_page = session.get(search_url, params=query_params)
+            query_params['from_organization__id'] = organization_id
+            query_params['page'] = 1
 
-            for result in result_page.json()['results']:
+            self.log_message('Getting bills from {}'.format(organization_name), style='NOTICE')
 
-                bill_url = '{base}/{bill_id}/'.format(
-                    base=base_url, bill_id=result['id'])
-                bill_detail = session.get(bill_url)
+            search_results = session.get(search_url, params=query_params)
+            page_json = search_results.json()
 
-                bill_json = bill_detail.json()
-                ocd_uuid = bill_json['id'].split('/')[-1]
-                bill_filename = '{}.json'.format(ocd_uuid)
+            counter = 0
+            for page_num in range(page_json['meta']['max_page']):
 
-                with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
-                    f.write(json.dumps(bill_json))
+                query_params['page'] = int(page_num) + 1
+                result_page = session.get(search_url, params=query_params)
 
-                counter += 1
+                for result in result_page.json()['results']:
 
-                print('.', end='')
-                sys.stdout.flush()
+                    bill_url = '{base}/{bill_id}/'.format(
+                        base=base_url, bill_id=result['id'])
+                    bill_detail = session.get(bill_url)
 
-                if counter % 1000 == 0:
-                    print('\n')
-                    self.log_message('Downloaded {} bills'.format(counter))
+                    bill_json = bill_detail.json()
+                    ocd_uuid = bill_json['id'].split('/')[-1]
+                    bill_filename = '{}.json'.format(ocd_uuid)
+
+                    with open(os.path.join(self.bills_folder, bill_filename), 'w') as f:
+                        f.write(json.dumps(bill_json))
+
+                    counter += 1
+
+                    print('.', end='')
+                    sys.stdout.flush()
+
+                    if counter % 1000 == 0:
+                        print('\n')
+                        self.log_message('Downloaded {} bills'.format(counter))
 
         self.log_message('Downloaded {} bills'.format(counter), fancy=True)
 
@@ -912,7 +919,7 @@ class Command(BaseCommand):
             for source in bill_info['sources']:
                 if source['note'] == 'web':
                     source_url = source['url']
- 
+
             full_text = None
             if 'rtf_text' in bill_info['extras']:
                 full_text = bill_info['extras']['rtf_text']
@@ -1301,8 +1308,8 @@ class Command(BaseCommand):
     def insert_raw_subjects(self, delete=False):
         pk_cols = ['bill_id', 'subject']
 
-        self.setup_raw('subject', 
-                       delete=delete, 
+        self.setup_raw('subject',
+                       delete=delete,
                        updated_at=False,
                        pk_cols=pk_cols)
 
@@ -1351,8 +1358,8 @@ class Command(BaseCommand):
     def insert_raw_relatedbills(self, delete=False):
         pk_cols = ['related_bill_identifier', 'central_bill_id']
 
-        self.setup_raw('relatedbill', 
-                       delete=delete, 
+        self.setup_raw('relatedbill',
+                       delete=delete,
                        updated_at=False,
                        pk_cols=pk_cols)
 
@@ -2166,7 +2173,7 @@ class Command(BaseCommand):
 
         change_count = self.connection.execute('select count(*) from change_relatedbill').first().count
 
-        self.log_message('Found {0} changed related bills'.format(change_count), style='SUCCESS')        
+        self.log_message('Found {0} changed related bills'.format(change_count), style='SUCCESS')
 
     def update_existing_events(self):
         cols = [
@@ -2532,13 +2539,13 @@ class Command(BaseCommand):
         # At this point, the database has bills and actions related to those bills.
         # Create last_action_date for bills.
         insert_last_action_date = '''
-        UPDATE councilmatic_core_bill 
+        UPDATE councilmatic_core_bill
         SET last_action_date = s.last_action_date
         FROM (
             SELECT (array_agg(action.date order by action.date desc))[1] as last_action_date, bill.ocd_id
             FROM councilmatic_core_action AS action
-            JOIN councilmatic_core_bill AS bill 
-            ON action.bill_id=bill.ocd_id 
+            JOIN councilmatic_core_bill AS bill
+            ON action.bill_id=bill.ocd_id
             GROUP BY bill.ocd_id
             ) AS s
         WHERE councilmatic_core_bill.ocd_id = s.ocd_id
@@ -2960,13 +2967,13 @@ class Command(BaseCommand):
         new_count = self.connection.execute('select count(*) from new_eventdocument').first().count
 
         self.log_message('Found {0} new event documents'.format(new_count), style='SUCCESS')
-    
+
     def insert_event_agenda_items(self):
         inserts = []
 
         # We do not want to import redundant or obsolete event agenda items: before importing new items, delete existing ones (with the specified ocd_id).
         delete_statement = '''
-            DELETE FROM councilmatic_core_eventagendaitem 
+            DELETE FROM councilmatic_core_eventagendaitem
             WHERE event_id in ({})
         '''
 
@@ -3085,7 +3092,7 @@ class Command(BaseCommand):
             except:
                 client.captureException()
                 raise
-                
+
 
     # Call this function when consolidating multiple queries into a single transaction!
     # This function iterates over a list of queries and a list of params, and executes those queries.
@@ -3093,15 +3100,15 @@ class Command(BaseCommand):
     def executeTransactionList(self, query_list, args_list):
         with self.connection.begin() as trans:
             self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-            
+
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
 
-    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status 
+    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status
     def _get_response(self, url):
         response = session.get(url)
         if response.ok:
             return response
-        else: 
+        else:
             self.log_message('WARNING: {url} returned a bad response - {status}'.format(url=url, status=response.status_code), style='ERROR')
             return None
