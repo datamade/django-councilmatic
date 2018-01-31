@@ -4,6 +4,8 @@
 
 *Changes*
 
+**Release date:** 1-31-2018
+
 Includes a new management command that converts bill text from RTF to HTML.
 
 Makes amendments to `import_data`:
