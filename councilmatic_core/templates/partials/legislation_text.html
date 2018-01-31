@@ -18,6 +18,19 @@
     </iframe>
 
     <div class="divider"></div>
+{% elif legislation.html_text %}
+    {% if legislation.html_text|length > 65 %}
+    <h3>
+        <i class='fa fa-fw fa-file-text-o'></i>
+        Legislation text
+    </h3>
+    <div class='panel panel-default'>
+        <div class='panel-body'>
+            {{ legislation.html_text|safe }}
+        </div>
+    </div>
+    <div class="divider"></div>
+    {% endif %}
 {% elif legislation.ocr_full_text %}
     {% if legislation.ocr_full_text|clean_html|length > 65 %}
     <h3>

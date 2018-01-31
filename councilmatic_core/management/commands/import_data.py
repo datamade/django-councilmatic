@@ -254,7 +254,7 @@ class Command(BaseCommand):
             self.log_message('Importing bills ...',
                              center=True,
                              art_file='bills.txt')
-            
+
             self.insert_raw_bills(delete=delete)
             self.insert_raw_actions(delete=delete)
 
@@ -878,6 +878,7 @@ class Command(BaseCommand):
                 from_organization_id,
                 full_text,
                 ocr_full_text,
+                html_text,
                 abstract,
                 legislative_session_id,
                 bill_type,
@@ -894,6 +895,7 @@ class Command(BaseCommand):
                 :from_organization_id,
                 :full_text,
                 :ocr_full_text,
+                :html_text,
                 :abstract,
                 :legislative_session_id,
                 :bill_type,
@@ -912,7 +914,7 @@ class Command(BaseCommand):
             for source in bill_info['sources']:
                 if source['note'] == 'web':
                     source_url = source['url']
- 
+
             full_text = None
             if 'rtf_text' in bill_info['extras']:
                 full_text = bill_info['extras']['rtf_text']
@@ -920,6 +922,10 @@ class Command(BaseCommand):
             ocr_full_text = None
             if 'plain_text' in bill_info['extras']:
                 ocr_full_text = bill_info['extras']['plain_text']
+
+            html_text = None
+            if 'html_text' in bill_info['extras']:
+                html_text = bill_info['extras']['html_text']
 
             abstract = None
             if bill_info['abstracts']:
@@ -948,6 +954,7 @@ class Command(BaseCommand):
                 'from_organization_id': bill_info['from_organization']['id'],
                 'full_text': full_text,
                 'ocr_full_text': ocr_full_text,
+                'html_text': html_text,
                 'abstract': abstract,
                 'legislative_session_id': bill_info['legislative_session']['identifier'],
                 'bill_type': bill_type,
@@ -1301,8 +1308,8 @@ class Command(BaseCommand):
     def insert_raw_subjects(self, delete=False):
         pk_cols = ['bill_id', 'subject']
 
-        self.setup_raw('subject', 
-                       delete=delete, 
+        self.setup_raw('subject',
+                       delete=delete,
                        updated_at=False,
                        pk_cols=pk_cols)
 
@@ -1351,8 +1358,8 @@ class Command(BaseCommand):
     def insert_raw_relatedbills(self, delete=False):
         pk_cols = ['related_bill_identifier', 'central_bill_id']
 
-        self.setup_raw('relatedbill', 
-                       delete=delete, 
+        self.setup_raw('relatedbill',
+                       delete=delete,
                        updated_at=False,
                        pk_cols=pk_cols)
 
@@ -1820,6 +1827,7 @@ class Command(BaseCommand):
             'from_organization_id',
             'full_text',
             'ocr_full_text',
+            'html_text',
             'abstract',
             'last_action_date',
             'legislative_session_id',
@@ -2166,7 +2174,7 @@ class Command(BaseCommand):
 
         change_count = self.connection.execute('select count(*) from change_relatedbill').first().count
 
-        self.log_message('Found {0} changed related bills'.format(change_count), style='SUCCESS')        
+        self.log_message('Found {0} changed related bills'.format(change_count), style='SUCCESS')
 
     def update_existing_events(self):
         cols = [
@@ -2470,6 +2478,7 @@ class Command(BaseCommand):
             'from_organization_id',
             'full_text',
             'ocr_full_text',
+            'html_text',
             'abstract',
             'last_action_date',
             'legislative_session_id',
@@ -2532,13 +2541,13 @@ class Command(BaseCommand):
         # At this point, the database has bills and actions related to those bills.
         # Create last_action_date for bills.
         insert_last_action_date = '''
-        UPDATE councilmatic_core_bill 
+        UPDATE councilmatic_core_bill
         SET last_action_date = s.last_action_date
         FROM (
             SELECT (array_agg(action.date order by action.date desc))[1] as last_action_date, bill.ocd_id
             FROM councilmatic_core_action AS action
-            JOIN councilmatic_core_bill AS bill 
-            ON action.bill_id=bill.ocd_id 
+            JOIN councilmatic_core_bill AS bill
+            ON action.bill_id=bill.ocd_id
             GROUP BY bill.ocd_id
             ) AS s
         WHERE councilmatic_core_bill.ocd_id = s.ocd_id
@@ -2960,13 +2969,13 @@ class Command(BaseCommand):
         new_count = self.connection.execute('select count(*) from new_eventdocument').first().count
 
         self.log_message('Found {0} new event documents'.format(new_count), style='SUCCESS')
-    
+
     def insert_event_agenda_items(self):
         inserts = []
 
         # We do not want to import redundant or obsolete event agenda items: before importing new items, delete existing ones (with the specified ocd_id).
         delete_statement = '''
-            DELETE FROM councilmatic_core_eventagendaitem 
+            DELETE FROM councilmatic_core_eventagendaitem
             WHERE event_id in ({})
         '''
 
@@ -3085,7 +3094,7 @@ class Command(BaseCommand):
             except:
                 client.captureException()
                 raise
-                
+
 
     # Call this function when consolidating multiple queries into a single transaction!
     # This function iterates over a list of queries and a list of params, and executes those queries.
@@ -3093,15 +3102,15 @@ class Command(BaseCommand):
     def executeTransactionList(self, query_list, args_list):
         with self.connection.begin() as trans:
             self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-            
+
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
 
-    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status 
+    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status
     def _get_response(self, url):
         response = session.get(url)
         if response.ok:
             return response
-        else: 
+        else:
             self.log_message('WARNING: {url} returned a bad response - {status}'.format(url=url, status=response.status_code), style='ERROR')
             return None
