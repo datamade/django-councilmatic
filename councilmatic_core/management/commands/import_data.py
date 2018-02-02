@@ -325,12 +325,6 @@ class Command(BaseCommand):
         os.makedirs(self.organizations_folder, exist_ok=True)
         os.makedirs(self.posts_folder, exist_ok=True)
 
-        # first grab city council root
-        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            self.grab_organization_posts({'id': settings.OCD_CITY_COUNCIL_ID})
-        else:
-            self.grab_organization_posts({'name': settings.OCD_CITY_COUNCIL_NAME})
-
         orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
         r = session.get(orgs_url)
 
