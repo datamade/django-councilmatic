@@ -49,10 +49,6 @@ for configuration in ['OCD_JURISDICTION_ID',
         raise ImproperlyConfigured(
             'You must define {0} in settings.py'.format(configuration))
 
-if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
-    raise ImproperlyConfigured(
-        'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
-
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 DB_CONN = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'
