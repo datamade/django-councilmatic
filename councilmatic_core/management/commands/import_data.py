@@ -885,6 +885,7 @@ class Command(BaseCommand):
                 from_organization_id,
                 full_text,
                 ocr_full_text,
+                html_text,
                 abstract,
                 legislative_session_id,
                 bill_type,
@@ -901,6 +902,7 @@ class Command(BaseCommand):
                 :from_organization_id,
                 :full_text,
                 :ocr_full_text,
+                :html_text,
                 :abstract,
                 :legislative_session_id,
                 :bill_type,
@@ -927,6 +929,10 @@ class Command(BaseCommand):
             ocr_full_text = None
             if 'plain_text' in bill_info['extras']:
                 ocr_full_text = bill_info['extras']['plain_text']
+
+            html_text = None
+            if 'html_text' in bill_info['extras']:
+                html_text = bill_info['extras']['html_text']
 
             abstract = None
             if bill_info['abstracts']:
@@ -955,6 +961,7 @@ class Command(BaseCommand):
                 'from_organization_id': bill_info['from_organization']['id'],
                 'full_text': full_text,
                 'ocr_full_text': ocr_full_text,
+                'html_text': html_text,
                 'abstract': abstract,
                 'legislative_session_id': bill_info['legislative_session']['identifier'],
                 'bill_type': bill_type,
@@ -1827,6 +1834,7 @@ class Command(BaseCommand):
             'from_organization_id',
             'full_text',
             'ocr_full_text',
+            'html_text',
             'abstract',
             'last_action_date',
             'legislative_session_id',
@@ -2477,6 +2485,7 @@ class Command(BaseCommand):
             'from_organization_id',
             'full_text',
             'ocr_full_text',
+            'html_text',
             'abstract',
             'last_action_date',
             'legislative_session_id',
