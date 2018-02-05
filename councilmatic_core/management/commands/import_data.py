@@ -49,10 +49,6 @@ for configuration in ['OCD_JURISDICTION_ID',
         raise ImproperlyConfigured(
             'You must define {0} in settings.py'.format(configuration))
 
-if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
-    raise ImproperlyConfigured(
-        'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
-
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 DB_CONN = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'
@@ -324,12 +320,6 @@ class Command(BaseCommand):
     def grab_organizations(self):
         os.makedirs(self.organizations_folder, exist_ok=True)
         os.makedirs(self.posts_folder, exist_ok=True)
-
-        # first grab city council root
-        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            self.grab_organization_posts({'id': settings.OCD_CITY_COUNCIL_ID})
-        else:
-            self.grab_organization_posts({'name': settings.OCD_CITY_COUNCIL_NAME})
 
         orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
         r = session.get(orgs_url)
