@@ -40,10 +40,8 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 session = requests.Session()
 
-for configuration in ['OCD_JURISDICTION_ID',
-                      'HEADSHOT_PATH',
-                      'LEGISLATIVE_SESSIONS'
-                      ]:
+for configuration in ['OCD_JURISDICTION_IDS',
+                      'HEADSHOT_PATH',]:
 
     if not hasattr(settings, configuration):
         raise ImproperlyConfigured(
@@ -102,44 +100,54 @@ class Command(BaseCommand):
 
         self.connection = engine.connect()
 
-        self.downloads_folder = 'downloads'
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
-
-        self.organizations_folder = os.path.join(self.downloads_folder, 'organizations')
-        self.posts_folder = os.path.join(self.downloads_folder, 'posts')
-        self.bills_folder = os.path.join(self.downloads_folder, 'bills')
-        self.people_folder = os.path.join(self.downloads_folder, 'people')
-        self.events_folder = os.path.join(self.downloads_folder, 'events')
 
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
 
         endpoints = options['endpoints'].split(',')
 
-        for endpoint in endpoints:
+        for jurisdiction_id in settings.OCD_JURISDICTION_IDS:
 
-            if endpoint not in ['organizations', 'people', 'bills', 'events']:
+            self.jurisdiction_id = jurisdiction_id
+            self.jurisdiction_name = jurisdiction_id.rsplit(':', 1)[1].split('/')[0]
 
-                self.log_message('"{}" is not a valid endpoint'.format(endpoint), style='ERROR')
+            self.downloads_folder = os.path.join(self.this_folder,
+                                                 'downloads',
+                                                 self.jurisdiction_name)
 
-            else:
+            self.organizations_folder = os.path.join(self.downloads_folder, 'organizations')
+            self.posts_folder = os.path.join(self.downloads_folder, 'posts')
+            self.bills_folder = os.path.join(self.downloads_folder, 'bills')
+            self.people_folder = os.path.join(self.downloads_folder, 'people')
+            self.events_folder = os.path.join(self.downloads_folder, 'events')
 
-                download_only = options['download_only']
-                import_only = options['import_only']
+            self.create_legislative_sessions()
 
-                if not import_only and not download_only:
-                    download_only = True
-                    import_only = True
+            for endpoint in endpoints:
 
-                try:
-                    etl_method = getattr(self, '{}_etl'.format(endpoint))
-                    etl_method(import_only=import_only,
-                               download_only=download_only,
-                               delete=options['delete'])
+                if endpoint not in ['organizations', 'people', 'bills', 'events']:
 
-                except Exception as e:
-                    client.captureException()
-                    logger.error(e, exc_info=True)
+                    self.log_message('"{}" is not a valid endpoint'.format(endpoint), style='ERROR')
+
+                else:
+
+                    download_only = options['download_only']
+                    import_only = options['import_only']
+
+                    if not import_only and not download_only:
+                        download_only = True
+                        import_only = True
+
+                    try:
+                        etl_method = getattr(self, '{}_etl'.format(endpoint))
+                        etl_method(import_only=import_only,
+                                   download_only=download_only,
+                                   delete=options['delete'])
+
+                    except Exception as e:
+                        client.captureException()
+                        logger.error(e, exc_info=True)
 
 
     def log_message(self,
@@ -238,7 +246,6 @@ class Command(BaseCommand):
                   download_only=False,
                   delete=False):
 
-        self.create_legislative_sessions()
 
         if download_only:
             self.log_message('Downloading bills ...',
@@ -321,7 +328,7 @@ class Command(BaseCommand):
         os.makedirs(self.organizations_folder, exist_ok=True)
         os.makedirs(self.posts_folder, exist_ok=True)
 
-        orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
+        orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, self.jurisdiction_id)
         r = session.get(orgs_url)
 
         page_json = json.loads(r.text)
@@ -449,7 +456,10 @@ class Command(BaseCommand):
 
         os.makedirs(self.bills_folder, exist_ok=True)
 
-        organization_ids = [(o.ocd_id, o.name) for o in Organization.objects.all()]
+        organizations = session.get('{}/organizations/'.format(base_url),
+                                    params={'jurisdiction__id': self.jurisdiction_id})
+
+        organization_ids = [(o['id'], o['name']) for o in organizations.json()['results']]
 
         if self.update_since is None:
             max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
@@ -514,7 +524,7 @@ class Command(BaseCommand):
 
         events_url = '{0}/events/'.format(base_url)
 
-        params = {'jurisdiction_id': settings.OCD_JURISDICTION_ID}
+        params = {'jurisdiction_id': self.jurisdiction_id}
 
         if self.update_since is None:
             max_updated = Event.objects.all().aggregate(
@@ -612,10 +622,10 @@ class Command(BaseCommand):
         if hasattr(settings, 'LEGISLATIVE_SESSIONS') and settings.LEGISLATIVE_SESSIONS:
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
-            url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
-            r = session.get(url)
+            url = base_url + '/' + self.jurisdiction_id + '/'
+            r = session.get(url, params={'fields': 'legislative_sessions'})
             page_json = json.loads(r.text)
-            session_ids = [session['identifier']
+            session_ids = ['{0}-{1}'.format(session['identifier'], self.jurisdiction_name)
                            for session in page_json['legislative_sessions']]
 
         # Sort so most recent session last
@@ -623,7 +633,7 @@ class Command(BaseCommand):
         for leg_session in session_ids:
             obj, created = LegislativeSession.objects.get_or_create(
                 identifier=leg_session,
-                jurisdiction_ocd_id=settings.OCD_JURISDICTION_ID,
+                jurisdiction_ocd_id=self.jurisdiction_id,
                 name='%s Legislative Session' % leg_session,
             )
             if created and DEBUG:
@@ -953,7 +963,7 @@ class Command(BaseCommand):
                 'ocr_full_text': ocr_full_text,
                 'html_text': html_text,
                 'abstract': abstract,
-                'legislative_session_id': bill_info['legislative_session']['identifier'],
+                'legislative_session_id': '{0}-{1}'.format(bill_info['legislative_session']['identifier'], self.jurisdiction_name),
                 'bill_type': bill_type,
                 'slug': slug,
             }
