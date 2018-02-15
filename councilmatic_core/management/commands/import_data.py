@@ -34,7 +34,6 @@ from councilmatic_core.models import Person, Bill, Organization, Action, ActionR
 
 
 logging.config.dictConfig(settings.LOGGING)
-logging.getLogger("requests").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
