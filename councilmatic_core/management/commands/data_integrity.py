@@ -24,7 +24,7 @@ class Command(BaseCommand):
             solr_url = settings.HAYSTACK_CONNECTIONS['default']['URL']
             requests.get(solr_url)
         except requests.ConnectionError:
-            message = "ConnectionError: Unable to connect to Solr at {}. Is Solr running?".format(solr_url)
+            message = "ConnectionError: Unable to connect to Solr at {} when running the data integrity check. Is Solr running?".format(solr_url)
             logger.error(message)
             raise Exception(message)
 
