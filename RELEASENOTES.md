@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.8.10
+
+*Changes*
+
+**Release date:** 2-27-2018
+
+Substitutes instances of `session.get` with `_get_response` - a custom function that sets a timeout of 60 seconds on HTTP requests and raises an error for bad responses. 
+
 ## Version 0.8.9
 
 *Changes*
