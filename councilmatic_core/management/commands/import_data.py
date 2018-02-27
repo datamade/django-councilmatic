@@ -321,25 +321,21 @@ class Command(BaseCommand):
         os.makedirs(self.organizations_folder, exist_ok=True)
         os.makedirs(self.posts_folder, exist_ok=True)
 
-        orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
-        r = session.get(orgs_url, timeout=60)
-
-        page_json = json.loads(r.text)
-
         org_counter = 0
         post_counter = 0
+        orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
+
+        r = self._get_response(orgs_url)
+        page_json = json.loads(r.text)
 
         for i in range(page_json['meta']['max_page']):
+            r = self._get_response(orgs_url + '&page=' + str(i + 1))
 
-            r = session.get(orgs_url + '&page=' + str(i + 1), timeout=60)
             page_json = json.loads(r.text)
-
             org_counter += len(page_json['results'])
 
             for result in page_json['results']:
-
                 post_count = self.grab_organization_posts({'id': result['id']})
-
                 post_counter += post_count
 
                 print('.', end='')
@@ -418,15 +414,14 @@ class Command(BaseCommand):
 
     def grab_person_memberships(self, person_id):
         # this grabs a person and all their memberships
-
         url = base_url + '/' + person_id + '/'
-        r = session.get(url, timeout=60)
+        r = self._get_response(url)
         page_json = json.loads(r.text)
 
         # save image to disk
         if page_json['image']:
-            r = session.get(page_json['image'], verify=False, timeout=60)
-            if r.status_code == 200:
+            r = self._get_response(page_json['image'], verify=False, error=False)
+            if r:
                 with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
                     for chunk in r.iter_content(1000):
                         f.write(chunk)
@@ -3055,14 +3050,15 @@ class Command(BaseCommand):
         # grab boundary listing
         for boundary in settings.BOUNDARY_SET:
             bndry_set_url = bndry_base_url + '/boundaries/' + boundary
-            r = session.get(bndry_set_url + '/?limit=0', timeout=60)
+
+            r = self._get_response(bndry_set_url + '/?limit=0')
             page_json = json.loads(r.text)
 
             # loop through boundary listing
             for bndry_json in page_json['objects']:
                 # grab boundary shape
                 shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-                r = self._get_response(shape_url)
+                r = self._get_response(shape_url, error=False)
                 # update the right post(s) with the shape
                 if r:
                     if 'ocd-division' in bndry_json['external_id']:
@@ -3092,7 +3088,6 @@ class Command(BaseCommand):
                 client.captureException()
                 raise
 
-
     # Call this function when consolidating multiple queries into a single transaction!
     # This function iterates over a list of queries and a list of params, and executes those queries.
     # It, then, tries to commit the results of the execution and rolls back, if unable to do so.
@@ -3103,11 +3098,15 @@ class Command(BaseCommand):
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
 
-    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status
-    def _get_response(self, url):
-        response = session.get(url, timeout=60)
+    # OCD API has intermittently thrown 502 and 504 errors; only proceed when receiving an 'ok' status.
+    def _get_response(self, url, params=None, timeout=60, error=True, **kwargs):
+        response = session.get(url, params=params, timeout=timeout, **kwargs)
+        
         if response.ok:
             return response
-        else:
-            self.log_message('WARNING: {url} returned a bad response - {status}'.format(url=url, status=response.status_code), style='ERROR')
+        message = '{url} returned a bad response - {status}'.format(url=url, status=response.status_code)
+        if not error:
+            self.log_message('WARNING: {0}'.format(message), style='ERROR')
             return None
+
+        raise requests.exceptions.HTTPError('ERROR: {0}'.format(message))
