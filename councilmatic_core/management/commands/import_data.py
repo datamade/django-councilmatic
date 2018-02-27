@@ -321,25 +321,21 @@ class Command(BaseCommand):
         os.makedirs(self.organizations_folder, exist_ok=True)
         os.makedirs(self.posts_folder, exist_ok=True)
 
-        orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
-        r = session.get(orgs_url)
-
-        page_json = json.loads(r.text)
-
         org_counter = 0
         post_counter = 0
+        orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
+
+        r = self._get_response(orgs_url)
+        page_json = json.loads(r.text)
 
         for i in range(page_json['meta']['max_page']):
+            r = self._get_response(orgs_url + '&page=' + str(i + 1))
 
-            r = session.get(orgs_url + '&page=' + str(i + 1))
             page_json = json.loads(r.text)
-
             org_counter += len(page_json['results'])
 
             for result in page_json['results']:
-
                 post_count = self.grab_organization_posts({'id': result['id']})
-
                 post_counter += post_count
 
                 print('.', end='')
@@ -354,13 +350,12 @@ class Command(BaseCommand):
 
     def grab_organization_posts(self, org_dict):
         url = base_url + '/organizations/'
-
-        r = session.get(url, params=org_dict)
+        r = self._get_response(url, params=org_dict)
         page_json = json.loads(r.text)
         organization_ocd_id = page_json['results'][0]['id']
 
         url = base_url + '/' + organization_ocd_id + '/'
-        r = session.get(url)
+        r = self._get_response(url)
         page_json = json.loads(r.text)
 
         if page_json.get('error'):
@@ -418,15 +413,14 @@ class Command(BaseCommand):
 
     def grab_person_memberships(self, person_id):
         # this grabs a person and all their memberships
-
         url = base_url + '/' + person_id + '/'
-        r = session.get(url)
+        r = self._get_response(url)
         page_json = json.loads(r.text)
 
         # save image to disk
         if page_json['image']:
-            r = session.get(page_json['image'], verify=False)
-            if r.status_code == 200:
+            r = self._get_response(page_json['image'], verify=False, raise_error=False)
+            if r:
                 with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
                     for chunk in r.iter_content(1000):
                         f.write(chunk)
@@ -475,20 +469,20 @@ class Command(BaseCommand):
 
             self.log_message('Getting bills from {}'.format(organization_name), style='NOTICE')
 
-            search_results = session.get(search_url, params=query_params)
+            search_results = self._get_response(search_url, params=query_params)
             page_json = search_results.json()
 
             counter = 0
             for page_num in range(page_json['meta']['max_page']):
 
                 query_params['page'] = int(page_num) + 1
-                result_page = session.get(search_url, params=query_params)
+                result_page = self._get_response(search_url, params=query_params)
 
                 for result in result_page.json()['results']:
 
                     bill_url = '{base}/{bill_id}/'.format(
                         base=base_url, bill_id=result['id'])
-                    bill_detail = session.get(bill_url)
+                    bill_detail = self._get_response(bill_url)
 
                     bill_json = bill_detail.json()
                     ocd_uuid = bill_json['id'].split('/')[-1]
@@ -528,14 +522,14 @@ class Command(BaseCommand):
         params['updated_at__gte'] = max_updated.isoformat()
         params['sort'] = 'updated_at'
 
-        r = session.get(events_url, params=params)
+        r = self._get_response(events_url, params=params)
         page_json = json.loads(r.text)
 
         counter = 0
         for i in range(page_json['meta']['max_page']):
 
             params['page'] = str(i + 1)
-            r = session.get(events_url, params=params)
+            r = self._get_response(events_url, params=params)
             page_json = json.loads(r.text)
 
             for event in page_json['results']:
@@ -544,7 +538,7 @@ class Command(BaseCommand):
                 event_filename = '{}.json'.format(ocd_uuid)
 
                 event_url = base_url + '/' + event['id'] + '/'
-                r = session.get(event_url)
+                r = self._get_response(event_url)
 
                 if r.status_code == 200:
                     page_json = json.loads(r.text)
@@ -613,7 +607,7 @@ class Command(BaseCommand):
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
             url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
-            r = session.get(url)
+            r = self._get_response(url)
             page_json = json.loads(r.text)
             session_ids = [session['identifier']
                            for session in page_json['legislative_sessions']]
@@ -3055,14 +3049,15 @@ class Command(BaseCommand):
         # grab boundary listing
         for boundary in settings.BOUNDARY_SET:
             bndry_set_url = bndry_base_url + '/boundaries/' + boundary
-            r = session.get(bndry_set_url + '/?limit=0')
+
+            r = self._get_response(bndry_set_url + '/?limit=0')
             page_json = json.loads(r.text)
 
             # loop through boundary listing
             for bndry_json in page_json['objects']:
                 # grab boundary shape
                 shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-                r = self._get_response(shape_url)
+                r = self._get_response(shape_url, raise_error=False)
                 # update the right post(s) with the shape
                 if r:
                     if 'ocd-division' in bndry_json['external_id']:
@@ -3092,7 +3087,6 @@ class Command(BaseCommand):
                 client.captureException()
                 raise
 
-
     # Call this function when consolidating multiple queries into a single transaction!
     # This function iterates over a list of queries and a list of params, and executes those queries.
     # It, then, tries to commit the results of the execution and rolls back, if unable to do so.
@@ -3103,11 +3097,15 @@ class Command(BaseCommand):
             for query, args in zip(query_list, args_list):
                 self.connection.execute(query, *args)
 
-    # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status
-    def _get_response(self, url):
-        response = session.get(url)
+    # OCD API has intermittently thrown 502 and 504 errors; only proceed when receiving an 'ok' status.
+    def _get_response(self, url, params=None, timeout=60, raise_error=True, **kwargs):
+        response = session.get(url, params=params, timeout=timeout, **kwargs)
+
         if response.ok:
             return response
-        else:
-            self.log_message('WARNING: {url} returned a bad response - {status}'.format(url=url, status=response.status_code), style='ERROR')
+        message = '{url} returned a bad response - {status}'.format(url=url, status=response.status_code)
+        if not raise_error:
+            self.log_message('WARNING: {0}'.format(message), style='ERROR')
             return None
+
+        raise requests.exceptions.HTTPError('ERROR: {0}'.format(message))
