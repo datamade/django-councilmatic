@@ -322,7 +322,7 @@ class Command(BaseCommand):
         os.makedirs(self.posts_folder, exist_ok=True)
 
         orgs_url = '{}/organizations/?sort=updated_at&jurisdiction_id={}'.format(base_url, settings.OCD_JURISDICTION_ID)
-        r = session.get(orgs_url)
+        r = session.get(orgs_url, timeout=60)
 
         page_json = json.loads(r.text)
 
@@ -331,7 +331,7 @@ class Command(BaseCommand):
 
         for i in range(page_json['meta']['max_page']):
 
-            r = session.get(orgs_url + '&page=' + str(i + 1))
+            r = session.get(orgs_url + '&page=' + str(i + 1), timeout=60)
             page_json = json.loads(r.text)
 
             org_counter += len(page_json['results'])
@@ -355,12 +355,12 @@ class Command(BaseCommand):
     def grab_organization_posts(self, org_dict):
         url = base_url + '/organizations/'
 
-        r = session.get(url, params=org_dict)
+        r = session.get(url, params=org_dict, timeout=60)
         page_json = json.loads(r.text)
         organization_ocd_id = page_json['results'][0]['id']
 
         url = base_url + '/' + organization_ocd_id + '/'
-        r = session.get(url)
+        r = session.get(url, timeout=60)
         page_json = json.loads(r.text)
 
         if page_json.get('error'):
@@ -420,12 +420,12 @@ class Command(BaseCommand):
         # this grabs a person and all their memberships
 
         url = base_url + '/' + person_id + '/'
-        r = session.get(url)
+        r = session.get(url, timeout=60)
         page_json = json.loads(r.text)
 
         # save image to disk
         if page_json['image']:
-            r = session.get(page_json['image'], verify=False)
+            r = session.get(page_json['image'], verify=False, timeout=60)
             if r.status_code == 200:
                 with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
                     for chunk in r.iter_content(1000):
@@ -475,20 +475,20 @@ class Command(BaseCommand):
 
             self.log_message('Getting bills from {}'.format(organization_name), style='NOTICE')
 
-            search_results = session.get(search_url, params=query_params)
+            search_results = session.get(search_url, params=query_params, timeout=60)
             page_json = search_results.json()
 
             counter = 0
             for page_num in range(page_json['meta']['max_page']):
 
                 query_params['page'] = int(page_num) + 1
-                result_page = session.get(search_url, params=query_params)
+                result_page = session.get(search_url, params=query_params, timeout=60)
 
                 for result in result_page.json()['results']:
 
                     bill_url = '{base}/{bill_id}/'.format(
                         base=base_url, bill_id=result['id'])
-                    bill_detail = session.get(bill_url)
+                    bill_detail = session.get(bill_url, timeout=60)
 
                     bill_json = bill_detail.json()
                     ocd_uuid = bill_json['id'].split('/')[-1]
@@ -528,14 +528,14 @@ class Command(BaseCommand):
         params['updated_at__gte'] = max_updated.isoformat()
         params['sort'] = 'updated_at'
 
-        r = session.get(events_url, params=params)
+        r = session.get(events_url, params=params, timeout=60)
         page_json = json.loads(r.text)
 
         counter = 0
         for i in range(page_json['meta']['max_page']):
 
             params['page'] = str(i + 1)
-            r = session.get(events_url, params=params)
+            r = session.get(events_url, params=params, timeout=60)
             page_json = json.loads(r.text)
 
             for event in page_json['results']:
@@ -544,7 +544,7 @@ class Command(BaseCommand):
                 event_filename = '{}.json'.format(ocd_uuid)
 
                 event_url = base_url + '/' + event['id'] + '/'
-                r = session.get(event_url)
+                r = session.get(event_url, timeout=60)
 
                 if r.status_code == 200:
                     page_json = json.loads(r.text)
@@ -613,7 +613,7 @@ class Command(BaseCommand):
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
             url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
-            r = session.get(url)
+            r = session.get(url, timeout=60)
             page_json = json.loads(r.text)
             session_ids = [session['identifier']
                            for session in page_json['legislative_sessions']]
@@ -3055,7 +3055,7 @@ class Command(BaseCommand):
         # grab boundary listing
         for boundary in settings.BOUNDARY_SET:
             bndry_set_url = bndry_base_url + '/boundaries/' + boundary
-            r = session.get(bndry_set_url + '/?limit=0')
+            r = session.get(bndry_set_url + '/?limit=0', timeout=60)
             page_json = json.loads(r.text)
 
             # loop through boundary listing
@@ -3105,7 +3105,7 @@ class Command(BaseCommand):
 
     # OCD API has intermittently thrown 502 errors; only proceed when receiving an 'ok' status
     def _get_response(self, url):
-        response = session.get(url)
+        response = session.get(url, timeout=60)
         if response.ok:
             return response
         else:
