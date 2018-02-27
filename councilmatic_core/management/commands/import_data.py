@@ -420,7 +420,7 @@ class Command(BaseCommand):
 
         # save image to disk
         if page_json['image']:
-            r = self._get_response(page_json['image'], verify=False, error=False)
+            r = self._get_response(page_json['image'], verify=False, raise_error=False)
             if r:
                 with open((settings.HEADSHOT_PATH + page_json['id'] + ".jpg"), 'wb') as f:
                     for chunk in r.iter_content(1000):
@@ -3058,7 +3058,7 @@ class Command(BaseCommand):
             for bndry_json in page_json['objects']:
                 # grab boundary shape
                 shape_url = bndry_base_url + bndry_json['url'] + 'shape'
-                r = self._get_response(shape_url, error=False)
+                r = self._get_response(shape_url, raise_error=False)
                 # update the right post(s) with the shape
                 if r:
                     if 'ocd-division' in bndry_json['external_id']:
@@ -3099,13 +3099,13 @@ class Command(BaseCommand):
                 self.connection.execute(query, *args)
 
     # OCD API has intermittently thrown 502 and 504 errors; only proceed when receiving an 'ok' status.
-    def _get_response(self, url, params=None, timeout=60, error=True, **kwargs):
+    def _get_response(self, url, params=None, timeout=60, raise_error=True, **kwargs):
         response = session.get(url, params=params, timeout=timeout, **kwargs)
-        
+
         if response.ok:
             return response
         message = '{url} returned a bad response - {status}'.format(url=url, status=response.status_code)
-        if not error:
+        if not riase_error:
             self.log_message('WARNING: {0}'.format(message), style='ERROR')
             return None
 
