@@ -350,13 +350,12 @@ class Command(BaseCommand):
 
     def grab_organization_posts(self, org_dict):
         url = base_url + '/organizations/'
-
-        r = session.get(url, params=org_dict, timeout=60)
+        r = self._get_response(url, params=org_dict)
         page_json = json.loads(r.text)
         organization_ocd_id = page_json['results'][0]['id']
 
         url = base_url + '/' + organization_ocd_id + '/'
-        r = session.get(url, timeout=60)
+        r = self._get_response(url)
         page_json = json.loads(r.text)
 
         if page_json.get('error'):
@@ -470,20 +469,20 @@ class Command(BaseCommand):
 
             self.log_message('Getting bills from {}'.format(organization_name), style='NOTICE')
 
-            search_results = session.get(search_url, params=query_params, timeout=60)
+            search_results = self._get_response(search_url, params=query_params)
             page_json = search_results.json()
 
             counter = 0
             for page_num in range(page_json['meta']['max_page']):
 
                 query_params['page'] = int(page_num) + 1
-                result_page = session.get(search_url, params=query_params, timeout=60)
+                result_page = self._get_response(search_url, params=query_params)
 
                 for result in result_page.json()['results']:
 
                     bill_url = '{base}/{bill_id}/'.format(
                         base=base_url, bill_id=result['id'])
-                    bill_detail = session.get(bill_url, timeout=60)
+                    bill_detail = self._get_response(bill_url)
 
                     bill_json = bill_detail.json()
                     ocd_uuid = bill_json['id'].split('/')[-1]
@@ -523,14 +522,14 @@ class Command(BaseCommand):
         params['updated_at__gte'] = max_updated.isoformat()
         params['sort'] = 'updated_at'
 
-        r = session.get(events_url, params=params, timeout=60)
+        r = self._get_response(events_url, params=params)
         page_json = json.loads(r.text)
 
         counter = 0
         for i in range(page_json['meta']['max_page']):
 
             params['page'] = str(i + 1)
-            r = session.get(events_url, params=params, timeout=60)
+            r = self._get_response(events_url, params=params)
             page_json = json.loads(r.text)
 
             for event in page_json['results']:
@@ -539,7 +538,7 @@ class Command(BaseCommand):
                 event_filename = '{}.json'.format(ocd_uuid)
 
                 event_url = base_url + '/' + event['id'] + '/'
-                r = session.get(event_url, timeout=60)
+                r = self._get_response(event_url)
 
                 if r.status_code == 200:
                     page_json = json.loads(r.text)
@@ -608,7 +607,7 @@ class Command(BaseCommand):
             session_ids = settings.LEGISLATIVE_SESSIONS
         else:
             url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
-            r = session.get(url, timeout=60)
+            r = self._get_response(url)
             page_json = json.loads(r.text)
             session_ids = [session['identifier']
                            for session in page_json['legislative_sessions']]
@@ -3105,7 +3104,7 @@ class Command(BaseCommand):
         if response.ok:
             return response
         message = '{url} returned a bad response - {status}'.format(url=url, status=response.status_code)
-        if not riase_error:
+        if not raise_error:
             self.log_message('WARNING: {0}'.format(message), style='ERROR')
             return None
 
