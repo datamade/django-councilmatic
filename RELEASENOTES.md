@@ -1,5 +1,27 @@
 # Release notes for django-councilmatic
 
+## Version 0.8.10-0.8.11
+
+*Changes*
+
+**Release date:** 2-27-2018
+
+Substitutes instances of `session.get` with `_get_response` - a custom function that sets a timeout of 60 seconds on HTTP requests and raises an error for bad responses. 
+
+Pin `django-adv-cache-tag` to version 1.1.0.
+
+## Version 0.8.9
+
+*Changes*
+
+**Release date:** 2-16-2018
+
+Includes a new management command that tests for agreement between the Councilmatic database and Solr index. 
+
+Makes amendments to `import_data`:
+* Adds `html_text` to bills when it exists.
+* Refactors code redundancies for readability.
+
 ## Version 0.8.8
 
 *Changes*
@@ -53,7 +75,7 @@ Adds a client for improved Sentry logging when import_data fails or rolls back a
 
 *Changes*
 
-Ammends `import_data` codebase: imports shape data, only when the response from the OCD API returns an 'ok' status code. 
+Amends `import_data` codebase: imports shape data, only when the response from the OCD API returns an 'ok' status code. 
 
 ## Version 0.8.2
 

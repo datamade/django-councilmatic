@@ -15,6 +15,7 @@ from django.db.models import Max
 from councilmatic_core.models import Bill
 
 logging.config.dictConfig(settings.LOGGING)
+logging.getLogger("requests").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 DB_CONN = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'
