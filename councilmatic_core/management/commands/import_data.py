@@ -30,7 +30,7 @@ from django.db.models import Max
 from councilmatic_core.models import Person, Bill, Organization, Action, ActionRelatedEntity, \
     Post, Membership, Sponsorship, LegislativeSession, \
     Document, BillDocument, Event, EventParticipant, EventDocument, \
-    EventAgendaItem
+    EventAgendaItem, Jurisdiction
 
 
 logging.config.dictConfig(settings.LOGGING)
@@ -122,6 +122,7 @@ class Command(BaseCommand):
             self.people_folder = os.path.join(self.downloads_folder, 'people')
             self.events_folder = os.path.join(self.downloads_folder, 'events')
 
+            self.create_jurisdiction()
             self.create_legislative_sessions()
 
             for endpoint in endpoints:
@@ -610,19 +611,44 @@ class Command(BaseCommand):
                 ALTER COLUMN updated_at SET DEFAULT NOW()
             '''.format(entity_type))
 
+    def create_jurisdiction(self):
+
+        url = '{0}/jurisdictions/?id={1}'.format(base_url, self.jurisdiction_id)
+
+        r = self._get_response(url)
+        jurisdiction_info = json.loads(r.text)['results'][0]
+
+        try:
+            jurisdiction = Jurisdiction.objects.get(ocd_id=jurisdiction_info['id'])
+            self.log_message('Skipped creating jurisdiction {}'.format(jurisdiction_info['name']),
+                             style='SUCCESS')
+        except Jurisdiction.DoesNotExist:
+            jurisdiction = Jurisdiction(ocd_id=jurisdiction_info['id'],
+                                        name=jurisdiction_info['name'],
+                                        classification=jurisdiction_info['classification'],
+                                        url=jurisdiction_info['url'])
+            jurisdiction.save()
+
+            self.log_message('Created jurisdiction {}'.format(jurisdiction_info['name']),
+                             style='SUCCESS')
+
+
     def create_legislative_sessions(self):
         session_ids = []
 
         if hasattr(settings, 'LEGISLATIVE_SESSIONS') and settings.LEGISLATIVE_SESSIONS:
             session_ids = settings.LEGISLATIVE_SESSIONS
+
+            # for more than one jurisdiction, LEGISLATIVE_SESSIONS will be
+            # a dict where the keys are jurisdiction ids and the values are
+            # lists of legislative sessions
+
+            if isinstance(session_ids, dict):
+                session_ids = session_ids[self.jurisdiction_id]
+
         else:
-<<<<<<< HEAD
             url = base_url + '/' + self.jurisdiction_id + '/'
-            r = session.get(url, params={'fields': 'legislative_sessions'})
-=======
-            url = base_url + '/' + settings.OCD_JURISDICTION_ID + '/'
             r = self._get_response(url)
->>>>>>> master
             page_json = json.loads(r.text)
             session_ids = ['{0}-{1}'.format(session['identifier'], self.jurisdiction_name)
                            for session in page_json['legislative_sessions']]
@@ -651,14 +677,16 @@ class Command(BaseCommand):
                 classification,
                 source_url,
                 slug,
-                parent_id
+                parent_id,
+                jurisdiction_id
             ) VALUES (
                 :ocd_id,
                 :name,
                 :classification,
                 :source_url,
                 :slug,
-                :parent_id
+                :parent_id,
+                :jurisdiction_id
             )
             '''
 
@@ -685,6 +713,7 @@ class Command(BaseCommand):
                 'source_url': source_url,
                 'slug': slug,
                 'parent_id': parent_ocd_id,
+                'jurisdiction_id': self.jurisdiction_id,
             }
 
             inserts.append(insert)
@@ -1717,6 +1746,7 @@ class Command(BaseCommand):
             'classification',
             'source_url',
             'parent_id',
+            'jurisdiction_id',
             'slug'
         ]
 
@@ -2371,6 +2401,7 @@ class Command(BaseCommand):
             'classification',
             'source_url',
             'parent_id',
+            'jurisdiction_id',
             'slug',
         ]
 

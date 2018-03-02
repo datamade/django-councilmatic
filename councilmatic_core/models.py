@@ -60,6 +60,15 @@ def get_uuid():
     return str(uuid.uuid4())
 
 
+class Jurisdiction(models.Model):
+    ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
+    name = models.CharField(max_length=300)
+    classification = models.CharField(max_length=50)
+    url = models.CharField(max_length=2000)
+
+    def __str__(self):
+        return '{0} ({1})'.format(self.name, self.ocd_id)
+
 class Person(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True, default=get_uuid, primary_key=True)
     name = models.CharField(max_length=100)
@@ -398,6 +407,11 @@ class Organization(models.Model):
     source_url = models.CharField(max_length=255, blank=True, null=True)
     slug = models.CharField(max_length=255, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    jurisdiction = models.ForeignKey(Jurisdiction,
+                                     related_name='organizations',
+                                     on_delete=models.PROTECT,
+                                     null=True)
 
     @property
     def parent(self):
