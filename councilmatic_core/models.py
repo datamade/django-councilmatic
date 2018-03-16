@@ -69,6 +69,7 @@ class Jurisdiction(models.Model):
     def __str__(self):
         return '{0} ({1})'.format(self.name, self.ocd_id)
 
+
 class Person(models.Model):
     ocd_id = models.CharField(max_length=100, unique=True, default=get_uuid, primary_key=True)
     name = models.CharField(max_length=100)
