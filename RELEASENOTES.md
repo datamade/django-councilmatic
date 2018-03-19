@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.9.1
+
+*Changes*
+
+Makes consistent the legislative_session_id on the bill model with other data sources (e.g., OCD legislative identifier). This fixes a bug in the previous release. 
+
+**Release date:** 3-19-2018
+
 ## Version 0.9.0
 
 *Changes*
