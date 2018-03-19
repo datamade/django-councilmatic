@@ -991,7 +991,7 @@ class Command(BaseCommand):
                 'ocr_full_text': ocr_full_text,
                 'html_text': html_text,
                 'abstract': abstract,
-                'legislative_session_id': '{0}-{1}'.format(bill_info['legislative_session']['identifier'], self.jurisdiction_name),
+                'legislative_session_id': bill_info['legislative_session']['identifier'],
                 'bill_type': bill_type,
                 'slug': slug,
             }
