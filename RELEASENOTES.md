@@ -1,5 +1,17 @@
 # Release notes for django-councilmatic
 
+## Version 0.9.0
+
+*Changes*
+
+**Release date:** 3-19-2018
+
+Allows for data from multiple jurisdictions by replacing `JURISDICTION_ID` setting with `JURISDICTION_IDS`, an array of OCD API jurisdiction IDs.
+
+Adds `Jurisdiction` model.
+
+Returns only unique identifiers from `alternative_identifiers` template filter.
+
 ## Version 0.8.10-0.8.11
 
 *Changes*
