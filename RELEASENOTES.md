@@ -4,7 +4,7 @@
 
 *Changes*
 
-Changes the `downloads` path to insure that data resides in Councilmatic instances, rather than `django-councilmatic`. This reverts a change in in the 0.9.0 release. 
+Changes the path to `downloads` in `import_data`: this insures that downloaded data resides in Councilmatic instances, rather than `django-councilmatic`. This reverts a change in the 0.9.0 release. 
 
 **Release date:** 3-22-2018
 
