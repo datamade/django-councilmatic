@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
         # Chicago
         if settings.OCD_CITY_COUNCIL_ID == 'ocd-organization/ef168607-9135-4177-ad8e-c1f7a4806c3a':
             added_space = r'^([A-Za-z]+)\s([-\d]+)$'
-            for bill in Bill.objects.filter(identifier__iregex=added_space):
+            for bill in Bill.objects.filter(identifier__iregex=added_space)[:10]:
                 match = re.match(added_space, bill.identifier)
                 unmangled_identifier = '{mangled_prefix}{count}'.format(mangled_prefix=match.group(1), 
                                                                         count=match.group(2))
