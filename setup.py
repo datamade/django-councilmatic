@@ -27,7 +27,6 @@ setup(
                       'SQLAlchemy>=1.1.2,<1.2',
                       'psycopg2>=2.7',
                       'django-password-reset>=0.9,<1.0',
-                      'django-councilmatic-notifications<0.2',
                       'django-adv-cache-tag==1.1.0'],
     classifiers=[
         'Environment :: Web Environment',
