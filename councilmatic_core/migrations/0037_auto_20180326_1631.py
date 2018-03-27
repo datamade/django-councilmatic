@@ -5,6 +5,7 @@ import re
 
 from django.conf import settings
 from django.db import migrations, models
+from django.utils.text import slugify
 
 class Migration(migrations.Migration):
     def unmangle_identifier(apps, schema_editor):
@@ -17,7 +18,7 @@ class Migration(migrations.Migration):
 
         For Chicago, the second case affected nearly all bills. 
 
-        This migration unmangles identifiers. 
+        This migration unmangles identifiers and changes the slugs accordingly.
         '''
 
         Bill = apps.get_model('councilmatic_core', 'Bill')
@@ -32,6 +33,7 @@ class Migration(migrations.Migration):
                                                                                          remainder=match.group(3))
                 
                 bill.identifier = unmangled_identifier
+                bill.slug = slugify(unmangled_identifier)
                 bill.save()
 
             added_space = r'^(T)\s([-\d]+)$'
@@ -41,6 +43,7 @@ class Migration(migrations.Migration):
                                                                         count=match.group(2))
 
                 bill.identifier = unmangled_identifier
+                bill.slug = slugify(unmangled_identifier)
                 bill.save()
 
         # Chicago
@@ -52,6 +55,7 @@ class Migration(migrations.Migration):
                                                                         count=match.group(2))
 
                 bill.identifier = unmangled_identifier
+                bill.slug = slugify(unmangled_identifier)
                 bill.save()
                 
     dependencies = [
