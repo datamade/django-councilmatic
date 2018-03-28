@@ -65,8 +65,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'councilmatic_core',
     'haystack',
-    'notifications',
-    'django_rq',
     'password_reset',
     'adv_cache_tag',
 )
