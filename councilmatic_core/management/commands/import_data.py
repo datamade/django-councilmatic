@@ -974,7 +974,8 @@ class Command(BaseCommand):
             else:
                 raise Exception(bill_info['classification'])
 
-            slug = slugify(bill_info['identifier'])
+            slug = slugify('{0} {1}'.format(self.jurisdiction_name, 
+                                            bill_info['identifier']))
 
             insert = {
                 'ocd_id': bill_info['id'],
