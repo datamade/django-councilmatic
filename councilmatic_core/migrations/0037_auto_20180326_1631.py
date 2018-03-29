@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
 
         Bill = apps.get_model('councilmatic_core', 'Bill')
 
-        # NYC
+        # New York City
         if settings.OCD_CITY_COUNCIL_ID == 'ocd-organization/0f63aae8-16fd-4d3c-b525-00747a482cf9':
             deleted_zeroes = r'^((?!T\s)[A-Za-z]+)\s(\d{1,3})-([-\w]+)$'
             for bill in Bill.objects.filter(identifier__iregex=deleted_zeroes):
