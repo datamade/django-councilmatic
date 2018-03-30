@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.9.2
+
+*Changes*
+
+Changes the path to `downloads` in `import_data`: this insures that downloaded data resides in Councilmatic instances, rather than `django-councilmatic`. This reverts a change in the 0.9.0 release. 
+
+**Release date:** 3-22-2018
+
 ## Version 0.9.1
 
 *Changes*

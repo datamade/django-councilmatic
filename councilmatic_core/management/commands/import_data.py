@@ -111,9 +111,8 @@ class Command(BaseCommand):
 
             self.jurisdiction_id = jurisdiction_id
             self.jurisdiction_name = jurisdiction_id.rsplit(':', 1)[1].split('/')[0]
-
-            self.downloads_folder = os.path.join(self.this_folder,
-                                                 'downloads',
+            
+            self.downloads_folder = os.path.join('downloads',
                                                  self.jurisdiction_name)
 
             self.organizations_folder = os.path.join(self.downloads_folder, 'organizations')
