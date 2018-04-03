@@ -16,8 +16,6 @@ class Migration(migrations.Migration):
 
         For NYC, the second case ONLY affected bills that begin with 'T', and the first case did NOT affect bills that begin with 'T' - that is, NYC bills never follow these patterns 'T 0023-2015' or 'T0023-2015'.
 
-        For Chicago, the second case affected nearly all bills. 
-
         This migration unmangles identifiers and changes the slugs accordingly.
         '''
 
@@ -50,26 +48,6 @@ class Migration(migrations.Migration):
                 unmangled_identifier = '{mangled_prefix}{count}'.format(mangled_prefix=match.group(1), 
                                                                         count=match.group(2))
                 
-                print('{} becomes {}'.format(bill.identifier, unmangled_identifier))
-                try:
-                    duplicate = Bill.objects.get(identifier=unmangled_identifier)
-                    print('{} - duplicate found. Deleting.'.format(unmangled_identifier))
-                    duplicate.delete()
-                except Bill.DoesNotExist: 
-                    pass
-
-                bill.identifier = unmangled_identifier
-                bill.slug = slugify(unmangled_identifier)
-                bill.save()
-
-        # Chicago
-        if settings.OCD_CITY_COUNCIL_ID == 'ocd-organization/ef168607-9135-4177-ad8e-c1f7a4806c3a':
-            added_space = r'^([A-Za-z]+)\s([-\d]+)$'
-            for bill in Bill.objects.filter(identifier__iregex=added_space):
-                match = re.match(added_space, bill.identifier)
-                unmangled_identifier = '{mangled_prefix}{count}'.format(mangled_prefix=match.group(1), 
-                                                                        count=match.group(2))
-
                 print('{} becomes {}'.format(bill.identifier, unmangled_identifier))
                 try:
                     duplicate = Bill.objects.get(identifier=unmangled_identifier)
