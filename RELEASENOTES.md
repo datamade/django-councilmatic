@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.9.3
+
+*Changes*
+
+Adds two migrations that unmangle NYC and Chicago Councilmatic bill identifiers and slugs, specifically: adds leading zeroes, and removes unwanted space. 
+
+**Release date:** 4-3-2018
+
 ## Version 0.9.2
 
 *Changes*
