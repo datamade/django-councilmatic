@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.9.4
+
+*Changes*
+
+Increases the chunk size within migration number 0038 to increase processing time. 
+
+**Release date:** 4-3-2018
+
 ## Version 0.9.3
 
 *Changes*
