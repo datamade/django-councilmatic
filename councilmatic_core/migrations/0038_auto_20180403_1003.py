@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 """)
 
                 while True:
-                    cursor.execute("FETCH 1000 FROM bills_cursor")
+                    cursor.execute("FETCH 4000 FROM bills_cursor")
                     bill_chunk = cursor.fetchall()
 
                     if not bill_chunk:
