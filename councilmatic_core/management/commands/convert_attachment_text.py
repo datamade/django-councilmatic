@@ -9,6 +9,7 @@ import signal
 import os
 import requests
 import textract
+import tempfile
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -39,15 +40,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.update_all = options['update_all']
         self.connection = engine.connect()
-
         self.add_plain_text()
-        
-        # Unoconv solution!
-        # listener = subprocess.Popen(['unoconv', '--listener'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        # try:
-        #     self.add_html()
-        # finally:
-        #     listener.terminate()
 
     def get_document_url(self):
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
@@ -61,8 +54,8 @@ class Command(BaseCommand):
                     FROM councilmatic_core_billdocument 
                     WHERE document_type='A' 
                     AND full_text is null
+                    AND lower(url) similar to '%(.doc|.docx|.pdf)'
                     ORDER BY updated_at DESC
-                    LIMIT 10
                 ''' 
             else:
                 query = '''
@@ -71,6 +64,7 @@ class Command(BaseCommand):
                     WHERE updated_at >= :max_updated
                     AND document_type='A' 
                     AND full_text is null
+                    AND lower(url) similar to '%(.doc|.docx|.pdf)'
                     ORDER BY updated_at DESC
                 '''
 
@@ -87,45 +81,15 @@ class Command(BaseCommand):
             document_data = dict(document_data)
             url = document_data['url']
             document_id = document_data['id']
-
             response = requests.get(url)
             extension = os.path.splitext(url)[1]
 
-            # TODO: Is this possible without storing as temp file?
-            with open('/tmp/temp_file.{}'.format(extension), 'wb') as temp_pdf:
-                temp_pdf.write(response.content)
-
-                plain_text = textract.process('/tmp/temp_file.{}'.format(extension))
-
-            # UNOCONV solution!            
-            # if url.endswith('doc') or url.endswith('docx'):
-            #     try:
-            #         # For Python 3.4 and below
-            #         process = subprocess.Popen(['unoconv', '--stdout', '-f', 'text', url], preexec_fn=os.setsid, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
-
-            #         plain_text, stderr_data = process.communicate(timeout=15)
-
-            #     except subprocess.TimeoutExpired as e:
-            #         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-            #         logger.error(e)
-            #         continue
-
-            #     logger.info('Successful conversion of {}'.format(url))
-
-            # pdfminer.six solution!
-            # elif url.lower().endswith('pdf'):
-            #     response = requests.get(url)
-
-            #     # TODO: Find a way to do this without a temp file.
-            #     with open('/tmp/temp_pdf.pdf', 'wb') as temp_pdf:
-            #         temp_pdf.write(response.content)
-
-            #     # Create a subprocess.Popen object
-            #     process = subprocess.Popen(['python', '/Users/reginacompton/.virtualenvs/a-test/bin/pdf2txt.py', '/tmp/temp_pdf.pdf'], preexec_fn=os.setsid, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
-
-            #     plain_text, stderr_data = process.communicate()
+            with tempfile.NamedTemporaryFile(suffix=extension) as tfp:
+                tfp.write(response.content)
+                plain_text = textract.process(tfp.name)
 
             yield {'plain_text': plain_text.decode('utf-8'), 'id': document_id}
+            
 
     def add_plain_text(self):
         plain_text_results = self.convert_document()
@@ -147,7 +111,6 @@ class Command(BaseCommand):
                     
                     chunk = []
 
-        # Update bills when less than 1,000 elements in a chunk. 
         if chunk:
             with self.connection.begin() as trans:
                 self.connection.execute(sa.text(query), chunk)
