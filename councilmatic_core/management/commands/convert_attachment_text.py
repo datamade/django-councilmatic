@@ -1,15 +1,11 @@
 import os
-import sys
-import subprocess
 import logging
 import logging.config
 import sqlalchemy as sa
-import datetime
-import signal
-import os
 import requests
 import textract
 import tempfile
+import itertools
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -39,11 +35,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.update_all = options['update_all']
-        self.connection = engine.connect()
         self.add_plain_text()
 
     def get_document_url(self):
-        self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
         with engine.begin() as connection:
             # Only apply this query to most recently updated (or created) bill documents.
             max_updated = BillDocument.objects.all().aggregate(Max('updated_at'))['updated_at__max']
@@ -72,12 +66,10 @@ class Command(BaseCommand):
 
             yield from result
 
-    def convert_document(self):
-        documents = self.get_document_url()
-
+    def convert_document_to_plaintext(self):
         logger.info('Converting document to plain text...')
 
-        for document_data in documents:
+        for document_data in self.get_document_url():
             document_data = dict(document_data)
             url = document_data['url']
             document_id = document_data['id']
@@ -92,27 +84,28 @@ class Command(BaseCommand):
             
 
     def add_plain_text(self):
-        plain_text_results = self.convert_document()
+        '''
+        Metro has over 2,000 attachments that should be converted into plain text. 
+        Updating all attachments in a single query can be memory intensive.
+        This function insures that the database updates only 20 documents per connection: it fetches up to 20 elements from a generator object, runs the UPDATE query, and then fetches up to 20 more.
 
-        self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-        query = '''
+        Inspired by: https://stackoverflow.com/questions/30510593/how-can-i-use-server-side-cursors-with-django-and-psycopg2/41088159#41088159
+        '''
+        update_statement = '''
             UPDATE councilmatic_core_billdocument as bill_docs
             SET full_text = :plain_text
             WHERE bill_docs.id = :id  
         '''
+        
+        plaintexts = self.convert_document_to_plaintext()
 
-        chunk = []
+        while True:
+            plaintexts_fetched_from_generator = list(itertools.islice(plaintexts, 20))
 
-        for doc_dict in plain_text_results:
-            chunk.append(doc_dict)
-            if len(chunk) == 20:
-                with self.connection.begin() as trans:
-                    self.connection.execute(sa.text(query), chunk)
-                    
-                    chunk = []
-
-        if chunk:
-            with self.connection.begin() as trans:
-                self.connection.execute(sa.text(query), chunk)
+            if not documents_fetched_from_generator:
+                break
+            else:
+                with engine.begin() as connection:
+                    connection.execute(sa.text(update_statement), documents_fetched_from_generator)
 
         logger.info('SUCCESS')
