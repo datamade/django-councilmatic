@@ -86,11 +86,14 @@ class Command(BaseCommand):
     def add_plain_text(self):
         '''
         Metro has over 2,000 attachments that should be converted into plain text. 
-        Updating all attachments in a single query can be memory intensive.
-        This function insures that the database updates only 20 documents per connection: it fetches up to 20 elements from a generator object, runs the UPDATE query, and then fetches up to 20 more.
+        When updating all documents with `--update_all`, this function insures that the database updates only 20 documents per connection (mainly, to avoid unexpected memory consumption).
+        It fetches up to 20 elements from a generator object, runs the UPDATE query, and then fetches up to 20 more.
 
         Inspired by: https://stackoverflow.com/questions/30510593/how-can-i-use-server-side-cursors-with-django-and-psycopg2/41088159#41088159
+
+        More often, this script updates just a handful of documents: so, the incremental, fetch-just-20 approach may prove unnecessary. Possible refactor?
         '''
+
         update_statement = '''
             UPDATE councilmatic_core_billdocument as bill_docs
             SET full_text = :plain_text
