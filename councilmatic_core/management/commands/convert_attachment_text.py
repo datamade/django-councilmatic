@@ -75,12 +75,14 @@ class Command(BaseCommand):
             # Sometimes, Metro Legistar has a URL that retuns a bad status code (e.g., 404 from http://metro.legistar1.com/metro/attachments/95d5007e-720b-4cdd-9494-c800392b9265.pdf). 
             # Skip these documents.
             if response.status_code != 200:
+                logger.error('Document URL {} returns {} - Could not get attachment text!'.format(url, response.status_code))
                 continue
 
             extension = os.path.splitext(url)[1]
 
             with tempfile.NamedTemporaryFile(suffix=extension) as tfp:
                 tfp.write(response.content)
+
                 try:
                     plain_text = textract.process(tfp.name)
                 except textract.exceptions.ShellError as e:
