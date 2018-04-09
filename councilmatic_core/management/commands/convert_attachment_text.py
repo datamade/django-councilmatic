@@ -74,11 +74,22 @@ class Command(BaseCommand):
             url = document_data['url']
             document_id = document_data['id']
             response = requests.get(url)
+            # Sometimes, Metro Legistar has a URL that retuns a bad status code (e.g., 404 from http://metro.legistar1.com/metro/attachments/95d5007e-720b-4cdd-9494-c800392b9265.pdf). 
+            # Skip these documents.
+            if response.status_code != 200:
+                continue
+
             extension = os.path.splitext(url)[1]
 
             with tempfile.NamedTemporaryFile(suffix=extension) as tfp:
                 tfp.write(response.content)
-                plain_text = textract.process(tfp.name)
+                try:
+                    plain_text = textract.process(tfp.name)
+                except textract.exceptions.ShellError as e:
+                    logger.error('{} - Could not convert Document ID {}!'.format(e, document_id))
+                    continue
+
+                logger.info('Document ID {} - conversion complete'.format(document_id))
 
             yield {'plain_text': plain_text.decode('utf-8'), 'id': document_id}
             
@@ -103,12 +114,13 @@ class Command(BaseCommand):
         plaintexts = self.convert_document_to_plaintext()
 
         while True:
+            logger.info('Updating documents with plain text...')
             plaintexts_fetched_from_generator = list(itertools.islice(plaintexts, 20))
 
-            if not documents_fetched_from_generator:
+            if not plaintexts_fetched_from_generator:
                 break
             else:
                 with engine.begin() as connection:
-                    connection.execute(sa.text(update_statement), documents_fetched_from_generator)
+                    connection.execute(sa.text(update_statement), plaintexts_fetched_from_generator)
 
         logger.info('SUCCESS')
