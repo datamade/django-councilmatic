@@ -67,8 +67,6 @@ class Command(BaseCommand):
             yield from result
 
     def convert_document_to_plaintext(self):
-        logger.info('Converting document to plain text...')
-
         for document_data in self.get_document_url():
             document_data = dict(document_data)
             url = document_data['url']
