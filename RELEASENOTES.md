@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.9.5
+
+*Changes*
+
+Adds a management command (`convert_attachment_text`) that converts bill attachments into plain text. [LA Metro Councilmatic](https://github.com/datamade/la-metro-councilmatic) uses this script. 
+
+**Release date:** 4-9-2018
+
 ## Version 0.9.4
 
 *Changes*
