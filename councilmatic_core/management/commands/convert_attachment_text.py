@@ -67,7 +67,9 @@ class Command(BaseCommand):
             yield from result
 
     def convert_document_to_plaintext(self):
-        for document_data in self.get_document_url():
+        documents = self.get_document_url()
+        logger.info('Begin process of converting and updating {} documents...'.format(len(list(documents))))
+        for document_data in documents:
             document_data = dict(document_data)
             url = document_data['url']
             document_id = document_data['id']
