@@ -1699,7 +1699,7 @@ class Command(BaseCommand):
 
                     insert = {
                         'event_id': event_info['id'],
-                        'note': event['note'],
+                        'note': media['note'],
                         'url': link['url'],
                     }
 
@@ -1719,7 +1719,7 @@ class Command(BaseCommand):
 
             counter += len(inserts)
 
-        self.log_message('Inserted {0} event documents\n'.format(counter), style='SUCCESS')
+        self.log_message('Inserted {0} event media\n'.format(counter), style='SUCCESS')
 
     ################################
     ###                          ###
