@@ -10,7 +10,7 @@ from django.utils.timezone import utc
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0037_multi_event_media'),
+        ('councilmatic_core', '0039_multi_event_media'),
     ]
 
     operations = [
