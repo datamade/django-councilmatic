@@ -685,7 +685,6 @@ class Event(models.Model):
     status = models.CharField(max_length=100)
     location_name = models.CharField(max_length=255)
     location_url = models.CharField(max_length=255, blank=True)
-    media_url = models.CharField(max_length=555, null=True, default=None)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
@@ -766,6 +765,15 @@ class EventAgendaItem(models.Model):
         super(EventAgendaItem, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
         self.bill = override_relation(self.bill)
+
+
+class EventMedia(models.Model):
+    event = models.ForeignKey('Event', related_name='media_urls')
+    url = models.CharField(max_length=555)
+
+    def __init__(self, *args, **kwargs):
+        super(EventParticipant, self).__init__(*args, **kwargs)
+        self.event = override_relation(self.event)
 
 
 class Document(models.Model):
