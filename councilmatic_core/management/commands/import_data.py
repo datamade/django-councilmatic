@@ -1458,7 +1458,6 @@ class Command(BaseCommand):
                 status,
                 location_name,
                 location_url,
-                media_url,
                 source_url,
                 source_note,
                 slug,
@@ -1476,7 +1475,6 @@ class Command(BaseCommand):
                 :status,
                 :location_name,
                 :location_url,
-                :media_url,
                 :source_url,
                 :source_note,
                 :slug,
@@ -1521,7 +1519,6 @@ class Command(BaseCommand):
                 'status': event_info['status'],
                 'location_name': event_info['location']['name'],
                 'location_url': event_info['location']['url'],
-                'media_url': event_info['media'][0]['links'][0]['url'] if event_info['media'] else None,
                 'source_url': source_url,
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
@@ -1652,6 +1649,67 @@ class Command(BaseCommand):
                     self.log_message('Inserted {} raw event documents'.format(counter))
 
                     inserts = []
+
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+
+            counter += len(inserts)
+
+        self.log_message('Inserted {0} event documents\n'.format(counter), style='SUCCESS')
+
+    def insert_raw_eventmedia(self, delete=False):
+        pk_cols = ['event_id', 'url']
+
+        self.setup_raw('eventmedia',
+                       delete=delete,
+                       pk_cols=pk_cols,
+                       updated_at=True)
+
+        self.executeTransaction('''
+                ALTER TABLE raw_eventmedia
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+
+        insert_query = '''
+            INSERT INTO raw_eventmedia (
+                event_id,
+                note,
+                url
+            ) VALUES (
+                :event_id,
+                :note,
+                :url
+            )
+            '''
+
+        counter = 0
+        for event_json in os.listdir(self.events_folder):
+
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
+
+            for media in event_info['media']:
+
+                for link in media['links']:
+
+                    insert = {
+                        'event_id': event_info['id'],
+                        'note': event['note'],
+                        'url': link['url'],
+                    }
+
+                    inserts.append(insert)
+
+                    if inserts and len(inserts) % 10000 == 0:
+                        self.executeTransaction(sa.text(insert_query), *inserts)
+
+                        counter += 10000
+
+                        self.log_message('Inserted {} raw event media'.format(counter))
+
+                        inserts = []
 
         if inserts:
             self.executeTransaction(sa.text(insert_query), *inserts)

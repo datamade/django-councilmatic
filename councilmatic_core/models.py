@@ -770,6 +770,8 @@ class EventAgendaItem(models.Model):
 class EventMedia(models.Model):
     event = models.ForeignKey('Event', related_name='media_urls')
     url = models.CharField(max_length=555)
+    note = models.CharField(max_length=255, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super(EventParticipant, self).__init__(*args, **kwargs)
