@@ -1,5 +1,14 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.0
+
+*Changes*
+
+Adds support for multiple event media links, by introducing an `EventMedia`
+model, and removing `media_url` from the `Event` model.
+
+**Release date:** 4-13-2018
+
 ## Version 0.9.5
 
 *Changes*
