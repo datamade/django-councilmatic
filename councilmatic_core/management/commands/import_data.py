@@ -305,14 +305,17 @@ class Command(BaseCommand):
             self.insert_raw_events(delete=delete)
             self.insert_raw_eventparticipants(delete=delete)
             self.insert_raw_eventdocuments(delete=delete)
+            self.insert_raw_eventmedia(delete=delete)
 
             self.update_existing_events()
             self.update_existing_eventparticipants()
             self.update_existing_eventdocuments()
+            self.update_existing_eventmedia()
 
             self.add_new_events()
             self.add_new_eventparticipants()
             self.add_new_eventdocuments()
+            self.add_new_eventmedia()
 
             self.insert_event_agenda_items()
 
@@ -1458,7 +1461,6 @@ class Command(BaseCommand):
                 status,
                 location_name,
                 location_url,
-                media_url,
                 source_url,
                 source_note,
                 slug,
@@ -1476,7 +1478,6 @@ class Command(BaseCommand):
                 :status,
                 :location_name,
                 :location_url,
-                :media_url,
                 :source_url,
                 :source_note,
                 :slug,
@@ -1521,7 +1522,6 @@ class Command(BaseCommand):
                 'status': event_info['status'],
                 'location_name': event_info['location']['name'],
                 'location_url': event_info['location']['url'],
-                'media_url': event_info['media'][0]['links'][0]['url'] if event_info['media'] else None,
                 'source_url': source_url,
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
@@ -1659,6 +1659,67 @@ class Command(BaseCommand):
             counter += len(inserts)
 
         self.log_message('Inserted {0} event documents\n'.format(counter), style='SUCCESS')
+
+    def insert_raw_eventmedia(self, delete=False):
+        pk_cols = ['event_id', 'url']
+
+        self.setup_raw('eventmedia',
+                       delete=delete,
+                       pk_cols=pk_cols,
+                       updated_at=True)
+
+        self.executeTransaction('''
+                ALTER TABLE raw_eventmedia
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+
+        insert_query = '''
+            INSERT INTO raw_eventmedia (
+                event_id,
+                note,
+                url
+            ) VALUES (
+                :event_id,
+                :note,
+                :url
+            )
+            '''
+
+        counter = 0
+        for event_json in os.listdir(self.events_folder):
+
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
+
+            for media in event_info['media']:
+
+                for link in media['links']:
+
+                    insert = {
+                        'event_id': event_info['id'],
+                        'note': media['note'],
+                        'url': link['url'],
+                    }
+
+                    inserts.append(insert)
+
+                    if inserts and len(inserts) % 10000 == 0:
+                        self.executeTransaction(sa.text(insert_query), *inserts)
+
+                        counter += 10000
+
+                        self.log_message('Inserted {} raw event media'.format(counter))
+
+                        inserts = []
+
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+
+            counter += len(inserts)
+
+        self.log_message('Inserted {0} event media\n'.format(counter), style='SUCCESS')
 
     ################################
     ###                          ###
@@ -2225,7 +2286,6 @@ class Command(BaseCommand):
             'status',
             'location_name',
             'location_url',
-            'media_url',
             'source_url',
             'source_note',
             'slug',
@@ -2343,6 +2403,58 @@ class Command(BaseCommand):
         change_count = self.connection.execute('select count(*) from change_eventdocument').first().count
 
         self.log_message('Found {0} changed event documents'.format(change_count), style='SUCCESS')
+
+    def update_existing_eventmedia(self):
+        self.executeTransaction('DROP TABLE IF EXISTS change_eventmedia')
+        self.executeTransaction('''
+            CREATE TABLE change_eventmedia (
+                event_id VARCHAR,
+                url VARCHAR
+            )
+        ''')
+
+        cols = [
+            'event_id',
+            'url',
+            'note'
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, [])
+
+        find_changes = '''
+            INSERT INTO change_eventmedia
+              SELECT
+                raw.event_id,
+                raw.url
+              FROM raw_eventmedia AS raw
+              JOIN councilmatic_core_eventmedia AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.url = dat.url)
+              WHERE {}
+        '''.format(where_clause)
+
+        update_dat = '''
+            UPDATE councilmatic_core_eventmedia SET
+              {set_values}
+            FROM (
+              SELECT
+                {fields}
+              FROM raw_eventmedia AS raw
+              JOIN change_eventmedia AS change
+                ON (raw.event_id = change.event_id
+                    AND raw.url = change.url)
+            ) AS s
+            WHERE councilmatic_core_eventmedia.event_id = s.event_id
+              AND councilmatic_core_eventmedia.url = s.url
+        '''.format(set_values=set_values,
+                   fields=fields)
+
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+
+        change_count = self.connection.execute('select count(*) from change_eventmedia').first().count
+
+        self.log_message('Found {0} changed event media'.format(change_count), style='SUCCESS')
 
     ########################
     ###                  ###
@@ -2888,7 +3000,6 @@ class Command(BaseCommand):
             'status',
             'location_name',
             'location_url',
-            'media_url',
             'source_url',
             'source_note',
             'slug',
@@ -3005,6 +3116,57 @@ class Command(BaseCommand):
         new_count = self.connection.execute('select count(*) from new_eventdocument').first().count
 
         self.log_message('Found {0} new event documents'.format(new_count), style='SUCCESS')
+
+    def add_new_eventmedia(self):
+        self.executeTransaction('DROP TABLE IF EXISTS new_eventmedia')
+        self.executeTransaction('''
+            CREATE TABLE new_eventmedia (
+                event_id VARCHAR,
+                url VARCHAR
+            )
+        ''')
+
+        cols = [
+            'event_id',
+            'url',
+            'note'
+        ]
+
+        find_new = '''
+            INSERT INTO new_eventmedia
+              SELECT
+                raw.event_id,
+                raw.url
+              FROM raw_eventmedia AS raw
+              LEFT JOIN councilmatic_core_eventmedia AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.url = dat.url)
+              WHERE dat.event_id IS NULL
+                    AND dat.url IS NULL
+        '''
+
+        self.executeTransaction(find_new)
+
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = '''
+            INSERT INTO councilmatic_core_eventmedia (
+              {insert_fields}, updated_at
+            )
+              SELECT {select_fields}, updated_at
+              FROM raw_eventmedia AS raw
+              JOIN new_eventmedia AS new
+                ON (raw.event_id = new.event_id
+                    AND raw.url = new.url)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+
+        self.executeTransaction(insert_new)
+
+        new_count = self.connection.execute('select count(*) from new_eventmedia').first().count
+
+        self.log_message('Found {0} new event media'.format(new_count), style='SUCCESS')
 
     def insert_event_agenda_items(self):
         inserts = []
