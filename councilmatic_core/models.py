@@ -774,7 +774,7 @@ class EventMedia(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
-        super(EventParticipant, self).__init__(*args, **kwargs)
+        super(EventMedia, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
 
 
