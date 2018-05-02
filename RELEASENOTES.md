@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.1
+
+*Changes*
+
+Fixes bug in EventMedia init method.
+
+**Release date:** 5-2-2018
+
 ## Version 0.10.0
 
 *Changes*
