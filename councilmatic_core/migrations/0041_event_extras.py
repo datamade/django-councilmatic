@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RunSQL('''
             UPDATE councilmatic_core_event
-              SET extras = jsonb_build_object('guid', guid)
+              SET extras = json_build_object('guid', guid)
               WHERE guid IS NOT NULL
         ''', reverse_sql='''
             UPDATE councilmatic_core_event
