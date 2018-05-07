@@ -1,5 +1,14 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.2
+
+*Changes*
+
+Replaces Event.guid field with generic Event.extras field, which accepts an
+object containing arbitrary keys and values for downstream customizations.
+
+**Release date:** 5-7-2018
+
 ## Version 0.10.1
 
 *Changes*
