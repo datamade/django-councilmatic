@@ -13,13 +13,27 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='event',
-            name='guid',
-        ),
         migrations.AddField(
             model_name='event',
             name='extras',
             field=django.contrib.postgres.fields.jsonb.JSONField(default=dict),
+        ),
+        migrations.RunSQL('''
+            INSERT INTO councilmatic_core_event (extras)
+              WITH guids AS (
+                SELECT guid
+                FROM councilmatic_core_event
+                WHERE guid IS NOT NULL
+              )
+              SELECT to_jsonb(guids) FROM guids
+        ''', reverse_sql='''
+            INSERT INTO councilmatic_core_event (guid)
+              SELECT extras->'guid'
+              FROM councilmatic_core_event
+              WHERE extras->'guid' IS NOT NULL
+        '''),
+        migrations.RemoveField(
+            model_name='event',
+            name='guid',
         ),
     ]
