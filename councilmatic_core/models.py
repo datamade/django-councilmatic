@@ -7,6 +7,7 @@ import pytz
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
+from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import NoReverseMatch
 from django.utils import timezone
@@ -688,8 +689,8 @@ class Event(models.Model):
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
-    guid = models.CharField(max_length=255, unique=True, null=True, default=None)
     updated_at = models.DateTimeField(auto_now=True)
+    extras = JSONField(default=dict)
 
     @property
     def event_page_url(self):

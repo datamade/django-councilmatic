@@ -1464,7 +1464,7 @@ class Command(BaseCommand):
                 source_url,
                 source_note,
                 slug,
-                guid
+                extras
             ) VALUES (
                 :ocd_id,
                 :ocd_created_at,
@@ -1481,7 +1481,7 @@ class Command(BaseCommand):
                 :source_url,
                 :source_note,
                 :slug,
-                :guid
+                :extras
             )
         '''
 
@@ -1505,10 +1505,6 @@ class Command(BaseCommand):
                 else:
                     source_url = el['url']
 
-            guid = None
-            if 'guid' in event_info['extras']:
-                guid = event_info['extras']['guid']
-
             insert = {
                 'ocd_id': ocd_id,
                 'ocd_created_at': event_info['created_at'],
@@ -1525,7 +1521,7 @@ class Command(BaseCommand):
                 'source_url': source_url,
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
-                'guid': guid
+                'extras': json.dumps(event_info['extras']),
             }
 
             inserts.append(insert)
@@ -2289,7 +2285,7 @@ class Command(BaseCommand):
             'source_url',
             'source_note',
             'slug',
-            'guid'
+            'extras',
         ]
         self.update_entity_type('event', cols=cols)
 
@@ -3003,7 +2999,7 @@ class Command(BaseCommand):
             'source_url',
             'source_note',
             'slug',
-            'guid'
+            'extras',
         ]
 
         self.add_entity_type('event', cols=cols)
