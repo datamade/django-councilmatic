@@ -20,11 +20,11 @@ class Migration(migrations.Migration):
         ),
         migrations.RunSQL('''
             UPDATE councilmatic_core_event
-              SET extras = json_build_object('guid', guid)
+              SET extras = json_build_object('guid', guid)::jsonb
               WHERE guid IS NOT NULL
         ''', reverse_sql='''
             UPDATE councilmatic_core_event
-              SET guid = extras->'guid'
+              SET guid = extras->>'guid'
               WHERE extras->'guid' IS NOT NULL
         '''),
         migrations.RemoveField(
