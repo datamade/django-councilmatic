@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.3
+
+*Changes*
+
+Breaks search bar into its own partial for downstream override.
+
+**Release date:** 5-31-2018
+
 ## Version 0.10.2
 
 *Changes*
