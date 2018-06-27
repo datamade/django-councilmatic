@@ -3228,6 +3228,8 @@ class Command(BaseCommand):
 
                 if item['extras'].get('plain_text'):
                     plain_text = item['extras']['plain_text']
+                else:
+                    plain_text = None
 
                 # Add all items!
                 insert = {
