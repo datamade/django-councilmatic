@@ -761,6 +761,7 @@ class EventAgendaItem(models.Model):
     note = models.CharField(max_length=255, null=True)
     notes = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    plain_text = models.TextField(null=True)
 
     def __init__(self, *args, **kwargs):
         super(EventAgendaItem, self).__init__(*args, **kwargs)

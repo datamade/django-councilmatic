@@ -111,7 +111,7 @@ class Command(BaseCommand):
 
             self.jurisdiction_id = jurisdiction_id
             self.jurisdiction_name = jurisdiction_id.rsplit(':', 1)[1].split('/')[0]
-            
+
             self.downloads_folder = os.path.join('downloads',
                                                  self.jurisdiction_name)
 
@@ -3181,7 +3181,8 @@ class Command(BaseCommand):
                 bill_id,
                 note,
                 notes,
-                updated_at
+                updated_at,
+                plain_text
             ) VALUES (
                 :order,
                 :description,
@@ -3189,7 +3190,8 @@ class Command(BaseCommand):
                 :bill_id,
                 :note,
                 :notes,
-                :updated_at
+                :updated_at,
+                :plain_text
             )
             '''
 
@@ -3224,6 +3226,9 @@ class Command(BaseCommand):
                 if item['notes']:
                     notes = item['notes'][0]
 
+                if item['extras'].get('plain_text'):
+                    plain_text = item['extras']['plain_text']
+
                 # Add all items!
                 insert = {
                     'order': item['order'],
@@ -3232,7 +3237,8 @@ class Command(BaseCommand):
                     'bill_id': bill_id,
                     'note': note,
                     'notes': notes,
-                    'updated_at': event_info['updated_at']
+                    'updated_at': event_info['updated_at'],
+                    'plain_text': plain_text
                 }
 
                 inserts.append(insert)
