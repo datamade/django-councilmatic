@@ -475,6 +475,8 @@ class Command(BaseCommand):
 
         search_url = '{}/bills/'.format(base_url)
 
+        counter = 0
+
         for organization_id, organization_name in organization_ids:
 
             query_params['from_organization__id'] = organization_id
@@ -485,7 +487,6 @@ class Command(BaseCommand):
             search_results = self._get_response(search_url, params=query_params)
             page_json = search_results.json()
 
-            counter = 0
             for page_num in range(page_json['meta']['max_page']):
 
                 query_params['page'] = int(page_num) + 1
@@ -1054,7 +1055,7 @@ class Command(BaseCommand):
                 if action['classification']:
                     classification = action['classification'][0]
 
-                action_date = app_timezone.localize(date_parser.parse(action['date']))
+                action_date = date_parser.parse(action['date']).date()
 
                 insert = {
                     'date': action_date,
