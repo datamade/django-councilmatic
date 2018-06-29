@@ -111,7 +111,7 @@ class Command(BaseCommand):
 
             self.jurisdiction_id = jurisdiction_id
             self.jurisdiction_name = jurisdiction_id.rsplit(':', 1)[1].split('/')[0]
-            
+
             self.downloads_folder = os.path.join('downloads',
                                                  self.jurisdiction_name)
 
@@ -475,6 +475,8 @@ class Command(BaseCommand):
 
         search_url = '{}/bills/'.format(base_url)
 
+        counter = 0
+
         for organization_id, organization_name in organization_ids:
 
             query_params['from_organization__id'] = organization_id
@@ -485,7 +487,6 @@ class Command(BaseCommand):
             search_results = self._get_response(search_url, params=query_params)
             page_json = search_results.json()
 
-            counter = 0
             for page_num in range(page_json['meta']['max_page']):
 
                 query_params['page'] = int(page_num) + 1
@@ -1054,7 +1055,7 @@ class Command(BaseCommand):
                 if action['classification']:
                     classification = action['classification'][0]
 
-                action_date = app_timezone.localize(date_parser.parse(action['date']))
+                action_date = date_parser.parse(action['date']).date()
 
                 insert = {
                     'date': action_date,
@@ -3181,7 +3182,8 @@ class Command(BaseCommand):
                 bill_id,
                 note,
                 notes,
-                updated_at
+                updated_at,
+                plain_text
             ) VALUES (
                 :order,
                 :description,
@@ -3189,7 +3191,8 @@ class Command(BaseCommand):
                 :bill_id,
                 :note,
                 :notes,
-                :updated_at
+                :updated_at,
+                :plain_text
             )
             '''
 
@@ -3224,6 +3227,11 @@ class Command(BaseCommand):
                 if item['notes']:
                     notes = item['notes'][0]
 
+                if item['extras'].get('plain_text'):
+                    plain_text = item['extras']['plain_text']
+                else:
+                    plain_text = None
+
                 # Add all items!
                 insert = {
                     'order': item['order'],
@@ -3232,7 +3240,8 @@ class Command(BaseCommand):
                     'bill_id': bill_id,
                     'note': note,
                     'notes': notes,
-                    'updated_at': event_info['updated_at']
+                    'updated_at': event_info['updated_at'],
+                    'plain_text': plain_text
                 }
 
                 inserts.append(insert)
