@@ -3224,10 +3224,10 @@ class Command(BaseCommand):
                     pass
 
                 notes = ''
-                if item['notes']:
+                if item.get('notes'):
                     notes = item['notes'][0]
 
-                if item['extras'].get('plain_text'):
+                if item.get('extras', {}).get('plain_text'):
                     plain_text = item['extras']['plain_text']
                 else:
                     plain_text = None
