@@ -120,35 +120,27 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
         return '0'
 
 
-@register.filter
-def format_url_parameters(url):
-    params = ["?&sort_by=date", "?&sort_by=title", "?&sort_by=relevance", "?&ascending=true", "?&descending=true", "&sort_by=date", "&sort_by=title", "&sort_by=relevance", "&ascending=true", "&descending=true", "sort_by=date", "sort_by=title", "sort_by=relevance", "ascending=true", "descending=true"]
+@register.simple_tag
+def search_with_querystring(request, **kwargs):
+    mutable_query_dict = dict(request.GET)
+    mutable_query_dict.update(kwargs)
+    return 'search' + '?' + urllib.parse.urlencode(mutable_query_dict)
 
-    paramsDict = dict((re.escape(el), "") for el in params)
 
-    pattern = re.compile("|".join(paramsDict.keys()))
+@register.simple_tag
+def sort_direction(request):
+    query_dict = request.GET
+    if query_dict.get('sort_by') == 'date':
+        if query_dict.get('asc'):
+            return 'asc'
+        else:
+            return 'desc'
 
-    return pattern.sub(lambda m: paramsDict[re.escape(m.group(0))], url)
-
-# TODO: Clean up for refactor of javascript.
-# @register.simple_tag
-# def query_transform(request, **kwargs):
-
-#     data_dict = dict(request.GET.copy())
-#     print(data_dict)
-#     try:
-#         selected_facet_names = data_dict['selected_facets']
-#     except:
-#         selected_facet_names = []
-
-#     updated = request.GET.copy()
-#     if selected_facet_names:
-#         for k,v in kwargs.items():
-#             selected_facet_names.append(v)
-
-#     updated['selected_facets'] = selected_facet_names
-
-#     return updated.urlencode()
+    if query_dict.get('sort_by') == 'title':
+        if query_dict.get('desc'):
+            return 'desc'
+        else:
+            return 'asc'
 
 
 @register.filter
