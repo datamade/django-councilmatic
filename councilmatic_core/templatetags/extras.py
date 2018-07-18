@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.core.serializers import serialize
 import json
 from django.db.models.query import QuerySet
-import urllib
+from urllib.parse import urlsplit, parse_qs, urlencode
 
 register = template.Library()
 
@@ -119,28 +119,31 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
     else:
         return '0'
 
-
+'''
+This tag updates the current URL params to reflect one of five sort options: date (asc, desc), title (asc, desc), and relevance.
+The `order_by_filter.html` partial calls this tag. 
+'''
 @register.simple_tag
 def search_with_querystring(request, **kwargs):
-    mutable_query_dict = dict(request.GET)
-    mutable_query_dict.update(kwargs)
-    return 'search' + '?' + urllib.parse.urlencode(mutable_query_dict)
+    query = urlsplit(request.get_full_path()).query
+    query_as_dict = parse_qs(query)
+    query_as_dict.update(kwargs)
+   
+    return '/search?' + urlencode(query_as_dict)
 
 
 @register.simple_tag
 def sort_direction(request):
     query_dict = request.GET
-    if query_dict.get('sort_by') == 'date':
-        if query_dict.get('asc'):
-            return 'asc'
-        else:
-            return 'desc'
+    return query_dict.get('order_by')
 
-    if query_dict.get('sort_by') == 'title':
-        if query_dict.get('desc'):
-            return 'desc'
-        else:
-            return 'asc'
+
+@register.filter
+def reverse_sort(sort_direction):
+    if sort_direction == 'asc':
+        return 'desc'
+    if sort_direction == 'desc':
+        return 'asc'
 
 
 @register.filter

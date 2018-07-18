@@ -110,15 +110,15 @@
 
                 Order by:
 
-                {% with order_name='date' %}
+                {% with sort_name='date' order_name='desc' %}
                     {% include 'partials/order_by_filter.html' %}
                 {% endwith %}
 
-                {% with order_name='title' %}
+                {% with sort_name='title' order_name='asc' %}
                     {% include 'partials/order_by_filter.html' %}
                 {% endwith %}
 
-                {% with order_name='relevance' %}
+                {% with sort_name='relevance' order_name='' %}
                     {% include 'partials/order_by_filter.html' %}
                 {% endwith %}
 
@@ -315,10 +315,10 @@
                 var addtl_filter = $(this).attr('data');
 
                 if(existing_q){
-                    window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
+                    window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter));
                 }
                 else{
-                    window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
+                    window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter));
                 };
 
             });
@@ -332,7 +332,7 @@
                     return encodeURIComponent(value) != to_remove;
                 });
 
-                window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+                window.location.assign('/search/?' + new_components.join('&'));
             });
 
             $(".remove-order-value").click(function() {
@@ -341,12 +341,12 @@
 
                 for(var i = existing_components.length -1; i >= 0 ; i--){
                     var el = existing_components[i]
-                    if(el.includes('ascending') || el.includes(to_remove) || el.includes('descending')) {
+                    if(el.includes('asc') || el.includes(to_remove) || el.includes('desc')) {
                         existing_components.splice(i, 1);
                     }
                 }
 
-                window.location.assign('/search/?' + existing_components.join('&')+"&_="+timestamp);
+                window.location.assign('/search/?' + existing_components.join('&'));
             });
 
         });
