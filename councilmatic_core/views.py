@@ -35,6 +35,7 @@ app_timezone = pytz.timezone(settings.TIME_ZONE)
 class CouncilmaticFacetedSearchView(FacetedSearchView):
 
     def extra_context(self):
+
         # Raise an error if Councilmatic cannot connect to Solr.
         # Most likely, Solr is down and needs restarting.
         try:
@@ -47,9 +48,6 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
         extra['request'] = self.request
         extra['facets'] = self.results.facet_counts()
 
-        # PROBLEM: self.request.GET does not recognize "order_by" params.
-        # E.g., /search/?sort_by=title&order_by=asc with a query search returns:
-        #  <QueryDict: {'sort_by': ['title'], 'q': ['san pedro']}>
         q_filters = ''
         url_params = [(p, val) for (p, val) in self.request.GET.items(
         ) if p != 'page' and p != 'selected_facets' and p != 'amp' and p != '_']
@@ -59,9 +57,6 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
             url_params.append(('selected_facets', facet_val))
         if url_params:
             q_filters = urllib.parse.urlencode(url_params)
-
-        # import pdb
-        # pdb.set_trace()
 
         extra['q_filters'] = q_filters
 
