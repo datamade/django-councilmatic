@@ -106,7 +106,7 @@
 
         <div class="col-sm-8 order-nav">
 
-            <nav class="nav nav-inline">
+            <nav class="nav nav-inline order-nav">
 
                 Order by:
 
@@ -118,9 +118,16 @@
                     {% include 'partials/order_by_filter.html' %}
                 {% endwith %}
 
-                {% with sort_name='relevance' order_name='' %}
-                    {% include 'partials/order_by_filter.html' %}
-                {% endwith %}
+                <!-- The templating logic is different for Relevance sort. The Relevance sort does not require a direction, and it should be bolded by default after submitting a query.-->
+                {% if 'sort_by=relevance' in request.get_full_path or 'order_by=' not in request.get_full_path and 'q=' in request.get_full_path %}
+                    <strong><a class="nav-link assort" href="{% search_with_querystring request sort_by='relevance' %}" data='sort_by=relevance'>
+                        Relevance
+                    </a></strong>
+                {% else %}
+                    <a class="sort-by nav-link" href="{% search_with_querystring request sort_by='relevance' %}" data='sort_by=relevance'>
+                        Relevance
+                    </a>
+                {% endif %}
 
                 {% if 'sort_by' in request.get_full_path %}
                     <a href ="#" class="remove-order-value btn btn-sm btn-primary hidden-xs"

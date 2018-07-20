@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.core.serializers import serialize
 import json
 from django.db.models.query import QuerySet
-from urllib.parse import urlsplit, parse_qs, urlencode
+from urllib.parse import urlsplit, parse_qs, parse_qsl, urlencode
 
 register = template.Library()
 
@@ -129,7 +129,7 @@ def search_with_querystring(request, **kwargs):
     query_as_dict = parse_qs(query)
     query_as_dict.update(kwargs)
    
-    return '/search?' + urlencode(query_as_dict)
+    return '/search?' + urlencode(query_as_dict, doseq=True)
 
 
 @register.simple_tag
