@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.core.serializers import serialize
 import json
 from django.db.models.query import QuerySet
-import urllib
+from urllib.parse import urlsplit, parse_qs, parse_qsl, urlencode
 
 register = template.Library()
 
@@ -119,36 +119,31 @@ def format_date_sort(s, fmt='%Y%m%d%H%M'):
     else:
         return '0'
 
+'''
+This tag updates the current URL params to reflect one of five sort options: date (asc, desc), title (asc, desc), and relevance.
+The `order_by_filter.html` partial calls this tag. 
+'''
+@register.simple_tag
+def search_with_querystring(request, **kwargs):
+    query = urlsplit(request.get_full_path()).query
+    query_as_dict = parse_qs(query)
+    query_as_dict.update(kwargs)
+   
+    return '/search?' + urlencode(query_as_dict, doseq=True)
+
+
+@register.simple_tag
+def sort_direction(request):
+    query_dict = request.GET
+    return query_dict.get('order_by')
+
 
 @register.filter
-def format_url_parameters(url):
-    params = ["?&sort_by=date", "?&sort_by=title", "?&sort_by=relevance", "?&ascending=true", "?&descending=true", "&sort_by=date", "&sort_by=title", "&sort_by=relevance", "&ascending=true", "&descending=true", "sort_by=date", "sort_by=title", "sort_by=relevance", "ascending=true", "descending=true"]
-
-    paramsDict = dict((re.escape(el), "") for el in params)
-
-    pattern = re.compile("|".join(paramsDict.keys()))
-
-    return pattern.sub(lambda m: paramsDict[re.escape(m.group(0))], url)
-
-# TODO: Clean up for refactor of javascript.
-# @register.simple_tag
-# def query_transform(request, **kwargs):
-
-#     data_dict = dict(request.GET.copy())
-#     print(data_dict)
-#     try:
-#         selected_facet_names = data_dict['selected_facets']
-#     except:
-#         selected_facet_names = []
-
-#     updated = request.GET.copy()
-#     if selected_facet_names:
-#         for k,v in kwargs.items():
-#             selected_facet_names.append(v)
-
-#     updated['selected_facets'] = selected_facet_names
-
-#     return updated.urlencode()
+def reverse_sort(sort_direction):
+    if sort_direction == 'asc':
+        return 'desc'
+    if sort_direction == 'desc':
+        return 'asc'
 
 
 @register.filter

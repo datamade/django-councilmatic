@@ -265,7 +265,9 @@ h1, h2, h3, h4 {
     border-radius: 0;
 }
 
-
+.order-nav a.nav-link {
+    margin-left: 1.8em;
+}
 
 
 /* bill detail listing */
