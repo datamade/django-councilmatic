@@ -1,5 +1,17 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.4
+
+*Changes*
+
+Refactors template and view logic for sorting search results by date, title, and relevance.
+
+Updates `import_data` to grab the `plain_text` for EventAgendaItems.
+
+Bug fix: Removes `full_text` from the Solr `bill_text` template. (Instances of Councilmatic need to `rebuild_index` to benefit from this change.)
+
+**Release date:** 7-24-2018
+
 ## Version 0.10.3
 
 *Changes*
@@ -78,29 +90,27 @@ Makes consistent the legislative_session_id on the bill model with other data so
 
 *Changes*
 
-**Release date:** 3-19-2018
-
 Allows for data from multiple jurisdictions by replacing `JURISDICTION_ID` setting with `JURISDICTION_IDS`, an array of OCD API jurisdiction IDs.
 
 Adds `Jurisdiction` model.
 
 Returns only unique identifiers from `alternative_identifiers` template filter.
 
+**Release date:** 3-19-2018
+
 ## Version 0.8.10-0.8.11
 
 *Changes*
-
-**Release date:** 2-27-2018
 
 Substitutes instances of `session.get` with `_get_response` - a custom function that sets a timeout of 60 seconds on HTTP requests and raises an error for bad responses. 
 
 Pin `django-adv-cache-tag` to version 1.1.0.
 
+**Release date:** 2-27-2018
+
 ## Version 0.8.9
 
 *Changes*
-
-**Release date:** 2-16-2018
 
 Includes a new management command that tests for agreement between the Councilmatic database and Solr index. 
 
@@ -108,11 +118,11 @@ Makes amendments to `import_data`:
 * Adds `html_text` to bills when it exists.
 * Refactors code redundancies for readability.
 
+**Release date:** 2-16-2018
+
 ## Version 0.8.8
 
 *Changes*
-
-**Release date:** 1-31-2018
 
 Includes a new management command that converts bill text from RTF to HTML.
 
@@ -123,49 +133,48 @@ Makes amendments to `import_data`:
 
 Responsive table for legislation types on About page.
 
-## Version 0.8.7
+**Release date:** 1-31-2018
 
-**Release date:** 12-11-2017
+## Version 0.8.7
 
 *Changes*
 
 Speeds up RSS feed load by removing unneeded list evaluations and minimizing object size.
 
-## Version 0.8.6
+**Release date:** 12-11-2017
 
-**Release date:** 12-07-2017
+## Version 0.8.6
 
 *Changes*
 
 Raises an error on the legislation search page when Councilmatic cannot connect to Solr.
 
-## Version 0.8.5
+**Release date:** 12-07-2017
 
-**Release date:** 11-28-2017
+## Version 0.8.5
 
 *Changes*
 
 Adds a `guid` field in the Event model, and imports it when available in the OCD API.
 
-## Version 0.8.4
+**Release date:** 11-28-2017
 
-**Release date:** 11-13-2017
+## Version 0.8.4
 
 *Changes*
 
 Adds a client for improved Sentry logging when import_data fails or rolls back a transaction. 
 
-## Version 0.8.3
+**Release date:** 11-13-2017
 
-**Release date:** 11-7-2017
+## Version 0.8.3
 
 *Changes*
 
 Amends `import_data` codebase: imports shape data, only when the response from the OCD API returns an 'ok' status code. 
+**Release date:** 11-7-2017
 
 ## Version 0.8.2
-
-**Release date:** 11-6-2017
 
 *Changes*
 
@@ -190,3 +199,5 @@ Enforce a rollback in the event of an IntegrityError.
 ## Prior versions
 
 See [commit history](https://github.com/datamade/django-councilmatic/commits/master) for prior changes.
+
+**Release date:** 11-6-2017
