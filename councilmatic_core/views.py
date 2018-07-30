@@ -128,7 +128,8 @@ def city_context(request):
         'MAP_CONFIG',
         'ANALYTICS_TRACKING_CODE',
         'ABOUT_BLURBS',
-        'USING_NOTIFICATIONS'
+        'USING_NOTIFICATIONS',
+        'GOOGLE_API_KEY'
     ]
 
     city_context = {s: getattr(settings, s, None) for s in relevant_settings}
