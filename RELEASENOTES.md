@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.5
+
+*Changes*
+
+Passes `GOOGLE_API_KEY` into relevant templates. This change requires adding the new variable to `settings_deployment.py`.
+
+**Release date:** 7-30-2018
+
 ## Version 0.10.4
 
 *Changes*
