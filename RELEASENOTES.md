@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.6
+
+*Changes*
+
+Fixes a bug in the search functionality (wherein the `order_by` param was not preserved in the query string).
+
+**Release date:** 8-2-2018
+
 ## Version 0.10.5
 
 *Changes*
