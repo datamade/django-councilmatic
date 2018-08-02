@@ -36,6 +36,14 @@
                     <input name="sort_by" type="hidden" class="form-control" value="relevance">
                 {% endif %}
 
+                {% if 'order_by=asc' in request.get_full_path %}
+                    <input name="order_by" type="hidden" class="form-control" value="asc">
+                {% endif %}
+
+                {% if 'order_by=desc' in request.get_full_path %}
+                    <input name="order_by" type="hidden" class="form-control" value="desc">
+                {% endif %}
+
                 {% with formatted_q=request.GET.q|remove_question %}
                     {% include 'partials/search_bar.html' %}
                 {% endwith %}
