@@ -498,7 +498,7 @@ textarea {
 
 .info-blurb p { font-size: .85em; }
 
-p.search-result em {
+p.search-result em, .highlighted {
     background-color: #D9EDF7;
     font-style: normal;
 }
