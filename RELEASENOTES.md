@@ -4,7 +4,7 @@
 
 *Changes*
 
-Adds a ExactHighlighter class, which enables highlighting multi-word strings via Haystack. 
+Adds an ExactHighlighter class, which enables highlighting multi-word strings via Haystack. 
 
 Adds "nofollow" attribute to Legistar links to improve search rankings.  
 
