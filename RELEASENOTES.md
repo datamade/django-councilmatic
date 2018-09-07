@@ -1,5 +1,15 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.7
+
+*Changes*
+
+Adds an ExactHighlighter class, which enables highlighting multi-word strings via Haystack. 
+
+Adds "nofollow" attribute to Legistar links to improve search rankings.  
+
+**Release date:** 9-7-2018
+
 ## Version 0.10.6
 
 *Changes*
