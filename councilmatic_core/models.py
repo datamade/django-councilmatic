@@ -640,7 +640,6 @@ class Membership(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     extras = JSONField(default=dict)
 
-
     @property
     def organization(self):
         return override_relation(self._organization)
