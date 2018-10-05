@@ -849,6 +849,7 @@ class Command(BaseCommand):
                 role,
                 start_date,
                 end_date,
+                extras,
                 organization_id,
                 person_id,
                 post_id
@@ -857,6 +858,7 @@ class Command(BaseCommand):
                 :role,
                 :start_date,
                 :end_date,
+                :extras,
                 :organization_id,
                 :person_id,
                 :post_id
@@ -869,9 +871,7 @@ class Command(BaseCommand):
                 person_info = json.loads(f.read())
 
             for membership_json in person_info['memberships']:
-
                 end_date = parse_date(membership_json['end_date'])
-
                 start_date = parse_date(membership_json['start_date'])
 
                 post_id = None
@@ -883,6 +883,7 @@ class Command(BaseCommand):
                     'role': membership_json['role'],
                     'start_date': start_date,
                     'end_date': end_date,
+                    'extras': json.dumps(membership_json['extras']),
                     'organization_id': membership_json['organization']['id'],
                     'person_id': person_info['id'],
                     'post_id': post_id,
@@ -1843,7 +1844,8 @@ class Command(BaseCommand):
                 person_id VARCHAR,
                 post_id VARCHAR,
                 start_date DATE,
-                end_date DATE
+                end_date DATE,
+                extras JSONB
             )
         ''')
 
@@ -1852,6 +1854,7 @@ class Command(BaseCommand):
            'role',
            'start_date',
            'end_date',
+           'extras',
            'organization_id',
            'person_id',
            'post_id'
@@ -1866,7 +1869,8 @@ class Command(BaseCommand):
                 raw.person_id,
                 raw.post_id,
                 raw.start_date,
-                raw.end_date
+                raw.end_date,
+                raw.extras
               FROM raw_membership AS raw
               JOIN councilmatic_core_membership AS dat
                 ON (raw.organization_id = dat.organization_id
@@ -2548,7 +2552,8 @@ class Command(BaseCommand):
                 person_id VARCHAR,
                 post_id VARCHAR,
                 start_date DATE,
-                end_date DATE
+                end_date DATE,
+                extras JSONB
             )
         ''')
 
@@ -2559,7 +2564,8 @@ class Command(BaseCommand):
                 raw.person_id,
                 raw.post_id,
                 raw.start_date,
-                raw.end_date
+                raw.end_date,
+                raw.extras
               FROM raw_membership AS raw
               LEFT JOIN councilmatic_core_membership AS dat
                 ON (raw.organization_id = dat.organization_id
@@ -2579,6 +2585,7 @@ class Command(BaseCommand):
            'role',
            'start_date',
            'end_date',
+           'extras',
            'organization_id',
            'person_id',
            'post_id',
