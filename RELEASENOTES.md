@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.8
+
+*Changes*
+
+Captures `extras` for Membership model.
+
+**Release date:** 10-8-2018
+
 ## Version 0.10.7
 
 *Changes*
