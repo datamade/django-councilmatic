@@ -638,6 +638,7 @@ class Membership(models.Model):
     start_date = models.DateField(default=None, null=True)
     end_date = models.DateField(default=None, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    extras = JSONField(default=dict)
 
     @property
     def organization(self):
