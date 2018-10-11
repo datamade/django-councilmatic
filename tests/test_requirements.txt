@@ -1,4 +1,5 @@
 -e .
+flake8
 requests==2.7.0
 django-haystack==2.5.1
 pysolr==3.3.2
