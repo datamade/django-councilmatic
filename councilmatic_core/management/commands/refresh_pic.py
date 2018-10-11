@@ -11,7 +11,7 @@ from django.conf import settings
 for configuration in ['AWS_KEY','AWS_SECRET']:
     if not hasattr(settings, configuration):
         raise ImproperlyConfigured(
-            'You must define {0} in settings_deployment.py'.format(configuration))
+            'Please define {0} in settings_deployment.py'.format(configuration))
 
 
 class Command(BaseCommand):
@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         document_urls = self._get_urls()
-        aws_keys = [urllib.parse.quote_plus(url) for url in document_urls]
+        aws_keys = self._create_keys(document_urls)
 
         s3_conn = S3Connection(settings.AWS_KEY, settings.AWS_SECRET)
         bucket = s3_conn.get_bucket('councilmatic-document-cache')
@@ -33,10 +33,9 @@ class Command(BaseCommand):
         Select URLs from two tables:
         
         (1) councilmatic_core_billdocument
-        Why? The bill ocr_full_text may change, 
-        and import_data will add that bill to the `change_bill` table. 
-        The ocr_full_text presents the bill's text, i.e., the text on the PDF.
-        If it changes, assume that the bill document changed, too. 
+        Why? The ocr_full_text of a bill presents the its text, i.e., the text on the PDF. 
+        When a bill's ocr_full_text changes, `import_data` adds that bill to the `change_bill` table. 
+        We can query the `change_bill` table to determine which bill documents (potentially) changed, too. 
 
         (2) councilmatic_core_eventdocument
         Why? The event agenda items contain the text of the agenda.
@@ -63,4 +62,6 @@ class Command(BaseCommand):
             cursor.execute(query)
 
             return [entry[0] for entry in cursor.fetchall()]
-            
+
+    def _create_keys(self, document_urls):
+        return [urllib.parse.quote_plus(url) for url in document_urls]
