@@ -1,0 +1,7 @@
+[
+  "tests/test_routes.py::test_routes_without_data[/]",
+  "tests/test_routes.py::test_routes_without_data[/about/]",
+  "tests/test_routes.py::test_committee_routes",
+  "tests/test_routes.py::test_bill_routes",
+  "tests/test_routes.py::test_person_routes"
+]

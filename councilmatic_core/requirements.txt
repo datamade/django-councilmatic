@@ -4,3 +4,5 @@ pysolr==3.3.2
 python-dateutil==2.4.2
 django-rq==0.9.1
 boto==2.38.0
+pytest==3.7.0
+pytest-django==3.3.3
