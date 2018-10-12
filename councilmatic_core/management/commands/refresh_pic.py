@@ -1,7 +1,3 @@
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key
-from boto.exception import S3ResponseError
-
 import urllib.parse
 
 from django.core.exceptions import ImproperlyConfigured
@@ -19,10 +15,15 @@ class Command(BaseCommand):
     help = 'Refreshes the property image cache by deleting documents that need to be newly created'
 
     def handle(self, *args, **options):
+        from boto.s3.connection import S3Connection
+        from boto.s3.key import Key
+        from boto.exception import S3ResponseError
+        
         document_urls = self._get_urls()
         aws_keys = self._create_keys(document_urls)
 
         s3_conn = S3Connection(settings.AWS_KEY, settings.AWS_SECRET)
+
         bucket = s3_conn.get_bucket('councilmatic-document-cache')
 
         bucket.delete_keys(aws_keys)
