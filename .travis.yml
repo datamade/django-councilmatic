@@ -1,6 +1,6 @@
 language: python
 
-python: '3.5'
+python: '3.4'
 
 env:
     - db_user=postgres
