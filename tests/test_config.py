@@ -130,5 +130,7 @@ RQ_QUEUES = {
     }
 }
 
+AWS_KEY = ''
+AWS_SECRET = ''
 
 from .test_config_jurisdiction import *
