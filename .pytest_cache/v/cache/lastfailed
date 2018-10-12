@@ -1,5 +1,0 @@
-{
-  "tests/test_routes.py::TestRoutes::()::test_index": true,
-  "tests/test_routes.py::test_pages_without_args[/council-members/]": true,
-  "tests/test_routes.py::test_routes_without_args[/council-members/]": true
-}
