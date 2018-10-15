@@ -32,18 +32,22 @@ class Command(BaseCommand):
 
     def _get_urls(self):
         '''
-        Select URLs from two tables:
+        Three select statements:
         
-        (1) councilmatic_core_billdocument
+        (1) change_bill
         Why? The ocr_full_text of a bill presents the same text as on the document. 
         When a bill's ocr_full_text changes, `import_data` adds that bill to the `change_bill` table. 
         We can query the `change_bill` table to determine which bill documents (potentially) changed, too. 
 
-        (2) councilmatic_core_eventdocument
+        (2) councilmatic_core_eventagendaitem
         Why? The event agenda items contain the text of the agenda.
         `import_data` does not have a "change" table for event agenda items 
         (otherwise, the database ends up with an overabundance of items: https://github.com/datamade/django-councilmatic/pull/140)
         If an agenda item has been updated, i.e., newly created, then assume that the event document changed, too.
+
+        (3) change_event
+        Why? The date, name, or other details of the event may have changed, and the document would have been updated in turn.
+
         '''
         with connection.cursor() as cursor:
 
@@ -61,6 +65,11 @@ class Command(BaseCommand):
                 WHERE e_item.updated_at >= (NOW() - INTERVAL '1 hour')
                 /* import_data runs up to four times per hour on the production site. */
                 /* Select items updated in the last hour, as a precaution for getting the most recently created ones. */
+                UNION
+                SELECT DISTINCT url from 
+                councilmatic_core_eventdocument as e_doc 
+                INNER JOIN change_event
+                ON change_event.ocd_id=e_doc.event_id
             '''
 
             cursor.execute(query)
