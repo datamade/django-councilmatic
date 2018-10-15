@@ -18,7 +18,7 @@ class Command(BaseCommand):
         from boto.s3.connection import S3Connection
         from boto.s3.key import Key
         from boto.exception import S3ResponseError
-        
+
         document_urls = self._get_urls()
         aws_keys = self._create_keys(document_urls)
 
@@ -35,7 +35,7 @@ class Command(BaseCommand):
         Select URLs from two tables:
         
         (1) councilmatic_core_billdocument
-        Why? The ocr_full_text of a bill presents the its text, i.e., the text on the PDF. 
+        Why? The ocr_full_text of a bill presents the same text as on the document. 
         When a bill's ocr_full_text changes, `import_data` adds that bill to the `change_bill` table. 
         We can query the `change_bill` table to determine which bill documents (potentially) changed, too. 
 
@@ -59,6 +59,8 @@ class Command(BaseCommand):
                 INNER JOIN councilmatic_core_eventagendaitem as e_item
                 ON e_doc.event_id=e_item.event_id
                 WHERE e_item.updated_at >= (NOW() - INTERVAL '1 hour')
+                /* import_data runs up to four times per hour on the production site. */
+                /* Select items updated in the last hour, as a precaution for getting the most recently created ones. */
             '''
 
             cursor.execute(query)
