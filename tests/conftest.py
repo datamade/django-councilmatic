@@ -1,10 +1,11 @@
 import pytest
 from pytest_django.fixtures import db
+from uuid import uuid4
 
 from django.core.management import call_command
 from django.db import connection
 
-from councilmatic_core.models import Bill, BillDocument
+from councilmatic_core.models import Bill, BillDocument, Event, EventDocument
 
 @pytest.fixture
 @pytest.mark.django_db
@@ -44,6 +45,23 @@ def metro_bill(db):
 
 @pytest.fixture
 @pytest.mark.django_db
+def metro_event(db):
+    event_info = {
+        'ocd_id': 'ocd-event/17fdaaa3-0aba-4df0-9893-2c2e8e94d18d',
+        'ocd_created_at': '2017-05-27 11:10:46.574-05',
+        'ocd_updated_at': '2017-05-27 11:10:46.574-05',
+        'name': 'System Safety, Security and Operations Committee',
+        'start_time': '2017-05-18 12:15:00-05',
+        'updated_at': '2017-05-17 11:06:47.1853',
+        'slug': uuid4(),
+    }
+
+    event = Event.objects.create(**event_info)
+
+    return event
+
+@pytest.fixture
+@pytest.mark.django_db
 def metro_bill_document(metro_bill, db):
     document_info = {
         'bill_id': metro_bill.ocd_id,
@@ -60,6 +78,21 @@ def metro_bill_document(metro_bill, db):
 
 @pytest.fixture
 @pytest.mark.django_db
+def metro_event_document(metro_event, db):
+    document_info = {
+        'event_id': metro_event.ocd_id,
+        'updated_at': '2017-05-27 11:10:46.574-05',
+        'full_text': '',
+        'note': 'Agenda',
+        'url': 'http://metro.legistar1.com/metro/meetings/2017/5/1216_A_System_Safety,_Security_and_Operations_Committee_17-05-18_Agenda.pdf',
+    }
+
+    document = EventDocument.objects.create(**document_info)
+
+    return document
+
+@pytest.fixture
+@pytest.mark.django_db
 def metro_change_bill(metro_bill, db):
     with connection.cursor() as cursor:
         sql = '''
@@ -70,5 +103,20 @@ def metro_change_bill(metro_bill, db):
             INSERT INTO change_bill (ocd_id)
             VALUES ('{}');
         '''.format(metro_bill.ocd_id)
+
+        cursor.execute(sql)
+
+@pytest.fixture
+@pytest.mark.django_db
+def metro_change_event(metro_event, db):
+    with connection.cursor() as cursor:
+        sql = '''
+            CREATE TABLE change_event (
+                ocd_id VARCHAR,
+                PRIMARY KEY (ocd_id)
+            );
+            INSERT INTO change_event (ocd_id)
+            VALUES ('{}');
+        '''.format(metro_event.ocd_id)
 
         cursor.execute(sql)
