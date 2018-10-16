@@ -1,5 +1,15 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.9
+
+*Changes*
+
+Adds a custom script that determines if bill and event documents have been modified and, if so, deletes them from DataMade's S3 bucket `councilmatic-document-cache`. Running this script requires including an AWS_KEY and AWS_SECRET in the settings file. 
+
+Adds a `restict_view` boolean field to the Bill model, and updates `import_data` to populate this field.
+
+**Release date:** 10-16-2018
+
 ## Version 0.10.8
 
 *Changes*
