@@ -1,4 +1,6 @@
 import urllib.parse
+import logging
+import logging.config
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
@@ -10,6 +12,8 @@ for configuration in ['AWS_KEY','AWS_SECRET']:
         raise ImproperlyConfigured(
             'Please define {0} in settings_deployment.py'.format(configuration))
 
+logging.config.dictConfig(settings.LOGGING)
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = 'Refreshes the property image cache by deleting documents that need to be newly created'
@@ -28,7 +32,7 @@ class Command(BaseCommand):
 
         bucket.delete_keys(aws_keys)
     
-        print(("Removed {} document(s) from the councilmatic-document-cache").format(len(aws_keys)))
+        logger.info(("Removed {} document(s) from the councilmatic-document-cache").format(len(aws_keys)))
 
     def _get_urls(self):
         '''
