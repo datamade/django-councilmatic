@@ -9,7 +9,7 @@ addons:
   postgresql: '9.4'
 
 install:
-    - pip install -r requirements-test.txt
+    - pip install --upgrade -r tests/test_requirements.txt
     - pip install -e .
 
 sudo: required 
@@ -18,4 +18,4 @@ group: deprecated-2017Q4
 
 script:
     - flake8 ./councilmatic_core/*.py
-    - python runtests.py
+    - pytest

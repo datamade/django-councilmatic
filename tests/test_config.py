@@ -19,10 +19,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'councilmatic',
-        'USER': os.environ['db_user'],
+        'USER': '',
         'PASSWORD': '',
         'HOST': '',
-        'PORT': '5432',
+        'PORT': 5432,
     }
 }
 
@@ -130,5 +130,7 @@ RQ_QUEUES = {
     }
 }
 
+AWS_KEY = ''
+AWS_SECRET = ''
 
-from .test_settings_jurisdiction import *
+from .test_config_jurisdiction import *

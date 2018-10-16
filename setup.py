@@ -28,7 +28,8 @@ setup(
                       'psycopg2>=2.7',
                       'django-password-reset>=0.9,<1.0',
                       'django-councilmatic-notifications<0.2',
-                      'django-adv-cache-tag==1.1.0'],
+                      'django-adv-cache-tag==1.1.0',
+                      'boto==2.38.0'],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
