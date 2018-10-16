@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.10
+
+*Changes*
+
+Properly logs the results of `refresh_pic`.
+
+**Release date:** 10-16-2018
+
 ## Version 0.10.9
 
 *Changes*
