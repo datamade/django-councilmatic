@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.11
+
+*Changes*
+
+Removes the `restrict_view` field (reverts changes in 0.10.9). 
+
+**Release date:** 10-17-2018
+
 ## Version 0.10.10
 
 *Changes*
