@@ -200,7 +200,6 @@ class Bill(models.Model):
                                              db_column='legislative_session_id')
 
     slug = models.CharField(max_length=255, unique=True)
-    restrict_view = models.BooleanField(default=False)
 
     @property
     def from_organization(self):
