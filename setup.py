@@ -19,6 +19,7 @@ setup(
     author='DataMade, LLC',
     author_email='info@datamade.us',
     install_requires=['requests>=2.7.0,<2.8',
+                      'opencivicdata==2.1.1',
                       'pytz>=2015.4',
                       'django-haystack>=2.5.0,<2.6',
                       'Django<1.10',

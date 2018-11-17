@@ -5,7 +5,7 @@
 {% block title %}{{committee.name}}{% endblock %}
 {% block content %}
 
-{% cache 600 committee_wrapper committee.ocd_id %}
+{# {% cache 600 committee_wrapper committee.id %} #}
 
     <div class="row-fluid">
         <div class="col-sm-8">
@@ -143,7 +143,7 @@
         </div>
     </div>
 
-{% endcache %}
+{# {% endcache %} #}
 
 {% endblock %}
 
@@ -252,7 +252,7 @@
         });
 
         // for reference purposes
-        console.log( "OCD ID: {{committee.ocd_id}}" )
+        console.log( "OCD ID: {{committee.id}}" )
 
     </script>
 {% endblock %}

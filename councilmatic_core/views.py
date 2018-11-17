@@ -160,6 +160,7 @@ class IndexView(TemplateView):
 
         return context
 
+    @property
     def extra_context(self):
         """
         Override this in custom subclass to add more context variables if needed.
@@ -303,6 +304,26 @@ class CommitteeDetailView(DetailView):
     template_name = 'councilmatic_core/committee.html'
     context_object_name = 'committee'
 
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        
+        ocd_part = slug.rsplit('-', 1)[1]
+        queryset = queryset.filter(id__endswith=ocd_part)
+
+        
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+
+        return obj
+
+
     def get_context_data(self, **kwargs):
         context = super(CommitteeDetailView, self).get_context_data(**kwargs)
 
@@ -330,7 +351,7 @@ class CommitteeDetailView(DetailView):
 
         context['user_subscribed_actions'] = False
         context['user_subscribed_events'] = False
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
@@ -509,6 +530,26 @@ class EventDetailView(DetailView):
     template_name = 'councilmatic_core/event.html'
     model = Event
     context_object_name = 'event'
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        
+        ocd_part = slug.rsplit('-', 1)[1]
+        queryset = queryset.filter(id__endswith=ocd_part)
+
+        
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+
+        return obj
+
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
