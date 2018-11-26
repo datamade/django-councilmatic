@@ -77,7 +77,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
 
         if (settings.USING_NOTIFICATIONS):
             extra['user_subscribed'] = False
-            if self.request.user.is_authenticated():
+            if self.request.user.is_authenticated:
                 user = self.request.user
                 extra['user'] = user
 
@@ -229,7 +229,7 @@ class CouncilMembersView(ListView):
 
     def get_queryset(self):
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            get_kwarg = {'ocd_id': settings.OCD_CITY_COUNCIL_ID}
+            get_kwarg = {'id': settings.OCD_CITY_COUNCIL_ID}
         else:
             get_kwarg = {'name': settings.OCD_CITY_COUNCIL_NAME}
 
@@ -271,7 +271,7 @@ class BillDetailView(DetailView):
         context['seo'] = seo
 
         context['user_subscribed'] = False
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
@@ -377,12 +377,34 @@ class PersonDetailView(DetailView):
     template_name = 'councilmatic_core/person.html'
     context_object_name = 'person'
 
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        
+        ocd_part = slug.rsplit('-', 1)[1]
+        queryset = queryset.filter(id__endswith=ocd_part)
+
+        
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+
+        return obj
+
+
     def get_context_data(self, **kwargs):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
 
         person = context['person']
         context['sponsored_legislation'] = [
-            s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')[:10]]
+            s.bill for s in person.primary_sponsorships\
+                                  .annotate(last_action=Max('bill__actions__date'))\
+                                  .order_by('-last_action')[:10]]
 
         title = ''
         if person.current_council_seat:
@@ -406,7 +428,7 @@ class PersonDetailView(DetailView):
                 person.name, settings.CITY_COUNCIL_NAME)
         seo['title'] = '%s - %s' % (person.name,
                                     settings.SITE_META['site_name'])
-        seo['image'] = person.headshot_url
+        #seo['image'] = person.headshot_url
         context['seo'] = seo
 
         context['map_geojson'] = None
@@ -433,7 +455,7 @@ class PersonDetailView(DetailView):
 
         if (settings.USING_NOTIFICATIONS):
 
-            if self.request.user.is_authenticated():
+            if self.request.user.is_authenticated:
                 user = self.request.user
                 context['user'] = user
                 # check if person of interest is subscribed to by user
@@ -515,7 +537,7 @@ class EventsView(ListView):
             context['upcoming_events'] = org_upcoming_events
 
         context['user_subscribed'] = False
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             user = self.request.user
             context['user'] = user
 

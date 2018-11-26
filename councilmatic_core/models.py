@@ -14,10 +14,13 @@ from django.db.models.functions import Cast
 
 from django.utils.text import slugify, Truncator
 
-from opencivicdata.core.models import *
-from opencivicdata.legislative.models import *
+#from opencivicdata.core.models import *
+#from opencivicdata.legislative.models import *
+from opencivicdata.legislative.models import Bill
+from opencivicdata.core.models import Post, Membership
 
 import opencivicdata.legislative.models
+import opencivicdata.core.models
 
 if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
     raise ImproperlyConfigured(
@@ -37,6 +40,7 @@ bill_document_choices = (
     ('V', 'Version'),
 )
 
+from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 
 def override_relation(base_model):
 
@@ -77,106 +81,114 @@ def get_uuid():
 #     def __str__(self):
 #         return '{0} ({1})'.format(self.name, self.ocd_id)
 
+# We are monkey patching a few attributes into the open civic data model
+# because of this 10 year old Django issue https://code.djangoproject.com/ticket/10961
+#
+# Have a stack overflow question looking out for a better solution here: https://stackoverflow.com/questions/53464061/return-proxied-class-in-many-to-many-relation/53465063?noredirect=1#comment93811813_53465063
+@property
+def link_html(self):
+    
+    if self.id and self.slug:
 
-# class Person(models.Model):
-#     ocd_id = models.CharField(max_length=100, unique=True, default=get_uuid, primary_key=True)
-#     name = models.CharField(max_length=100)
-#     headshot = models.CharField(max_length=255, blank=True, null=True)
-#     source_url = models.CharField(max_length=255, blank=True, null=True)
-#     source_note = models.CharField(max_length=255, blank=True, null=True)
-#     website_url = models.CharField(max_length=255, blank=True, null=True)
-#     email = models.CharField(max_length=255, blank=True, null=True)
-#     slug = models.CharField(max_length=255, unique=True)
-#     updated_at = models.DateTimeField(auto_now=True)
+        try:
+            link_path = reverse('{}:person'.format(settings.APP_NAME), args=(self.slug,))
+            
+        except NoReverseMatch:
+            link_path = reverse('person', args=(self.slug,))
 
-#     def __str__(self):
-#         return self.name
+        return '<a href="{0}" title="More on {1}">{1}</a>'.format(link_path, self.name)
 
-#     @property
-#     def latest_council_membership(self):
-#         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-#             filter_kwarg = {'_organization__ocd_id': settings.OCD_CITY_COUNCIL_ID}
-#         else:
-#             filter_kwarg = {'_organization__name': settings.OCD_CITY_COUNCIL_NAME}
+    return self.name
 
-#         city_council_memberships = self.memberships.filter(**filter_kwarg)
+opencivicdata.core.models.Person.link_html = link_html
 
-#         if city_council_memberships.count():
-#             return city_council_memberships.order_by('-start_date', '-end_date').first()
+@property
+def slug(self):
 
-#         return None
+    ocd_part = self.id.rsplit('-', 1)[1]
+    return '{0}-{1}'.format(slugify(self.name),ocd_part)
 
-#     @property
-#     def current_council_seat(self):
-#         m = self.latest_council_membership
-#         if m and m.post:
-#             if m.post.current_member:
-#                 if self == m.post.current_member.person:
-#                     return m.post.label
-#         return ''
+opencivicdata.core.models.Person.slug = slug
 
-#     @property
-#     def latest_council_seat(self):
-#         m = self.latest_council_membership
-#         if m and m.post:
-#             return m.post.label
-#         return ''
 
-#     @property
-#     def is_speaker(self):
-#         return True if self.memberships.filter(role='Speaker').first() else False
+class Person(opencivicdata.core.models.Person):
 
-#     @property
-#     def headshot_url(self):
-#         if self.slug in MANUAL_HEADSHOTS:
-#             return '/static/images/' + MANUAL_HEADSHOTS[self.slug]['image']
-#         elif self.headshot:
-#             return '/static/images/' + self.ocd_id + ".jpg"
-#         else:
-#             return '/static/images/headshot_placeholder.png'
+    class Meta:
+        proxy = True
 
-#     @property
-#     def headshot_source(self):
-#         if self.slug in MANUAL_HEADSHOTS:
-#             return MANUAL_HEADSHOTS[self.slug]['source']
-#         elif self.headshot:
-#             return settings.CITY_VOCAB['SOURCE']
-#         else:
-#             return None
+    def __str__(self):
+        return self.name
 
-#     @property
-#     def link_html(self):
+    @property
+    def latest_council_membership(self):
+        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
+            filter_kwarg = {'organization__id': settings.OCD_CITY_COUNCIL_ID}
+        else:
+            filter_kwarg = {'organization__name': settings.OCD_CITY_COUNCIL_NAME}
 
-#         if self.ocd_id and self.slug:
+        city_council_memberships = self.memberships.annotate(end_date_dt=Cast('end_date', models.DateTimeField()))\
+                                                   .annotate(start_date_dt=Cast('start_date', models.DateTimeField()))\
+                                                   .filter(**filter_kwarg)
 
-#             try:
-#                 link_path = reverse('{}:person'.format(settings.APP_NAME), args=(self.slug,))
+        if city_council_memberships.count():
+            return city_council_memberships.order_by('-start_date', '-end_date').first()
 
-#             except NoReverseMatch:
-#                 link_path = reverse('person', args=(self.slug,))
+        return None
 
-#             return '<a href="{0}" title="More on {1}">{1}</a>'.format(link_path, self.name)
+    @property
+    def current_council_seat(self):
+        m = self.latest_council_membership
+        print(m.end_date_dt)
+        if m.end_date_dt > datetime.now(pytz.utc):
+            return m.post.label
+        return ''
 
-#         return self.name
+    @property
+    def latest_council_seat(self):
+        m = self.latest_council_membership
+        if m and m.post:
+            return m.post.label
+        return ''
 
-#     @property
-#     def primary_sponsorships(self):
-#         return self.sponsorships.filter(is_primary=True)
+    @property
+    def is_speaker(self):
+        return True if self.memberships.filter(role='Speaker').first() else False
 
-#     @property
-#     def chair_role_memberships(self):
-#         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-#             return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
-#         else:
-#             return []
+    @property
+    def headshot_url(self):
+        if self.slug in MANUAL_HEADSHOTS:
+            return '/static/images/' + MANUAL_HEADSHOTS[self.slug]['image']
+        #elif self.headshot:
+        #    return '/static/images/' + self.ocd_id + ".jpg"
+        else:
+            return '/static/images/headshot_placeholder.png'
 
-#     @property
-#     def member_role_memberships(self):
-#         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-#             return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date__gt=datetime.now(app_timezone))
-#         else:
-#             return []
+    @property
+    def headshot_source(self):
+        if self.slug in MANUAL_HEADSHOTS:
+            return MANUAL_HEADSHOTS[self.slug]['source']
+        #elif self.headshot:
+        #    return settings.CITY_VOCAB['SOURCE']
+        else:
+            return None
 
+    @property
+    def primary_sponsorships(self):
+        return self.billsponsorship_set.filter(primary=True)
+
+    @property
+    def chair_role_memberships(self):
+        if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
+            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+        else:
+            return []
+
+    @property
+    def member_role_memberships(self):
+        if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
+            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+        else:
+            return []
 
 # class Bill(models.Model):
 #     ocd_id = models.CharField(max_length=100, unique=True, primary_key=True)
@@ -462,7 +474,8 @@ class Organization(opencivicdata.core.models.Organization):
     @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+            foo = self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+            return foo
         else:
             return []
 

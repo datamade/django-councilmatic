@@ -13,7 +13,7 @@
 
 {% block full_content %}
 
-{% cache 86400 members_wrapper 'members' %}
+{# {% cache 86400 members_wrapper 'members' %} #}
 
 <div class="container-fluid">
     {% if map_geojson %}
@@ -68,7 +68,7 @@
     </div>
 </div>
 
-{% endcache %}
+{# {% endcache %} #}
 
 {% endblock %}
 
