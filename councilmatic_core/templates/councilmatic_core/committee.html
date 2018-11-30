@@ -71,7 +71,7 @@
                             <tr class="activity-row">
                                 <td class='nowrap'>
                                     <p class="text-muted small no-pad-bottom">
-                                        {{action.date|date:'n/d/Y'}}
+                                        {{action.date_dt|date:'n/d/Y'}}
                                     </p>
                                     <p class="small no-pad-bottom">
                                         <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
@@ -82,7 +82,7 @@
                                         <a href="/legislation/{{action.bill.slug}}/">{{action.bill.friendly_name}}</a>
                                     </p>
                                     <p class="small no-pad-bottom">
-                                        {{action.bill.description | short_blurb}}
+                                        {{action.bill.title | short_blurb}}
                                     </p>
                                 </td>
                             </tr>

@@ -104,7 +104,7 @@
                         </thead>
                         <tbody>
                             {% for s in legislation.sponsorships.all %}
-                                {% if s.is_primary %}
+                                {% if s.primary %}
                                 <tr>
                                     <td>
                                         <div class="thumbnail-square">
@@ -121,7 +121,7 @@
                                 {% endif %}
                             {% endfor %}
                             {% for s in legislation.sponsorships.all %}
-                                {% if not s.is_primary %}
+                                {% if not s.primary %}
                                 <tr>
                                     <td>
                                         <div class="thumbnail-square">
@@ -158,7 +158,7 @@
                             {% for action in actions %}
                                 <tr>
                                     <td class='nowrap text-muted small'>
-                                        <span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'n/d/y'}}</span>
+                                        <span datetime='{{action.date_dt | format_date_sort }}'>{{action.date|date:'n/d/y'}}</span>
                                     </td>
                                     <td class="small">
                                         <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>

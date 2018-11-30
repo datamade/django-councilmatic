@@ -257,6 +257,25 @@ class BillDetailView(DetailView):
     template_name = 'councilmatic_core/legislation.html'
     context_object_name = 'legislation'
 
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        
+        queryset = queryset.filter(identifier__iexact=slug)
+
+        
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+
+        return obj
+
+
     def get_context_data(self, **kwargs):
         context = super(BillDetailView, self).get_context_data(**kwargs)
 
@@ -401,10 +420,8 @@ class PersonDetailView(DetailView):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
 
         person = context['person']
-        context['sponsored_legislation'] = [
-            s.bill for s in person.primary_sponsorships\
-                                  .annotate(last_action=Max('bill__actions__date'))\
-                                  .order_by('-last_action')[:10]]
+        context['sponsored_legislation'] = Bill.objects.filter(sponsorships__person=person).filter(sponsorships__primary=True).annotate(last_action=Max('actions__date'))\
+                                  .order_by('-last_action')[:10]
 
         title = ''
         if person.current_council_seat:
