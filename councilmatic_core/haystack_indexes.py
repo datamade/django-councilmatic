@@ -4,22 +4,20 @@ from councilmatic_core.templatetags.extras import clean_html
 
 # XXX: is it OK to link to Django settings in haystack_indexes.py ?
 from django.conf import settings
-import pytz
-app_timezone = pytz.timezone(settings.TIME_ZONE)
-
+from django.utils import timezone
 
 class BillIndex(indexes.SearchIndex):
 
     text = indexes.CharField(document=True, use_template=True,
                              template_name="search/indexes/councilmatic_core/bill_text.txt")
     slug = indexes.CharField(model_attr='slug', indexed=False)
-    ocd_id = indexes.CharField(model_attr='ocd_id', indexed=False)
+    id = indexes.CharField(model_attr='id', indexed=False)
     bill_type = indexes.CharField(faceted=True)
     identifier = indexes.CharField(model_attr='identifier')
-    description = indexes.CharField(model_attr='description', boost=1.25)
-    source_url = indexes.CharField(model_attr='source_url', indexed=False)
-    source_note = indexes.CharField(model_attr='source_note')
-    abstract = indexes.CharField(model_attr='abstract', boost=1.25, default='')
+    description = indexes.CharField(model_attr='title', boost=1.25)
+    source_url = indexes.CharField(model_attr='sources__url', indexed=False)
+    source_note = indexes.CharField(model_attr='sources__note')
+    abstract = indexes.CharField(model_attr='abstracts__abstract', boost=1.25, default='')
 
     friendly_name = indexes.CharField()
     sort_name = indexes.CharField()
@@ -58,16 +56,20 @@ class BillIndex(indexes.SearchIndex):
         return clean_html(obj.full_text)
 
     def prepare_last_action_date(self, obj):
-        from datetime import datetime, timedelta
-        if not obj.last_action_date:
-            return datetime.now().replace(tzinfo=app_timezone) - timedelta(days=36500)
-        return obj.last_action_date
+        from datetime import timedelta
+        last_date = obj.last_action_date
+        if not last_date:
+            last_date = timezone.now() - timedelta(36500)
+
+        if last_date:
+            last_date = last_date - last_date.utcoffset()
+            return last_date.replace(tzinfo=None).isoformat() + 'Z'
 
     def prepare_inferred_status(self, obj):
         return obj.inferred_status
 
     def prepare_legislative_session(self, obj):
-        return obj._legislative_session.identifier
+        return obj.legislative_session.identifier
 
     def prepare_ocr_full_text(self, obj):
         return clean_html(obj.ocr_full_text)

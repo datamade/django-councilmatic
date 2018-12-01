@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                     max_length=100, blank=True)),
                 ('person_ocd_id', models.CharField(max_length=100, blank=True)),
                 ('action', models.ForeignKey(
-                    related_name='related_entities', to='councilmatic_core.Action')),
+                    related_name='related_entities', to='councilmatic_core.Action', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True,
                                         primary_key=True, verbose_name='ID', serialize=False)),
                 ('bill', models.ForeignKey(
-                    related_name='documents', to='councilmatic_core.Bill')),
+                    related_name='documents', to='councilmatic_core.Bill', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -109,7 +109,7 @@ class Migration(migrations.Migration):
                 ('order', models.IntegerField()),
                 ('description', models.TextField()),
                 ('event', models.ForeignKey(
-                    related_name='agenda_items', to='councilmatic_core.Event')),
+                    related_name='agenda_items', to='councilmatic_core.Event', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -118,9 +118,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True,
                                         primary_key=True, verbose_name='ID', serialize=False)),
                 ('document', models.ForeignKey(
-                    related_name='events', to='councilmatic_core.Document')),
+                    related_name='events', to='councilmatic_core.Document', on_delete=models.deletion.CASCADE)),
                 ('event', models.ForeignKey(
-                    related_name='documents', to='councilmatic_core.Event')),
+                    related_name='documents', to='councilmatic_core.Event', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -132,7 +132,7 @@ class Migration(migrations.Migration):
                 ('entity_name', models.CharField(max_length=255)),
                 ('entity_type', models.CharField(max_length=100)),
                 ('event', models.ForeignKey(
-                    related_name='participants', to='councilmatic_core.Event')),
+                    related_name='participants', to='councilmatic_core.Event', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -167,7 +167,7 @@ class Migration(migrations.Migration):
                 ('source_url', models.CharField(max_length=255, blank=True)),
                 ('slug', models.CharField(max_length=255, unique=True)),
                 ('parent', models.ForeignKey(
-                    null=True, to='councilmatic_core.Organization', related_name='children')),
+                    null=True, to='councilmatic_core.Organization', related_name='children', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -194,7 +194,7 @@ class Migration(migrations.Migration):
                 ('label', models.CharField(max_length=255)),
                 ('role', models.CharField(max_length=255)),
                 ('organization', models.ForeignKey(
-                    related_name='posts', to='councilmatic_core.Organization')),
+                    related_name='posts', to='councilmatic_core.Organization', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -205,69 +205,69 @@ class Migration(migrations.Migration):
                 ('classification', models.CharField(max_length=255)),
                 ('is_primary', models.BooleanField(default=False)),
                 ('bill', models.ForeignKey(
-                    related_name='sponsorships', to='councilmatic_core.Bill')),
+                    related_name='sponsorships', to='councilmatic_core.Bill', on_delete=models.deletion.CASCADE)),
                 ('person', models.ForeignKey(
-                    related_name='sponsorships', to='councilmatic_core.Person')),
+                    related_name='sponsorships', to='councilmatic_core.Person', on_delete=models.deletion.CASCADE)),
             ],
         ),
         migrations.AddField(
             model_name='membership',
             name='organization',
             field=models.ForeignKey(
-                related_name='memberships', to='councilmatic_core.Organization'),
+                related_name='memberships', to='councilmatic_core.Organization', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='membership',
             name='person',
             field=models.ForeignKey(
-                related_name='memberships', to='councilmatic_core.Person'),
+                related_name='memberships', to='councilmatic_core.Person', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='membership',
             name='post',
             field=models.ForeignKey(
-                null=True, to='councilmatic_core.Post', related_name='memberships'),
+                null=True, to='councilmatic_core.Post', related_name='memberships', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='billdocument',
             name='document',
             field=models.ForeignKey(
-                related_name='bills', to='councilmatic_core.Document'),
+                related_name='bills', to='councilmatic_core.Document', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='bill',
             name='from_organization',
             field=models.ForeignKey(
-                null=True, to='councilmatic_core.Organization', related_name='bills'),
+                null=True, to='councilmatic_core.Organization', related_name='bills', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='bill',
             name='legislative_session',
             field=models.ForeignKey(
-                null=True, to='councilmatic_core.LegislativeSession', related_name='bills'),
+                null=True, to='councilmatic_core.LegislativeSession', related_name='bills', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='agendaitembill',
             name='agenda_item',
             field=models.ForeignKey(
-                related_name='related_bills', to='councilmatic_core.EventAgendaItem'),
+                related_name='related_bills', to='councilmatic_core.EventAgendaItem', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='agendaitembill',
             name='bill',
             field=models.ForeignKey(
-                related_name='related_agenda_items', to='councilmatic_core.Bill'),
+                related_name='related_agenda_items', to='councilmatic_core.Bill', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='action',
             name='bill',
             field=models.ForeignKey(
-                null=True, to='councilmatic_core.Bill', related_name='actions'),
+                null=True, to='councilmatic_core.Bill', related_name='actions', on_delete=models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='action',
             name='organization',
             field=models.ForeignKey(
-                null=True, to='councilmatic_core.Organization', related_name='actions'),
+                null=True, to='councilmatic_core.Organization', related_name='actions', on_delete=models.deletion.CASCADE),
         ),
     ]

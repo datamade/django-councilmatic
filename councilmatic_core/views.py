@@ -21,16 +21,11 @@ from django.utils import timezone
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
 
-import pytz
-
 from .models import Person, Bill, Organization, Event, Post
 
 
 if (settings.USING_NOTIFICATIONS):
     from notifications.models import BillSearchSubscription
-
-app_timezone = pytz.timezone(settings.TIME_ZONE)
-
 
 class CouncilmaticFacetedSearchView(FacetedSearchView):
 
@@ -182,10 +177,11 @@ class AboutView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['timestamp'] = datetime.now(app_timezone).strftime('%m%d%Y%s')
+        context['timestamp'] = timezone.now().strftime('%m%d%Y%s')
 
         return context
 
+    @property
     def extra_context(self):
         """
         Override this in custom subclass to add more context variables if needed.

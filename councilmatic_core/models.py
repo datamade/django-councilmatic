@@ -23,6 +23,10 @@ if not hasattr(settings, 'CITY_COUNCIL_NAME'):
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(
     settings, 'MANUAL_HEADSHOTS') else {}
 
+def get_uuid():
+    import uuid
+    return str(uuid.uuid4())
+
 class Person(opencivicdata.core.models.Person):
 
     class Meta:
@@ -47,7 +51,7 @@ class Person(opencivicdata.core.models.Person):
         if self.slug in MANUAL_HEADSHOTS:
             return '/static/images/' + MANUAL_HEADSHOTS[self.slug]['image']
         #elif self.headshot:
-        #    return '/static/images/' + self.ocd_id + ".jpg"
+        #    return '/static/images/' + self.ocd_id + ".jpg
         else:
             return '/static/images/headshot_placeholder.png'
 
@@ -234,7 +238,8 @@ class Post(opencivicdata.core.models.Post):
     @cached_property
     def current_member(self):
         return self.memberships.filter(end_date__gt=timezone.now())\
-                               .order_by('-end_date', '-start_date').first()
+                               .order_by('-end_date', '-start_date')\
+                               .first()
 
 
 class PostShape(models.Model):
@@ -374,6 +379,18 @@ class Bill(opencivicdata.legislative.models.Bill):
         return type
 
     @property
+    def full_text(self):
+        return self.extras.get('rtf_text')
+
+    @property
+    def ocr_full_text(self):
+        return self.extras.get('plain_text')
+
+    @property
+    def html_text(self):
+        return self.extras.get('html_text')
+
+    @property
     def controlling_body(self):
         """
         grabs the organization that's currently 'responsible' for a bill
@@ -386,8 +403,7 @@ class Bill(opencivicdata.legislative.models.Bill):
             # to a committee, controlling body is the organization
             # the bill was referred to (a related org)
             if related_orgs:
-                controlling_bodies = [Organization.objects.get(
-                    ocd_id=org.organization_ocd_id) for org in related_orgs]
+                controlling_bodies = [rel.organization for rel in related_orgs]
                 return controlling_bodies
             # otherwise, the controlling body is usually whatever organization
             # performed the most recent action (this is the case most of the
@@ -417,6 +433,7 @@ class Bill(opencivicdata.legislative.models.Bill):
         grabs the most recent action on a bill
         """
         return self.actions.last()
+
     @property
     def last_action_date(self):
         return self.current_action.date_dt
@@ -523,7 +540,7 @@ class Bill(opencivicdata.legislative.models.Bill):
         """
         grabs all bills that have had activity since a given date
         """
-        return cls.objects.filter(last_action_date__gte=date_cutoff)
+        return cls.objects.filter(last_action_date_dt__gte=date_cutoff)
 
     @classmethod
     def new_bills_since(cls, date_cutoff):
