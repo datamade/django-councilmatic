@@ -24,6 +24,7 @@ setup(
                       'django-haystack>=2.8.0,<2.9',
                       'Django>=2.0,<2.2',
                       'django-proxy-overrides>=0.2',
+                      'python-dateutil>=2.7<2.8',
                       'pysolr>=3.8,<3.9',
                       'psycopg2-binary>=2.7<2.8',
                       'django-password-reset>=0.9,<1.0',
