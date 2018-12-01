@@ -4,9 +4,9 @@ import itertools
 from operator import attrgetter
 import urllib
 import requests
-from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
+
 
 from django.shortcuts import render, redirect
 from django.conf import settings
@@ -17,6 +17,8 @@ from django.core.cache import cache
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.utils import timezone
+from django.http import Http404
+from django.utils.translation import gettext as _
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
@@ -26,6 +28,7 @@ from .models import Person, Bill, Organization, Event, Post
 
 if (settings.USING_NOTIFICATIONS):
     from notifications.models import BillSearchSubscription
+
 
 class CouncilmaticFacetedSearchView(FacetedSearchView):
 
@@ -258,10 +261,9 @@ class BillDetailView(DetailView):
             queryset = self.get_queryset()
 
         slug = self.kwargs.get(self.slug_url_kwarg)
-        
+
         queryset = queryset.filter(identifier__iexact=slug)
 
-        
         try:
             # Get the single item from the filtered queryset
             obj = queryset.get()
@@ -270,7 +272,6 @@ class BillDetailView(DetailView):
                           {'verbose_name': queryset.model._meta.verbose_name})
 
         return obj
-
 
     def get_context_data(self, **kwargs):
         context = super(BillDetailView, self).get_context_data(**kwargs)
@@ -324,11 +325,10 @@ class CommitteeDetailView(DetailView):
             queryset = self.get_queryset()
 
         slug = self.kwargs.get(self.slug_url_kwarg)
-        
+
         ocd_part = slug.rsplit('-', 1)[1]
         queryset = queryset.filter(id__endswith=ocd_part)
 
-        
         try:
             # Get the single item from the filtered queryset
             obj = queryset.get()
@@ -337,7 +337,6 @@ class CommitteeDetailView(DetailView):
                           {'verbose_name': queryset.model._meta.verbose_name})
 
         return obj
-
 
     def get_context_data(self, **kwargs):
         context = super(CommitteeDetailView, self).get_context_data(**kwargs)
@@ -397,11 +396,10 @@ class PersonDetailView(DetailView):
             queryset = self.get_queryset()
 
         slug = self.kwargs.get(self.slug_url_kwarg)
-        
+
         ocd_part = slug.rsplit('-', 1)[1]
         queryset = queryset.filter(id__endswith=ocd_part)
 
-        
         try:
             # Get the single item from the filtered queryset
             obj = queryset.get()
@@ -411,13 +409,14 @@ class PersonDetailView(DetailView):
 
         return obj
 
-
     def get_context_data(self, **kwargs):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
 
         person = context['person']
-        context['sponsored_legislation'] = Bill.objects.filter(sponsorships__person=person).filter(sponsorships__primary=True).annotate(last_action=Max('actions__date'))\
-                                  .order_by('-last_action')[:10]
+        context['sponsored_legislation'] = Bill.objects.filter(sponsorships__person=person)\
+                                                       .filter(sponsorships__primary=True)\
+                                                       .annotate(last_action=Max('actions__date'))\
+                                                       .order_by('-last_action')[:10]
 
         title = ''
         if person.current_council_seat:
@@ -441,7 +440,7 @@ class PersonDetailView(DetailView):
                 person.name, settings.CITY_COUNCIL_NAME)
         seo['title'] = '%s - %s' % (person.name,
                                     settings.SITE_META['site_name'])
-        #seo['image'] = person.headshot_url
+        seo['image'] = person.headshot_url
         context['seo'] = seo
 
         context['map_geojson'] = None
@@ -507,7 +506,7 @@ class EventsView(ListView):
 
         # Did the user set date boundaries?
         date_str = self.request.GET.get('form_datetime')
-        day_grouper = lambda x: (x.start_time.year, x.start_time.month, x.start_time.day)
+        day_grouper = lambda x: x.start_time.date
         context['select_date'] = ''
 
         # If yes, then filter for dates.
@@ -523,7 +522,7 @@ class EventsView(ListView):
 
             for event_date, events in itertools.groupby(select_events, key=day_grouper):
                 events = sorted(events, key=attrgetter('start_time'))
-                org_select_events.append([date(*event_date), events])
+                org_select_events.append([event_date, events])
 
             context['select_events'] = org_select_events
             context['select_date'] = date_time.strftime("%B") + " " + date_time.strftime("%Y")
@@ -545,7 +544,7 @@ class EventsView(ListView):
 
             for event_date, events in itertools.groupby(upcoming_events, key=day_grouper):
                 events = sorted(events, key=attrgetter('start_time'))
-                org_upcoming_events.append([date(*event_date), events])
+                org_upcoming_events.append([event_date, events])
 
             context['upcoming_events'] = org_upcoming_events
 
@@ -571,11 +570,10 @@ class EventDetailView(DetailView):
             queryset = self.get_queryset()
 
         slug = self.kwargs.get(self.slug_url_kwarg)
-        
+
         ocd_part = slug.rsplit('-', 1)[1]
         queryset = queryset.filter(id__endswith=ocd_part)
 
-        
         try:
             # Get the single item from the filtered queryset
             obj = queryset.get()
@@ -584,7 +582,6 @@ class EventDetailView(DetailView):
                           {'verbose_name': queryset.model._meta.verbose_name})
 
         return obj
-
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)

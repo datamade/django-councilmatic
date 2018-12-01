@@ -2,9 +2,8 @@ from councilmatic_core.models import Bill
 from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
 
-# XXX: is it OK to link to Django settings in haystack_indexes.py ?
-from django.conf import settings
 from django.utils import timezone
+
 
 class BillIndex(indexes.SearchIndex):
 

@@ -48,10 +48,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'opencivicdata.core',
+    'opencivicdata.legislative',
     'councilmatic_core',
     'haystack',
-    'notifications',
-    'django_rq',
     'password_reset',
     'adv_cache_tag',
 )
