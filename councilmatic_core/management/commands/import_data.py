@@ -7,6 +7,7 @@ import os
 import sys
 import logging
 import logging.config
+import shutil
 
 import requests
 import pytz
@@ -96,6 +97,10 @@ class Command(BaseCommand):
                             default=False,
                             help='Only download OCD data')
 
+        parser.add_argument('--clear_downloads',
+                            default=True,
+                            help='Clear downloads after successful import')
+
     def handle(self, *args, **options):
 
         self.connection = engine.connect()
@@ -134,6 +139,7 @@ class Command(BaseCommand):
 
                     download_only = options['download_only']
                     import_only = options['import_only']
+                    clear_downloads = options['clear_downloads']
 
                     if not import_only and not download_only:
                         download_only = True
@@ -143,6 +149,7 @@ class Command(BaseCommand):
                         etl_method = getattr(self, '{}_etl'.format(endpoint))
                         etl_method(import_only=import_only,
                                    download_only=download_only,
+                                   clear_downloads=clear_downloads,
                                    delete=options['delete'])
 
                     except Exception as e:
@@ -181,6 +188,7 @@ class Command(BaseCommand):
     def organizations_etl(self,
                           import_only=True,
                           download_only=True,
+                          clear_downloads=True,
                           delete=False):
 
         if download_only:
@@ -203,6 +211,9 @@ class Command(BaseCommand):
 
             self.add_new_organizations()
             self.add_new_posts()
+
+        if clear_downloads:
+            shutil.rmtree(self.organizations_folder)
 
         self.log_message('Organizations Complete!',
                          fancy=True,
