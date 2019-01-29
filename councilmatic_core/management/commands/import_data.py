@@ -100,12 +100,11 @@ class Command(BaseCommand):
                             default=False,
                             help='Only download OCD data')
 
-        parser.add_argument('--clear_downloads',
-                            default=True,
-                            help='Clear downloads after successful import')
+        parser.add_argument('--keep_downloads',
+                            action='store_true',
+                            help='Preserve JSON files in downloads directory')
 
     def handle(self, *args, **options):
-
         self.connection = engine.connect()
 
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
@@ -113,7 +112,6 @@ class Command(BaseCommand):
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
 
-        downloads_to_clear = []
         endpoints = options['endpoints'].split(',')
         if 'people' in endpoints and 'organizations' not in endpoints:
             self.log_message('Huh? Those endpoints do not look right.', style='ERROR')
@@ -146,7 +144,6 @@ class Command(BaseCommand):
 
                     download_only = options['download_only']
                     import_only = options['import_only']
-                    clear_downloads = options['clear_downloads']
 
                     if not import_only and not download_only:
                         download_only = True
@@ -157,19 +154,14 @@ class Command(BaseCommand):
                         etl_method(import_only=import_only,
                                    download_only=download_only,
                                    delete=options['delete'])
-                        
-                        if options['clear_downloads']:
-                            downloads_to_clear.append(endpoint)
 
                     except Exception as e:
                         client.captureException()
                         logger.error(e, exc_info=True)
         
-        for endpoint in downloads_to_clear:
-            folder = os.path.join(self.downloads_folder, endpoint)
-            shutil.rmtree(folder)
-
-            self.stdout.write('Files cleared from {}'.format(folder))
+        if not options['keep_downloads']:
+            shutil.rmtree(self.downloads_folder)
+            self.stdout.write('All files and folders cleared from {}'.format(self.downloads_folder))
 
     def log_message(self,
                     message,
