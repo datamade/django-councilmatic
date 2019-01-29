@@ -7,6 +7,7 @@ import os
 import sys
 import logging
 import logging.config
+import shutil
 
 import requests
 import pytz
@@ -75,7 +76,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             '--endpoints',
-            help="a specific endpoint to load data from",
+            help='Indicates a specific endpoint from which to load data.'
+                 'Be aware! Data about people depends on data about organizations,'
+                 'and so, the people endpoint should not be run without the organization endpoint,'
+                 'i.e., --endpoints=organizations,people',
             default='organizations,people,bills,events')
 
         parser.add_argument('--delete',
@@ -96,8 +100,11 @@ class Command(BaseCommand):
                             default=False,
                             help='Only download OCD data')
 
-    def handle(self, *args, **options):
+        parser.add_argument('--keep_downloads',
+                            action='store_true',
+                            help='Preserve JSON files in downloads directory')
 
+    def handle(self, *args, **options):
         self.connection = engine.connect()
 
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
@@ -106,6 +113,9 @@ class Command(BaseCommand):
             self.update_since = date_parser.parse(options['update_since'])
 
         endpoints = options['endpoints'].split(',')
+        if 'people' in endpoints and 'organizations' not in endpoints:
+            self.log_message('Huh? Those endpoints do not look right.', style='ERROR')
+            raise ValueError('You must import organization data to import people data: please include both endpoints')
 
         for jurisdiction_id in settings.OCD_JURISDICTION_IDS:
 
@@ -149,6 +159,9 @@ class Command(BaseCommand):
                         client.captureException()
                         logger.error(e, exc_info=True)
 
+        if not options['keep_downloads']:
+            shutil.rmtree(self.downloads_folder)
+            self.stdout.write('All files and folders cleared from {}'.format(self.downloads_folder))
 
     def log_message(self,
                     message,
@@ -305,14 +318,17 @@ class Command(BaseCommand):
             self.insert_raw_events(delete=delete)
             self.insert_raw_eventparticipants(delete=delete)
             self.insert_raw_eventdocuments(delete=delete)
+            self.insert_raw_eventmedia(delete=delete)
 
             self.update_existing_events()
             self.update_existing_eventparticipants()
             self.update_existing_eventdocuments()
+            self.update_existing_eventmedia()
 
             self.add_new_events()
             self.add_new_eventparticipants()
             self.add_new_eventdocuments()
+            self.add_new_eventmedia()
 
             self.insert_event_agenda_items()
 
@@ -472,6 +488,8 @@ class Command(BaseCommand):
 
         search_url = '{}/bills/'.format(base_url)
 
+        counter = 0
+
         for organization_id, organization_name in organization_ids:
 
             query_params['from_organization__id'] = organization_id
@@ -482,7 +500,6 @@ class Command(BaseCommand):
             search_results = self._get_response(search_url, params=query_params)
             page_json = search_results.json()
 
-            counter = 0
             for page_num in range(page_json['meta']['max_page']):
 
                 query_params['page'] = int(page_num) + 1
@@ -845,6 +862,7 @@ class Command(BaseCommand):
                 role,
                 start_date,
                 end_date,
+                extras,
                 organization_id,
                 person_id,
                 post_id
@@ -853,6 +871,7 @@ class Command(BaseCommand):
                 :role,
                 :start_date,
                 :end_date,
+                :extras,
                 :organization_id,
                 :person_id,
                 :post_id
@@ -865,9 +884,7 @@ class Command(BaseCommand):
                 person_info = json.loads(f.read())
 
             for membership_json in person_info['memberships']:
-
                 end_date = parse_date(membership_json['end_date'])
-
                 start_date = parse_date(membership_json['start_date'])
 
                 post_id = None
@@ -879,6 +896,7 @@ class Command(BaseCommand):
                     'role': membership_json['role'],
                     'start_date': start_date,
                     'end_date': end_date,
+                    'extras': json.dumps(membership_json['extras']),
                     'organization_id': membership_json['organization']['id'],
                     'person_id': person_info['id'],
                     'post_id': post_id,
@@ -1051,7 +1069,7 @@ class Command(BaseCommand):
                 if action['classification']:
                     classification = action['classification'][0]
 
-                action_date = app_timezone.localize(date_parser.parse(action['date']))
+                action_date = date_parser.parse(action['date']).date()
 
                 insert = {
                     'date': action_date,
@@ -1458,11 +1476,10 @@ class Command(BaseCommand):
                 status,
                 location_name,
                 location_url,
-                media_url,
                 source_url,
                 source_note,
                 slug,
-                guid
+                extras
             ) VALUES (
                 :ocd_id,
                 :ocd_created_at,
@@ -1476,11 +1493,10 @@ class Command(BaseCommand):
                 :status,
                 :location_name,
                 :location_url,
-                :media_url,
                 :source_url,
                 :source_note,
                 :slug,
-                :guid
+                :extras
             )
         '''
 
@@ -1504,10 +1520,6 @@ class Command(BaseCommand):
                 else:
                     source_url = el['url']
 
-            guid = None
-            if 'guid' in event_info['extras']:
-                guid = event_info['extras']['guid']
-
             insert = {
                 'ocd_id': ocd_id,
                 'ocd_created_at': event_info['created_at'],
@@ -1521,11 +1533,10 @@ class Command(BaseCommand):
                 'status': event_info['status'],
                 'location_name': event_info['location']['name'],
                 'location_url': event_info['location']['url'],
-                'media_url': event_info['media'][0]['links'][0]['url'] if event_info['media'] else None,
                 'source_url': source_url,
                 'source_note': event_info['sources'][0]['note'],
                 'slug': slug,
-                'guid': guid
+                'extras': json.dumps(event_info['extras']),
             }
 
             inserts.append(insert)
@@ -1660,6 +1671,67 @@ class Command(BaseCommand):
 
         self.log_message('Inserted {0} event documents\n'.format(counter), style='SUCCESS')
 
+    def insert_raw_eventmedia(self, delete=False):
+        pk_cols = ['event_id', 'url']
+
+        self.setup_raw('eventmedia',
+                       delete=delete,
+                       pk_cols=pk_cols,
+                       updated_at=True)
+
+        self.executeTransaction('''
+                ALTER TABLE raw_eventmedia
+                ALTER COLUMN updated_at SET DEFAULT NOW()
+            ''')
+
+        inserts = []
+
+        insert_query = '''
+            INSERT INTO raw_eventmedia (
+                event_id,
+                note,
+                url
+            ) VALUES (
+                :event_id,
+                :note,
+                :url
+            )
+            '''
+
+        counter = 0
+        for event_json in os.listdir(self.events_folder):
+
+            with open(os.path.join(self.events_folder, event_json)) as f:
+                event_info = json.loads(f.read())
+
+            for media in event_info['media']:
+
+                for link in media['links']:
+
+                    insert = {
+                        'event_id': event_info['id'],
+                        'note': media['note'],
+                        'url': link['url'],
+                    }
+
+                    inserts.append(insert)
+
+                    if inserts and len(inserts) % 10000 == 0:
+                        self.executeTransaction(sa.text(insert_query), *inserts)
+
+                        counter += 10000
+
+                        self.log_message('Inserted {} raw event media'.format(counter))
+
+                        inserts = []
+
+        if inserts:
+            self.executeTransaction(sa.text(insert_query), *inserts)
+
+            counter += len(inserts)
+
+        self.log_message('Inserted {0} event media\n'.format(counter), style='SUCCESS')
+
     ################################
     ###                          ###
     ### UPDATE EXISTING ENTITIES ###
@@ -1785,7 +1857,8 @@ class Command(BaseCommand):
                 person_id VARCHAR,
                 post_id VARCHAR,
                 start_date DATE,
-                end_date DATE
+                end_date DATE,
+                extras JSONB
             )
         ''')
 
@@ -1794,6 +1867,7 @@ class Command(BaseCommand):
            'role',
            'start_date',
            'end_date',
+           'extras',
            'organization_id',
            'person_id',
            'post_id'
@@ -1808,7 +1882,8 @@ class Command(BaseCommand):
                 raw.person_id,
                 raw.post_id,
                 raw.start_date,
-                raw.end_date
+                raw.end_date,
+                raw.extras
               FROM raw_membership AS raw
               JOIN councilmatic_core_membership AS dat
                 ON (raw.organization_id = dat.organization_id
@@ -2225,11 +2300,10 @@ class Command(BaseCommand):
             'status',
             'location_name',
             'location_url',
-            'media_url',
             'source_url',
             'source_note',
             'slug',
-            'guid'
+            'extras',
         ]
         self.update_entity_type('event', cols=cols)
 
@@ -2344,6 +2418,58 @@ class Command(BaseCommand):
 
         self.log_message('Found {0} changed event documents'.format(change_count), style='SUCCESS')
 
+    def update_existing_eventmedia(self):
+        self.executeTransaction('DROP TABLE IF EXISTS change_eventmedia')
+        self.executeTransaction('''
+            CREATE TABLE change_eventmedia (
+                event_id VARCHAR,
+                url VARCHAR
+            )
+        ''')
+
+        cols = [
+            'event_id',
+            'url',
+            'note'
+        ]
+
+        where_clause, set_values, fields = self.get_update_parts(cols, [])
+
+        find_changes = '''
+            INSERT INTO change_eventmedia
+              SELECT
+                raw.event_id,
+                raw.url
+              FROM raw_eventmedia AS raw
+              JOIN councilmatic_core_eventmedia AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.url = dat.url)
+              WHERE {}
+        '''.format(where_clause)
+
+        update_dat = '''
+            UPDATE councilmatic_core_eventmedia SET
+              {set_values}
+            FROM (
+              SELECT
+                {fields}
+              FROM raw_eventmedia AS raw
+              JOIN change_eventmedia AS change
+                ON (raw.event_id = change.event_id
+                    AND raw.url = change.url)
+            ) AS s
+            WHERE councilmatic_core_eventmedia.event_id = s.event_id
+              AND councilmatic_core_eventmedia.url = s.url
+        '''.format(set_values=set_values,
+                   fields=fields)
+
+        self.executeTransaction(find_changes)
+        self.executeTransaction(update_dat)
+
+        change_count = self.connection.execute('select count(*) from change_eventmedia').first().count
+
+        self.log_message('Found {0} changed event media'.format(change_count), style='SUCCESS')
+
     ########################
     ###                  ###
     ### ADD NEW ENTITIES ###
@@ -2439,7 +2565,8 @@ class Command(BaseCommand):
                 person_id VARCHAR,
                 post_id VARCHAR,
                 start_date DATE,
-                end_date DATE
+                end_date DATE,
+                extras JSONB
             )
         ''')
 
@@ -2450,7 +2577,8 @@ class Command(BaseCommand):
                 raw.person_id,
                 raw.post_id,
                 raw.start_date,
-                raw.end_date
+                raw.end_date,
+                raw.extras
               FROM raw_membership AS raw
               LEFT JOIN councilmatic_core_membership AS dat
                 ON (raw.organization_id = dat.organization_id
@@ -2470,6 +2598,7 @@ class Command(BaseCommand):
            'role',
            'start_date',
            'end_date',
+           'extras',
            'organization_id',
            'person_id',
            'post_id',
@@ -2888,11 +3017,10 @@ class Command(BaseCommand):
             'status',
             'location_name',
             'location_url',
-            'media_url',
             'source_url',
             'source_note',
             'slug',
-            'guid'
+            'extras',
         ]
 
         self.add_entity_type('event', cols=cols)
@@ -3006,6 +3134,57 @@ class Command(BaseCommand):
 
         self.log_message('Found {0} new event documents'.format(new_count), style='SUCCESS')
 
+    def add_new_eventmedia(self):
+        self.executeTransaction('DROP TABLE IF EXISTS new_eventmedia')
+        self.executeTransaction('''
+            CREATE TABLE new_eventmedia (
+                event_id VARCHAR,
+                url VARCHAR
+            )
+        ''')
+
+        cols = [
+            'event_id',
+            'url',
+            'note'
+        ]
+
+        find_new = '''
+            INSERT INTO new_eventmedia
+              SELECT
+                raw.event_id,
+                raw.url
+              FROM raw_eventmedia AS raw
+              LEFT JOIN councilmatic_core_eventmedia AS dat
+                ON (raw.event_id = dat.event_id
+                    AND raw.url = dat.url)
+              WHERE dat.event_id IS NULL
+                    AND dat.url IS NULL
+        '''
+
+        self.executeTransaction(find_new)
+
+        insert_fields = ', '.join(c for c in cols)
+        select_fields = ', '.join('raw.{}'.format(c) for c in cols)
+
+        insert_new = '''
+            INSERT INTO councilmatic_core_eventmedia (
+              {insert_fields}, updated_at
+            )
+              SELECT {select_fields}, updated_at
+              FROM raw_eventmedia AS raw
+              JOIN new_eventmedia AS new
+                ON (raw.event_id = new.event_id
+                    AND raw.url = new.url)
+        '''.format(insert_fields=insert_fields,
+                   select_fields=select_fields)
+
+        self.executeTransaction(insert_new)
+
+        new_count = self.connection.execute('select count(*) from new_eventmedia').first().count
+
+        self.log_message('Found {0} new event media'.format(new_count), style='SUCCESS')
+
     def insert_event_agenda_items(self):
         inserts = []
 
@@ -3023,7 +3202,8 @@ class Command(BaseCommand):
                 bill_id,
                 note,
                 notes,
-                updated_at
+                updated_at,
+                plain_text
             ) VALUES (
                 :order,
                 :description,
@@ -3031,7 +3211,8 @@ class Command(BaseCommand):
                 :bill_id,
                 :note,
                 :notes,
-                :updated_at
+                :updated_at,
+                :plain_text
             )
             '''
 
@@ -3055,6 +3236,12 @@ class Command(BaseCommand):
                 if item['notes']:
                     notes = item['notes'][0]
 
+                if item['extras'].get('plain_text'):
+                    plain_text = item['extras']['plain_text']
+                else:
+                    plain_text = None
+
+                # Add all items!
                 insert = {
                     'order': item['order'],
                     'description': item['description'],
@@ -3062,7 +3249,8 @@ class Command(BaseCommand):
                     'bill_id': bill_id,
                     'note': note,
                     'notes': notes,
-                    'updated_at': event_info['updated_at']
+                    'updated_at': event_info['updated_at'],
+                    'plain_text': plain_text
                 }
 
                 related_bill_entities = [i for i in item['related_entities']

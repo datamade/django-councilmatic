@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-councilmatic',
-    version='0.9.2',
+    version='0.10.11',
     packages=['councilmatic_core'],
     include_package_data=True,
     license='MIT License',  # example license
@@ -28,7 +28,8 @@ setup(
                       'psycopg2>=2.7',
                       'django-password-reset>=0.9,<1.0',
                       'django-councilmatic-notifications<0.2',
-                      'django-adv-cache-tag==1.1.0'],
+                      'django-adv-cache-tag==1.1.0',
+                      'boto==2.38.0'],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

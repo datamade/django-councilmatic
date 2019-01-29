@@ -49,7 +49,7 @@
                 {% endwith %}
 
                 <!-- View on legistar -->
-                <a href='{{person.source_url}}' target="_blank"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website</a>
+                <a href='{{person.source_url}}' target="_blank" rel="nofollow"><i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website</a>
 
             </div>
 
@@ -259,7 +259,7 @@
     {% if map_geojson %}
 
         <script src="{% static 'js/leaflet.js' %}" /></script>
-        <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&libraries=places&v=3.17"></script>
+        <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false&libraries=places&v=3.17&key={{GOOGLE_API_KEY}}}"></script>
         <script type="text/javascript" src="{% static 'js/leaflet-google.js' %}" ></script>
         <script>
 

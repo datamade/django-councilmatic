@@ -35,7 +35,6 @@ app_timezone = pytz.timezone(settings.TIME_ZONE)
 class CouncilmaticFacetedSearchView(FacetedSearchView):
 
     def extra_context(self):
-
         # Raise an error if Councilmatic cannot connect to Solr.
         # Most likely, Solr is down and needs restarting.
         try:
@@ -49,6 +48,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
         extra['facets'] = self.results.facet_counts()
 
         q_filters = ''
+
         url_params = [(p, val) for (p, val) in self.request.GET.items(
         ) if p != 'page' and p != 'selected_facets' and p != 'amp' and p != '_']
         selected_facet_vals = self.request.GET.getlist('selected_facets')
@@ -105,7 +105,6 @@ class CouncilmaticSearchForm(FacetedSearchForm):
 
     def no_query_found(self):
 
-        # return self.searchqueryset.order_by('-last_action_date').all()
         return self.searchqueryset.all()
 
 # This is used by a context processor in settings.py to render these variables
@@ -128,7 +127,8 @@ def city_context(request):
         'MAP_CONFIG',
         'ANALYTICS_TRACKING_CODE',
         'ABOUT_BLURBS',
-        'USING_NOTIFICATIONS'
+        'USING_NOTIFICATIONS',
+        'GOOGLE_API_KEY'
     ]
 
     city_context = {s: getattr(settings, s, None) for s in relevant_settings}

@@ -36,12 +36,17 @@
                     <input name="sort_by" type="hidden" class="form-control" value="relevance">
                 {% endif %}
 
-                <input name="q" type="text" class="input-lg form-control" placeholder="{{SEARCH_PLACEHOLDER_TEXT}}" {% if request.GET.q %}value="{{request.GET.q|remove_question}}"{% endif %}>
-                <div class='input-group-btn'>
-                    <button type="submit" class="btn btn-lg btn-primary">
-                        <i class='fa fa-fw fa-search'></i>
-                    </button>
-                </div>
+                {% if 'order_by=asc' in request.get_full_path %}
+                    <input name="order_by" type="hidden" class="form-control" value="asc">
+                {% endif %}
+
+                {% if 'order_by=desc' in request.get_full_path %}
+                    <input name="order_by" type="hidden" class="form-control" value="desc">
+                {% endif %}
+
+                {% with formatted_q=request.GET.q|remove_question %}
+                    {% include 'partials/search_bar.html' %}
+                {% endwith %}
             </div>
         </form>
     </div>
@@ -109,21 +114,28 @@
 
         <div class="col-sm-8 order-nav">
 
-            <nav class="nav nav-inline">
+            <nav class="nav nav-inline order-nav">
 
                 Order by:
 
-                {% with order_name='date' %}
+                {% with sort_name='date' order_name='desc' %}
                     {% include 'partials/order_by_filter.html' %}
                 {% endwith %}
 
-                {% with order_name='title' %}
+                {% with sort_name='title' order_name='asc' %}
                     {% include 'partials/order_by_filter.html' %}
                 {% endwith %}
 
-                {% with order_name='relevance' %}
-                    {% include 'partials/order_by_filter.html' %}
-                {% endwith %}
+                <!-- The templating logic is different for Relevance sort. The Relevance sort does not require a direction, and it should be bolded by default after submitting a query.-->
+                {% if 'sort_by=relevance' in request.get_full_path or 'order_by=' not in request.get_full_path and 'q=' in request.get_full_path %}
+                    <strong><a class="nav-link assort" href="{% search_with_querystring request sort_by='relevance' %}" data='sort_by=relevance'>
+                        Relevance
+                    </a></strong>
+                {% else %}
+                    <a class="sort-by nav-link" href="{% search_with_querystring request sort_by='relevance' %}" data='sort_by=relevance'>
+                        Relevance
+                    </a>
+                {% endif %}
 
                 {% if 'sort_by' in request.get_full_path %}
                     <a href ="#" class="remove-order-value btn btn-sm btn-primary hidden-xs"
@@ -311,17 +323,16 @@
                 }
             });
 
-            var timestamp = Date.now();
             var existing_q = decodeURIComponent("{{ q_filters }}").replace(/&amp;/g, '&').replace(/\+/g, ' ');
 
             $(".filter-value").click(function() {
                 var addtl_filter = $(this).attr('data');
 
                 if(existing_q){
-                    window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter)+"&_="+timestamp);
+                    window.location.assign('/search/?'+existing_q+'&selected_facets='+encodeURIComponent(addtl_filter));
                 }
                 else{
-                    window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter)+"&_="+timestamp);
+                    window.location.assign ('/search/?selected_facets=' + encodeURIComponent(addtl_filter));
                 };
 
             });
@@ -335,7 +346,7 @@
                     return encodeURIComponent(value) != to_remove;
                 });
 
-                window.location.assign('/search/?' + new_components.join('&')+"&_="+timestamp);
+                window.location.assign('/search/?' + new_components.join('&'));
             });
 
             $(".remove-order-value").click(function() {
@@ -344,12 +355,12 @@
 
                 for(var i = existing_components.length -1; i >= 0 ; i--){
                     var el = existing_components[i]
-                    if(el.includes('ascending') || el.includes(to_remove) || el.includes('descending')) {
+                    if(el.includes('asc') || el.includes(to_remove) || el.includes('desc')) {
                         existing_components.splice(i, 1);
                     }
                 }
 
-                window.location.assign('/search/?' + existing_components.join('&')+"&_="+timestamp);
+                window.location.assign('/search/?' + existing_components.join('&'));
             });
 
         });

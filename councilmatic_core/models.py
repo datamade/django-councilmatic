@@ -7,6 +7,7 @@ import pytz
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
+from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import NoReverseMatch
 from django.utils import timezone
@@ -637,6 +638,7 @@ class Membership(models.Model):
     start_date = models.DateField(default=None, null=True)
     end_date = models.DateField(default=None, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    extras = JSONField(default=dict)
 
     @property
     def organization(self):
@@ -685,12 +687,11 @@ class Event(models.Model):
     status = models.CharField(max_length=100)
     location_name = models.CharField(max_length=255)
     location_url = models.CharField(max_length=255, blank=True)
-    media_url = models.CharField(max_length=555, null=True, default=None)
     source_url = models.CharField(max_length=255)
     source_note = models.CharField(max_length=255, blank=True)
     slug = models.CharField(max_length=255, unique=True)
-    guid = models.CharField(max_length=255, unique=True, null=True, default=None)
     updated_at = models.DateTimeField(auto_now=True)
+    extras = JSONField(default=dict)
 
     @property
     def event_page_url(self):
@@ -761,11 +762,23 @@ class EventAgendaItem(models.Model):
     note = models.CharField(max_length=255, null=True)
     notes = models.CharField(max_length=255, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    plain_text = models.TextField(null=True)
 
     def __init__(self, *args, **kwargs):
         super(EventAgendaItem, self).__init__(*args, **kwargs)
         self.event = override_relation(self.event)
         self.bill = override_relation(self.bill)
+
+
+class EventMedia(models.Model):
+    event = models.ForeignKey('Event', related_name='media_urls')
+    url = models.CharField(max_length=555)
+    note = models.CharField(max_length=255, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __init__(self, *args, **kwargs):
+        super(EventMedia, self).__init__(*args, **kwargs)
+        self.event = override_relation(self.event)
 
 
 class Document(models.Model):
