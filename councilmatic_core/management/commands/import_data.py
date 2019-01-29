@@ -76,7 +76,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             '--endpoints',
-            help="a specific endpoint to load data from",
+            help='indicates a specific endpoint to load data from –'
+                 'note that people depends on data in organizations,'
+                 'and so, the people endpoint should not be run without organizations,'
+                 'i.e., --endpoints=organizations,people',
             default='organizations,people,bills,events')
 
         parser.add_argument('--delete',
@@ -110,7 +113,11 @@ class Command(BaseCommand):
         if options['update_since']:
             self.update_since = date_parser.parse(options['update_since'])
 
+        downloads_to_clear = []
         endpoints = options['endpoints'].split(',')
+        if 'people' in endpoints and 'organizations' not in endpoints:
+            self.log_message('Huh? Those endpoints do not look right.', style='ERROR')
+            raise ValueError('You must import organization data to import people data: please include both endpoints')
 
         for jurisdiction_id in settings.OCD_JURISDICTION_IDS:
 
@@ -149,13 +156,20 @@ class Command(BaseCommand):
                         etl_method = getattr(self, '{}_etl'.format(endpoint))
                         etl_method(import_only=import_only,
                                    download_only=download_only,
-                                   clear_downloads=clear_downloads,
                                    delete=options['delete'])
+                        
+                        if options['clear_downloads']:
+                            downloads_to_clear.append(endpoint)
 
                     except Exception as e:
                         client.captureException()
                         logger.error(e, exc_info=True)
+        
+        for endpoint in downloads_to_clear:
+            folder = os.path.join(self.downloads_folder, endpoint)
+            shutil.rmtree(folder)
 
+            self.stdout.write('Files cleared from {}'.format(folder))
 
     def log_message(self,
                     message,
@@ -188,7 +202,6 @@ class Command(BaseCommand):
     def organizations_etl(self,
                           import_only=True,
                           download_only=True,
-                          clear_downloads=True,
                           delete=False):
 
         if download_only:
@@ -211,9 +224,6 @@ class Command(BaseCommand):
 
             self.add_new_organizations()
             self.add_new_posts()
-
-        if clear_downloads:
-            shutil.rmtree(self.organizations_folder)
 
         self.log_message('Organizations Complete!',
                          fancy=True,
