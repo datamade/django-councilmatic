@@ -158,7 +158,7 @@ class Command(BaseCommand):
                     except Exception as e:
                         client.captureException()
                         logger.error(e, exc_info=True)
-        
+
         if not options['keep_downloads']:
             shutil.rmtree(self.downloads_folder)
             self.stdout.write('All files and folders cleared from {}'.format(self.downloads_folder))
@@ -3231,19 +3231,8 @@ class Command(BaseCommand):
 
                 bill_id = None
                 note = None
-
-                try:
-                    related_entity = item['related_entities'][0]
-
-                    # Only capture related entities when they are bills
-                    if related_entity['entity_type'] == 'bill':
-                        bill_id = related_entity['entity_id']
-                        note = related_entity['note']
-
-                except IndexError:
-                    pass
-
                 notes = ''
+
                 if item['notes']:
                     notes = item['notes'][0]
 
@@ -3264,7 +3253,19 @@ class Command(BaseCommand):
                     'plain_text': plain_text
                 }
 
-                inserts.append(insert)
+                related_bill_entities = [i for i in item['related_entities']
+                                         if i['entity_type'] == 'bill']
+
+                if related_bill_entities:
+
+                    for related_bill in related_bill_entities:
+                        insert['bill_id'] = related_bill['entity_id']
+                        insert['note'] = related_bill['note']
+
+                        inserts.append(insert)
+
+                else:
+                    inserts.append(insert)
 
         if inserts:
             queries_list = [delete_statement.format(','.join(["'{}'".format(e) for e in event_ids])), sa.text(insert_query)]
