@@ -76,9 +76,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             '--endpoints',
-            help='indicates a specific endpoint to load data from –'
-                 'note that people depends on data in organizations,'
-                 'and so, the people endpoint should not be run without organizations,'
+            help='Indicates a specific endpoint from which to load data.'
+                 'Be aware! Data about people depends on data about organizations,'
+                 'and so, the people endpoint should not be run without the organization endpoint,'
                  'i.e., --endpoints=organizations,people',
             default='organizations,people,bills,events')
 
