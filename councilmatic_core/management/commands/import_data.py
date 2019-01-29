@@ -7,6 +7,7 @@ import os
 import sys
 import logging
 import logging.config
+import shutil
 
 import requests
 import pytz
@@ -75,7 +76,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             '--endpoints',
-            help="a specific endpoint to load data from",
+            help='Indicates a specific endpoint from which to load data.'
+                 'Be aware! Data about people depends on data about organizations,'
+                 'and so, the people endpoint should not be run without the organization endpoint,'
+                 'i.e., --endpoints=organizations,people',
             default='organizations,people,bills,events')
 
         parser.add_argument('--delete',
@@ -96,8 +100,11 @@ class Command(BaseCommand):
                             default=False,
                             help='Only download OCD data')
 
-    def handle(self, *args, **options):
+        parser.add_argument('--keep_downloads',
+                            action='store_true',
+                            help='Preserve JSON files in downloads directory')
 
+    def handle(self, *args, **options):
         self.connection = engine.connect()
 
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
@@ -106,6 +113,9 @@ class Command(BaseCommand):
             self.update_since = date_parser.parse(options['update_since'])
 
         endpoints = options['endpoints'].split(',')
+        if 'people' in endpoints and 'organizations' not in endpoints:
+            self.log_message('Huh? Those endpoints do not look right.', style='ERROR')
+            raise ValueError('You must import organization data to import people data: please include both endpoints')
 
         for jurisdiction_id in settings.OCD_JURISDICTION_IDS:
 
@@ -148,7 +158,10 @@ class Command(BaseCommand):
                     except Exception as e:
                         client.captureException()
                         logger.error(e, exc_info=True)
-
+        
+        if not options['keep_downloads']:
+            shutil.rmtree(self.downloads_folder)
+            self.stdout.write('All files and folders cleared from {}'.format(self.downloads_folder))
 
     def log_message(self,
                     message,
