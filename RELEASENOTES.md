@@ -1,5 +1,15 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.12
+
+*Changes*
+
+Modifies `import_data`, so that the script removes the contents of the `downloads` directory at the end of every import. It does this by default; users have the option to call the command with `--keep_downloads`.
+
+Fixes a bug in `import_data`: now, the import considers all bills related to an event agenda item, not just the first one. 
+
+**Release date:** 1-29-2019
+
 ## Version 0.10.11
 
 *Changes*
