@@ -60,8 +60,13 @@ class Command(BaseCommand):
     def get_rtf(self):
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
         with engine.begin() as connection:
-            # Only apply this query to most recently updated (or created) bills.
-            max_updated = Bill.objects.all().aggregate(Max('ocd_updated_at'))['ocd_updated_at__max']
+            '''
+            `max_updated` determines which bills
+            have been recently updated (or created) in the Councilmatic database.
+
+            See the third (last) query option for its use.
+            '''
+            max_updated = Bill.objects.all().aggregate(Max('updated_at'))['updated_at__max']
 
             if max_updated is None or self.update_all:
                 query = '''
