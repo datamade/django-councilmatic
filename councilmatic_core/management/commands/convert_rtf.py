@@ -61,10 +61,10 @@ class Command(BaseCommand):
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
         with engine.begin() as connection:
             '''
-            `max_updated` determines which bills
-            have been recently updated (or created) in the Councilmatic database.
-
-            See the third (last) query option for its use.
+            The third (last) query option below uses `max_updated`. 
+            This query determines which bills have been recently updated (or created) 
+            in the Councilmatic database, by looking for bills with
+            an `updated_at` timestamp of greater or equal value.
             '''
             max_updated = Bill.objects.all().aggregate(Max('updated_at'))['updated_at__max']
 
