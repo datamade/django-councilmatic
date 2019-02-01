@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.13
+
+*Changes*
+
+Modifies the `convert_rtf` management command (used by NYC Councilmatic): now, the script converts by default the most recently updated bills in the Councilmatic database (`updated_at`), not the most recently updated bills in the OCD database (`ocd_updated_at`).
+
+**Release date:** 2-1-2019
+
 ## Version 0.10.12
 
 *Changes*
