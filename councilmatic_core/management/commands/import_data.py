@@ -934,7 +934,8 @@ class Command(BaseCommand):
                 abstract,
                 legislative_session_id,
                 bill_type,
-                slug
+                slug,
+                restrict_view
             ) VALUES (
                 :ocd_id,
                 :ocd_created_at,
@@ -951,7 +952,8 @@ class Command(BaseCommand):
                 :abstract,
                 :legislative_session_id,
                 :bill_type,
-                :slug
+                :slug,
+                :restrict_view
             )
             '''
 
@@ -994,6 +996,10 @@ class Command(BaseCommand):
 
             slug = slugify(bill_info['identifier'])
 
+            restrict_view = False
+            if bill_info['extras'].get('restrict_view'):
+                restrict_view = bill_info['extras']['restrict_view']
+
             insert = {
                 'ocd_id': bill_info['id'],
                 'ocd_created_at': bill_info['created_at'],
@@ -1011,6 +1017,7 @@ class Command(BaseCommand):
                 'legislative_session_id': bill_info['legislative_session']['identifier'],
                 'bill_type': bill_type,
                 'slug': slug,
+                'restrict_view': restrict_view,
             }
 
             inserts.append(insert)
@@ -1942,6 +1949,7 @@ class Command(BaseCommand):
             'last_action_date',
             'legislative_session_id',
             'slug',
+            'restrict_view',
         ]
         self.update_entity_type('bill', cols=cols)
 
@@ -2648,6 +2656,7 @@ class Command(BaseCommand):
             'last_action_date',
             'legislative_session_id',
             'slug',
+            'restrict_view',
         ]
 
         self.add_entity_type('bill', cols=cols)
