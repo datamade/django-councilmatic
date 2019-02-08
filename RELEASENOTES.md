@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.14
+
+*Changes*
+
+Adds a `restict_view` boolean field to the Bill model, and updates `import_data` to populate this field.
+
+**Release date:** 2-8-2019
+
 ## Version 0.10.13
 
 *Changes*
