@@ -964,10 +964,19 @@ class Command(BaseCommand):
             with open(os.path.join(self.bills_folder, bill_json)) as f:
                 bill_info = json.loads(f.read())
 
+
+            # Add the API source, if available, which allows for easier debugging 
+            # Otherwise, assume that the 'web' source is available
             source_url = None
+            source_note = None
             for source in bill_info['sources']:
-                if source['note'] == 'web':
+                if source['note'] == 'api':
                     source_url = source['url']
+                    source_note = source['note']
+                    break
+                else:
+                    source_url = source['url']
+                    source_note = source['note']
 
             full_text = None
             if 'rtf_text' in bill_info['extras']:
@@ -1008,7 +1017,7 @@ class Command(BaseCommand):
                 'identifier': bill_info['identifier'],
                 'classification': bill_info['classification'][0],
                 'source_url': source_url,
-                'source_note': bill_info['sources'][0]['note'],
+                'source_note': source_note,
                 'from_organization_id': bill_info['from_organization']['id'],
                 'full_text': full_text,
                 'ocr_full_text': ocr_full_text,
