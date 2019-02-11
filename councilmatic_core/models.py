@@ -179,7 +179,7 @@ class Bill(models.Model):
     identifier = models.CharField(max_length=50)
     bill_type = models.CharField(max_length=50)
     classification = models.CharField(max_length=100)
-    source_url = models.CharField(max_length=255)
+    source_url = models.CharField(max_length=255, blank=True)
     source_note = models.CharField(max_length=255, blank=True)
 
     _from_organization = models.ForeignKey('Organization',
