@@ -965,12 +965,12 @@ class Command(BaseCommand):
                 bill_info = json.loads(f.read())
 
 
-            # Add the API source, if available, which allows for easier debugging 
-            # Otherwise, assume that the 'web' source is available
+            # Add the web source, if available. 
+            # Otherwise, assume that the 'api' source is available and add that.
             source_url = None
             source_note = None
             for source in bill_info['sources']:
-                if source['note'] == 'api':
+                if source['note'] == 'web':
                     source_url = source['url']
                     source_note = source['note']
                     break
