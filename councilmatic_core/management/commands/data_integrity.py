@@ -16,9 +16,20 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = 'Checks for alignment between the Solr index and Councilmatic database'
+    def add_arguments(self, parser):
+        parser.add_argument('--city', 
+                            help='Indicates the name of the custom councilmatic instance.' +
+                                 'Currently supports LAMetroBills.' + 
+                                 'e.g., --city=metro')
 
     def handle(self, *args, **options):
-        councilmatic_count = Bill.objects.all().count()
+        if options['city']:
+            city = options['city']
+            if city == 'metro':
+                from lametro.models import LAMetroBill
+                councilmatic_count = LAMetroBill.objects.all().count()
+        else:
+            councilmatic_count = Bill.objects.all().count()
 
         try:
             solr_url = settings.HAYSTACK_CONNECTIONS['default']['URL']
