@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.15
+
+*Changes*
+
+Refactors the `data_integrity` management script by adding `count_councilmatic_bills` – an easy-to-override helper function.
+
+**Release date:** 3-1-2019
+
 ## Version 0.10.14
 
 *Changes*
