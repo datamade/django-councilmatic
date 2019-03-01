@@ -18,7 +18,8 @@ class Command(BaseCommand):
     help = 'Checks for alignment between the Solr index and Councilmatic database'
 
     def handle(self, *args, **options):
-        councilmatic_count = Bill.objects.all().count()
+        
+        councilmatic_count = self.count_councilmatic_bills()
 
         try:
             solr_url = settings.HAYSTACK_CONNECTIONS['default']['URL']
@@ -40,3 +41,7 @@ class Command(BaseCommand):
 
         logger.info('Good news! Solr index has {solr} entites. The Councilmatic database has {councilmatic} entities.'.format(solr=solr_index_count, councilmatic=councilmatic_count))
         print('. . . . .\n')
+
+    def count_councilmatic_bills(self):
+
+        return Bill.objects.all().count()
