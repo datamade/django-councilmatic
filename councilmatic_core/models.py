@@ -4,36 +4,46 @@ from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
 from django.db.models.functions import Cast
-from django.utils.text import slugify, Truncator
 from django.utils.functional import cached_property
+from django.core.files.storage import FileSystemStorage
 
 from proxy_overrides.related import ProxyForeignKey
 
 import opencivicdata.legislative.models
 import opencivicdata.core.models
 
-if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
-    raise ImproperlyConfigured(
-        'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
+static_storage = FileSystemStorage(location=settings.STATIC_ROOT, base_url='/')
 
-if not hasattr(settings, 'CITY_COUNCIL_NAME'):
-    raise ImproperlyConfigured(
-        'You must define a CITY_COUNCIL_NAME in settings.py')
+
+# if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
+#     raise ImproperlyConfigured(
+#         'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
+
+# if not hasattr(settings, 'CITY_COUNCIL_NAME'):
+#     raise ImproperlyConfigured(
+#         'You must define a CITY_COUNCIL_NAME in settings.py')
 
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(
     settings, 'MANUAL_HEADSHOTS') else {}
 
 
-def get_uuid():
-    import uuid
-    return str(uuid.uuid4())
-
-
 class Person(opencivicdata.core.models.Person):
 
-    class Meta:
-        proxy = True
+    person = models.OneToOneField(opencivicdata.core.models.Person,
+                                  on_delete=models.CASCADE,
+                                  related_name='councilmatic_person',
+                                  parent_link=True)
 
+    headshot = models.FileField(upload_to='images',
+                                storage=static_storage,
+                                default='images/headshot_placeholder.png')
+
+    slug = models.SlugField()
+
+    def delete(self, **kwargs):
+        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        super().delete(**kwargs)
+    
     def __str__(self):
         return self.name
 
@@ -44,27 +54,14 @@ class Person(opencivicdata.core.models.Person):
             return m.post.label
         return ''
 
-    @property
     def is_speaker(self):
-        return True if self.memberships.filter(role='Speaker').first() else False
-
-    @property
-    def headshot(self):
-        return self.image
-
-    @property
-    def headshot_url(self):
-        if self.slug in MANUAL_HEADSHOTS:
-            return '/static/images/' + MANUAL_HEADSHOTS[self.slug]['image']
-        elif self.headshot:
-            return '/static/images/' + self.id + ".jpg"
-        else:
-            return '/static/images/headshot_placeholder.png'
+        return True if self.memberships.filter(role='Speaker').first() else Fals
 
     @property
     def headshot_source(self):
-        if self.slug in MANUAL_HEADSHOTS:
-            return MANUAL_HEADSHOTS[self.slug]['source']
+        sources = self.sources.filter(url=self.headshot.url)
+        if sources:
+            return sources.get().note
         elif self.headshot:
             return settings.CITY_VOCAB['SOURCE']
         else:
@@ -89,27 +86,6 @@ class Person(opencivicdata.core.models.Person):
             return []
 
     @property
-    def link_html(self):
-
-        if self.id and self.slug:
-
-            try:
-                link_path = reverse('{}:person'.format(settings.APP_NAME), args=(self.slug,))
-
-            except NoReverseMatch:
-                link_path = reverse('person', args=(self.slug,))
-
-            return '<a href="{0}" title="More on {1}">{1}</a>'.format(link_path, self.name)
-
-        return self.name
-
-    @property
-    def slug(self):
-
-        ocd_part = self.id.rsplit('-', 1)[1]
-        return '{0}-{1}'.format(slugify(self.name), ocd_part)
-
-    @property
     def latest_council_membership(self):
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
             filter_kwarg = {'organization__id': settings.OCD_CITY_COUNCIL_ID}
@@ -130,17 +106,18 @@ class Person(opencivicdata.core.models.Person):
             return m.post.label
         return ''
 
-
 class Organization(opencivicdata.core.models.Organization):
 
-    class Meta:
-        proxy = True
+    organization = models.OneToOneField(opencivicdata.core.models.Organization,
+                                        on_delete=models.CASCADE,
+                                        related_name='councilmatic_organization',
+                                        parent_link=True)
 
-    @property
-    def slug(self):
+    slug = models.SlugField(max_length=200)
 
-        ocd_part = self.id.rsplit('-', 1)[1]
-        return '{0}-{1}'.format(slugify(self.name), ocd_part)
+    def delete(self, **kwargs):
+        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        super().delete(**kwargs)
 
     def __str__(self):
         return self.name
@@ -181,8 +158,10 @@ class Organization(opencivicdata.core.models.Organization):
     @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            foo = self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=timezone.now())
-            return foo
+            chairs = self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=timezone.now()).select_related('person__councilmatic_person')
+            for chair in chairs:
+                chair.person = chair.person.councilmatic_person
+            return chairs
         else:
             return []
 
@@ -231,7 +210,6 @@ class Organization(opencivicdata.core.models.Organization):
 
         return self.name
 
-
 class Post(opencivicdata.core.models.Post):
     class Meta:
         proxy = True
@@ -245,18 +223,14 @@ class Post(opencivicdata.core.models.Post):
 
     @cached_property
     def current_member(self):
-        return self.memberships.filter(end_date__gt=timezone.now())\
-                               .order_by('-end_date', '-start_date')\
-                               .first()
+        membership = self.memberships.filter(end_date__gt=timezone.now())\
+                                     .order_by('-end_date', '-start_date')\
+                                     .select_related('person__councilmatic_person').first()
+        if membership:
+            membership.person = membership.person.councilmatic_person
+            return membership
 
 
-class PostShape(models.Model):
-    post = models.OneToOneField(
-        Post,
-        on_delete=models.CASCADE,
-        primary_key=True,
-    )
-    shape = models.TextField(blank=True, null=True)
 
 
 class MembershipManager(models.Manager):
@@ -307,16 +281,18 @@ class EventManager(models.Manager):
 
 class Event(opencivicdata.legislative.models.Event):
 
-    class Meta:
-        proxy = True
+    event = models.OneToOneField(opencivicdata.legislative.models.Event,
+                                 on_delete=models.CASCADE,
+                                 related_name='councilmatic_event',
+                                 parent_link=True)
+
+    slug = models.SlugField(max_length=200)
+
+    def delete(self, **kwargs):
+        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        super().delete(**kwargs)
 
     objects = EventManager()
-
-    @property
-    def slug(self):
-        truncator = Truncator(self.name)
-        ocd_part = self.id.rsplit('-', 1)[1]
-        return '{0}-{1}'.format(slugify(truncator.words(5)), ocd_part)
 
     @property
     def event_page_url(self):
@@ -368,13 +344,18 @@ class Event(opencivicdata.legislative.models.Event):
 
 
 class Bill(opencivicdata.legislative.models.Bill):
-    class Meta:
-        proxy = True
 
-    @property
-    def slug(self):
-        return slugify(self.identifier)
+    bill = models.OneToOneField(opencivicdata.legislative.models.Bill,
+                                 on_delete=models.CASCADE,
+                                 related_name='councilmatic_bill',
+                                 parent_link=True)
 
+    slug = models.SlugField()
+
+    def delete(self, **kwargs):
+        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        super().delete(**kwargs)
+    
     def __str__(self):
         return self.friendly_name
 
@@ -397,6 +378,10 @@ class Bill(opencivicdata.legislative.models.Bill):
     @property
     def html_text(self):
         return self.extras.get('html_text')
+
+    @property
+    def web_source(self):
+        return self.sources.filter(note='web').get()
 
     @property
     def controlling_body(self):
@@ -444,7 +429,8 @@ class Bill(opencivicdata.legislative.models.Bill):
 
     @property
     def last_action_date(self):
-        return self.current_action.date_dt
+        if self.current_action:
+            return self.current_action.date_dt
 
     @property
     def first_action(self):
@@ -609,7 +595,10 @@ class BillAction(opencivicdata.legislative.models.BillAction):
 
     @property
     def label(self):
-        c = self.classification[0]
+        c = self.classification
+        if not c:
+            return 'default'
+        c = c[0]
 
         if c == 'committee-passage':
             return 'success'
@@ -636,3 +625,22 @@ class BillAction(opencivicdata.legislative.models.BillAction):
 
         else:
             return 'default'
+
+    @cached_property
+    def referred_org(self):
+        if self.description == 'Referred':
+            related_entity = self.related_entities.get()
+            if related_entity:
+                return related_entity.organization
+
+class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelatedEntity):
+    class Meta:
+        proxy = True
+
+    action = ProxyForeignKey(BillAction,
+                             related_name='related_entities',
+                             on_delete=models.CASCADE)
+
+    organization = ProxyForeignKey(Organization,
+                                   null=True,
+                                   on_delete=models.SET_NULL)
