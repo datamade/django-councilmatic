@@ -3,12 +3,13 @@ from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
 
 from django.utils import timezone
+from django.db import models
 
 
 class BillIndex(indexes.SearchIndex):
 
-    text = indexes.CharField(document=True, use_template=True,
-                             template_name="search/indexes/councilmatic_core/bill_text.txt")
+    text = indexes.CharField(document=True, use_template=True)
+#                             template_name="search/indexes/councilmatic_core/bill_text.txt")
     slug = indexes.CharField(model_attr='slug', indexed=False)
     id = indexes.CharField(model_attr='id', indexed=False)
     bill_type = indexes.CharField(faceted=True)

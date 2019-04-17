@@ -256,23 +256,6 @@ class BillDetailView(DetailView):
     template_name = 'councilmatic_core/legislation.html'
     context_object_name = 'legislation'
 
-    def get_object(self, queryset=None):
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        slug = self.kwargs.get(self.slug_url_kwarg)
-
-        queryset = queryset.filter(identifier__iexact=slug)
-
-        try:
-            # Get the single item from the filtered queryset
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
-
-        return obj
-
     def get_context_data(self, **kwargs):
         context = super(BillDetailView, self).get_context_data(**kwargs)
 
@@ -320,23 +303,6 @@ class CommitteeDetailView(DetailView):
     template_name = 'councilmatic_core/committee.html'
     context_object_name = 'committee'
 
-    def get_object(self, queryset=None):
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        slug = self.kwargs.get(self.slug_url_kwarg)
-
-        ocd_part = slug.rsplit('-', 1)[1]
-        queryset = queryset.filter(id__endswith=ocd_part)
-
-        try:
-            # Get the single item from the filtered queryset
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
-
-        return obj
 
     def get_context_data(self, **kwargs):
         context = super(CommitteeDetailView, self).get_context_data(**kwargs)
@@ -391,24 +357,6 @@ class PersonDetailView(DetailView):
     template_name = 'councilmatic_core/person.html'
     context_object_name = 'person'
 
-    def get_object(self, queryset=None):
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        slug = self.kwargs.get(self.slug_url_kwarg)
-
-        ocd_part = slug.rsplit('-', 1)[1]
-        queryset = queryset.filter(id__endswith=ocd_part)
-
-        try:
-            # Get the single item from the filtered queryset
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
-
-        return obj
-
     def get_context_data(self, **kwargs):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
 
@@ -440,7 +388,7 @@ class PersonDetailView(DetailView):
                 person.name, settings.CITY_COUNCIL_NAME)
         seo['title'] = '%s - %s' % (person.name,
                                     settings.SITE_META['site_name'])
-        seo['image'] = person.headshot_url
+        seo['image'] = person.headshot.url
         context['seo'] = seo
 
         context['map_geojson'] = None
@@ -564,24 +512,6 @@ class EventDetailView(DetailView):
     template_name = 'councilmatic_core/event.html'
     model = Event
     context_object_name = 'event'
-
-    def get_object(self, queryset=None):
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        slug = self.kwargs.get(self.slug_url_kwarg)
-
-        ocd_part = slug.rsplit('-', 1)[1]
-        queryset = queryset.filter(id__endswith=ocd_part)
-
-        try:
-            # Get the single item from the filtered queryset
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
-
-        return obj
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)

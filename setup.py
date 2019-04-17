@@ -27,10 +27,8 @@ setup(
                       'python-dateutil>=2.7<2.8',
                       'pysolr>=3.8,<3.9',
                       'psycopg2-binary>=2.7<2.8',
-                      'django-password-reset>=0.9,<1.0',
-                      'django-rq>=1.2<1.3',
-                      'django-councilmatic-notifications<0.2',
                       'django-adv-cache-tag==1.1.2',
+                      'django-activity-stream',
                       'boto==2.38.0'],
     classifiers=[
         'Environment :: Web Environment',

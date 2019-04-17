@@ -49,7 +49,7 @@
                 </strong><br/>
                 {% for s in legislation.sponsorships.all %}
                     {% if s.is_primary %}
-                        {{ s.person.link_html | safe }}</i>
+                        <a href="{% url 'person' s.person.slug %}">{{ s.person.name }}</a></i>
                     {% endif %}
                 {% endfor %}
             </p>
