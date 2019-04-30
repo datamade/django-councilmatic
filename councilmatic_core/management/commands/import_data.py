@@ -71,7 +71,6 @@ DEBUG = settings.DEBUG
 
 class Command(BaseCommand):
     help = 'loads in data from the open civic data API'
-    update_since = None
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -105,6 +104,8 @@ class Command(BaseCommand):
                             help='Preserve JSON files in downloads directory')
 
     def handle(self, *args, **options):
+        self.update_since = None
+
         self.connection = engine.connect()
 
         self.this_folder = os.path.abspath(os.path.dirname(__file__))
