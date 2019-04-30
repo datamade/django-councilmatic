@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 0.10.16
+
+*Changes*
+
+Fixes a tricky bug in `import_data`, where specifying `update_since` would result in unexpected behavior in later imports. Flushes and reimports subjects of bills during import, in order to capture the removal of subjects.
+
+**Release date:** 4-30-2019
+
 ## Version 0.10.15
 
 *Changes*
