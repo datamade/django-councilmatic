@@ -4,7 +4,7 @@ from haystack.query import SearchQuerySet
 
 from django.contrib.syndication.views import Feed
 from django.utils.feedgenerator import Rss201rev2Feed
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.conf import settings
 
 from .models import Person, Bill, Organization, Event

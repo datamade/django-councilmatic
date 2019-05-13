@@ -4,9 +4,9 @@ import itertools
 from operator import attrgetter
 import urllib
 import requests
-from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
+
 
 from django.shortcuts import render, redirect
 from django.conf import settings
@@ -17,19 +17,17 @@ from django.core.cache import cache
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.utils import timezone
+from django.http import Http404
+from django.utils.translation import gettext as _
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
-
-import pytz
 
 from .models import Person, Bill, Organization, Event, Post
 
 
 if (settings.USING_NOTIFICATIONS):
     from notifications.models import BillSearchSubscription
-
-app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 
 class CouncilmaticFacetedSearchView(FacetedSearchView):
@@ -77,7 +75,7 @@ class CouncilmaticFacetedSearchView(FacetedSearchView):
 
         if (settings.USING_NOTIFICATIONS):
             extra['user_subscribed'] = False
-            if self.request.user.is_authenticated():
+            if self.request.user.is_authenticated:
                 user = self.request.user
                 extra['user'] = user
 
@@ -160,6 +158,7 @@ class IndexView(TemplateView):
 
         return context
 
+    @property
     def extra_context(self):
         """
         Override this in custom subclass to add more context variables if needed.
@@ -181,10 +180,11 @@ class AboutView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['timestamp'] = datetime.now(app_timezone).strftime('%m%d%Y%s')
+        context['timestamp'] = timezone.now().strftime('%m%d%Y%s')
 
         return context
 
+    @property
     def extra_context(self):
         """
         Override this in custom subclass to add more context variables if needed.
@@ -228,7 +228,7 @@ class CouncilMembersView(ListView):
 
     def get_queryset(self):
         if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            get_kwarg = {'ocd_id': settings.OCD_CITY_COUNCIL_ID}
+            get_kwarg = {'id': settings.OCD_CITY_COUNCIL_ID}
         else:
             get_kwarg = {'name': settings.OCD_CITY_COUNCIL_NAME}
 
@@ -270,7 +270,7 @@ class BillDetailView(DetailView):
         context['seo'] = seo
 
         context['user_subscribed'] = False
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
@@ -303,6 +303,7 @@ class CommitteeDetailView(DetailView):
     template_name = 'councilmatic_core/committee.html'
     context_object_name = 'committee'
 
+
     def get_context_data(self, **kwargs):
         context = super(CommitteeDetailView, self).get_context_data(**kwargs)
 
@@ -330,7 +331,7 @@ class CommitteeDetailView(DetailView):
 
         context['user_subscribed_actions'] = False
         context['user_subscribed_events'] = False
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             user = self.request.user
             context['user'] = user
             # check if person of interest is subscribed to by user
@@ -360,8 +361,10 @@ class PersonDetailView(DetailView):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
 
         person = context['person']
-        context['sponsored_legislation'] = [
-            s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')[:10]]
+        context['sponsored_legislation'] = Bill.objects.filter(sponsorships__person=person)\
+                                                       .filter(sponsorships__primary=True)\
+                                                       .annotate(last_action=Max('actions__date'))\
+                                                       .order_by('-last_action')[:10]
 
         title = ''
         if person.current_council_seat:
@@ -385,7 +388,7 @@ class PersonDetailView(DetailView):
                 person.name, settings.CITY_COUNCIL_NAME)
         seo['title'] = '%s - %s' % (person.name,
                                     settings.SITE_META['site_name'])
-        seo['image'] = person.headshot_url
+        seo['image'] = person.headshot.url
         context['seo'] = seo
 
         context['map_geojson'] = None
@@ -412,7 +415,7 @@ class PersonDetailView(DetailView):
 
         if (settings.USING_NOTIFICATIONS):
 
-            if self.request.user.is_authenticated():
+            if self.request.user.is_authenticated:
                 user = self.request.user
                 context['user'] = user
                 # check if person of interest is subscribed to by user
@@ -451,7 +454,7 @@ class EventsView(ListView):
 
         # Did the user set date boundaries?
         date_str = self.request.GET.get('form_datetime')
-        day_grouper = lambda x: (x.start_time.year, x.start_time.month, x.start_time.day)
+        day_grouper = lambda x: x.start_time.date
         context['select_date'] = ''
 
         # If yes, then filter for dates.
@@ -467,7 +470,7 @@ class EventsView(ListView):
 
             for event_date, events in itertools.groupby(select_events, key=day_grouper):
                 events = sorted(events, key=attrgetter('start_time'))
-                org_select_events.append([date(*event_date), events])
+                org_select_events.append([event_date, events])
 
             context['select_events'] = org_select_events
             context['select_date'] = date_time.strftime("%B") + " " + date_time.strftime("%Y")
@@ -489,12 +492,12 @@ class EventsView(ListView):
 
             for event_date, events in itertools.groupby(upcoming_events, key=day_grouper):
                 events = sorted(events, key=attrgetter('start_time'))
-                org_upcoming_events.append([date(*event_date), events])
+                org_upcoming_events.append([event_date, events])
 
             context['upcoming_events'] = org_upcoming_events
 
         context['user_subscribed'] = False
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             user = self.request.user
             context['user'] = user
 

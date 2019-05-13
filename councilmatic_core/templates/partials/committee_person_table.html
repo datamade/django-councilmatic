@@ -18,10 +18,10 @@
                     </div>
                 </td>
                 <td>
-                    {{ membership.person.link_html | safe }}
+                    <a href="{% url 'person' membership.person.slug %}">{{ membership.person.name}}</a>
                 </td>
                 <td>
-                    {{membership.person.latest_council_seat}}
+                    {{membership.person.current_council_seat}}
                 </td>
                 <td>
                     Chairperson
@@ -36,10 +36,10 @@
                     </div>
                 </td>
                 <td>
-                    {{ membership.person.link_html | safe }}
+                    <a href="{% url 'person' membership.person.slug %}">{{ membership.person.name}}</a>
                 </td>
                 <td>
-                    {{membership.person.latest_council_seat}}
+                    {{membership.person.current_council_seat}}
                 </td>
                 <td>
                     Member

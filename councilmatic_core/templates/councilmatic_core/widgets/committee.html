@@ -31,7 +31,7 @@
                     Chairperson
                 </strong><br/>
                 {% for membership in committee.chairs %}
-                {{ membership.person.link_html | safe }}<br/>
+                <a href="{% url 'person' membership.person.slug %}">{{ membership.person.name}}</a><br/>
                 {% endfor %}
             </p>
         </div>
