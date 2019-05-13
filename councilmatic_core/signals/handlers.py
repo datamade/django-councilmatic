@@ -10,7 +10,13 @@ from opencivicdata.legislative.models import (Event as OCDEvent,
 from councilmatic_core.models import (Organization as CouncilmaticOrganization,
                                       Person as CouncilmaticPerson,
                                       Event as CouncilmaticEvent,
-                                      Bill as CouncilmaticBill)
+                                      Bill as CouncilmaticBill,
+                                      BillAction,
+                                      BillSponsorship)
+
+from haystack import connection_router, connections
+from actstream import action
+
 
 
 @receiver(post_save, sender=OCDOrganization)
@@ -61,3 +67,59 @@ def create_councilmatic_bill(sender, instance, created, **kwargs):
         cb = CouncilmaticBill.objects.get(id=instance.id)
     else:
         cb = instance.councilmatic_bill
+
+    save_haystack(cb)
+
+
+def save_haystack(instance):
+
+    using_backends = connection_router.for_write(instance=instance)
+
+    for using in using_backends:
+        index = connections[using].get_unified_index().get_index(instance.__class__)
+        index.update_object(instance, using=using)
+
+    
+@receiver(pre_delete, sender=CouncilmaticBill)
+def remove_haystack(sender, instance, *args, **kwargs):
+    
+    using_backends = connection_router.for_write(instance=instance)
+
+    for using in using_backends:
+        index = connections[using].get_unified_index().get_index(sender)
+        index.remove_object(instance, using=using)
+
+@receiver(post_save, sender=BillAction)
+def bill_action_activity(sender, instance, created, **kwargs):
+    if created:
+        action.send(instance.organization,
+                    'took action',
+                    action_object=instance,
+                    target=instance.bill)
+
+@receiver(post_save, sender=BillSponsorship)        
+def bill_sponsorship_activity(sender, instance, created, **kwargs):
+    if created:
+        if instance.person:
+            action.send(instance.person,
+                        'sponsored',
+                        target=instance.bill)
+        elif instance.organization:
+            action.send(instance.organization,
+                        'sponsored',
+                        target=instance.bill)
+
+@receiver(post_save, sender=CouncilmaticEvent)
+def event_activity(sender, instance, created, **kwargs):
+    if created:
+        for participant in instance.participants.filter(note='host'):
+            action.send(participant.organization,
+                        'scheduled an event',
+                        target=instance)
+    else:
+        for participant in instance.participants.filter(note='host'):
+            action.send(participant.organization,
+                        'updated',
+                        target=instance)
+            
+            
