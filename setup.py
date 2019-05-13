@@ -28,7 +28,6 @@ setup(
                       'pysolr>=3.8,<3.9',
                       'psycopg2-binary>=2.7<2.8',
                       'django-adv-cache-tag==1.1.2',
-                      'django-activity-stream',
                       'boto==2.38.0'],
     classifiers=[
         'Environment :: Web Environment',
