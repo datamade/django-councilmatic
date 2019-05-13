@@ -55,7 +55,7 @@ class Person(opencivicdata.core.models.Person):
         return ''
 
     def is_speaker(self):
-        return True if self.memberships.filter(role='Speaker').first() else Fals
+        return True if self.memberships.filter(role='Speaker').first() else False
 
     @property
     def headshot_source(self):
@@ -346,9 +346,9 @@ class Event(opencivicdata.legislative.models.Event):
 class Bill(opencivicdata.legislative.models.Bill):
 
     bill = models.OneToOneField(opencivicdata.legislative.models.Bill,
-                                 on_delete=models.CASCADE,
-                                 related_name='councilmatic_bill',
-                                 parent_link=True)
+                                on_delete=models.CASCADE,
+                                related_name='councilmatic_bill',
+                                parent_link=True)
 
     slug = models.SlugField()
     restrict_view = models.BooleanField(default=False)
