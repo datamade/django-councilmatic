@@ -52,9 +52,9 @@ INSTALLED_APPS = (
     'opencivicdata.legislative',
     'councilmatic_core',
     'haystack',
-    'password_reset',
     'adv_cache_tag',
 )
+
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
