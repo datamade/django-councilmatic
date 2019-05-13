@@ -214,12 +214,12 @@ class Post(opencivicdata.core.models.Post):
     class Meta:
         proxy = True
 
-    organization = ProxyForeignKey(
-        Organization,
-        related_name='posts',
-        help_text="The Organization in which the post is held.",
-        on_delete=models.CASCADE,
-    )
+    # organization = ProxyForeignKey(
+    #     Organization,
+    #     related_name='posts',
+    #     help_text="The Organization in which the post is held.",
+    #     on_delete=models.CASCADE,
+    # )
 
     @cached_property
     def current_member(self):
@@ -246,22 +246,22 @@ class Membership(opencivicdata.core.models.Membership):
 
     objects = MembershipManager()
 
-    organization = ProxyForeignKey(
-        Organization,
-        related_name='memberships',
-        # memberships will go away if the org does
-        on_delete=models.CASCADE,
-        help_text="A link to the Organization in which the Person is a member."
-    )
+    # organization = ProxyForeignKey(
+    #     Organization,
+    #     related_name='memberships',
+    #     # memberships will go away if the org does
+    #     on_delete=models.CASCADE,
+    #     help_text="A link to the Organization in which the Person is a member."
+    # )
 
-    person = ProxyForeignKey(
-        Person,
-        related_name='memberships',
-        null=True,
-        # Membership will just unlink if the person goes away
-        on_delete=models.SET_NULL,
-        help_text="A link to the Person that is a member of the Organization."
-    )
+    # person = ProxyForeignKey(
+    #     Person,
+    #     related_name='memberships',
+    #     null=True,
+    #     # Membership will just unlink if the person goes away
+    #     on_delete=models.SET_NULL,
+    #     help_text="A link to the Person that is a member of the Organization."
+    # )
 
     post = ProxyForeignKey(
         Post,
@@ -570,8 +570,8 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
     class Meta:
         proxy = True
 
-    bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
-    person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
+    #bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
+    #person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
 
 
 class BillActionManager(models.Manager):
@@ -586,13 +586,13 @@ class BillAction(opencivicdata.legislative.models.BillAction):
 
     objects = BillActionManager()
 
-    bill = ProxyForeignKey(Bill,
-                           related_name='actions',
-                           on_delete=models.CASCADE)
-    organization = ProxyForeignKey(Organization,
-                                   related_name='actions',
-                                   # don't let an org delete wipe out a bunch of bill actions
-                                   on_delete=models.PROTECT)
+    # bill = ProxyForeignKey(Bill,
+    #                        related_name='actions',
+    #                        on_delete=models.CASCADE)
+    # organization = ProxyForeignKey(Organization,
+    #                                related_name='actions',
+    #                                # don't let an org delete wipe out a bunch of bill actions
+    #                                on_delete=models.PROTECT)
 
     @property
     def label(self):
@@ -642,6 +642,6 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
                              related_name='related_entities',
                              on_delete=models.CASCADE)
 
-    organization = ProxyForeignKey(Organization,
-                                   null=True,
-                                   on_delete=models.SET_NULL)
+    # organization = ProxyForeignKey(Organization,
+    #                                null=True,
+    #                                on_delete=models.SET_NULL)
