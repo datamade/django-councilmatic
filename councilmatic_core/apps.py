@@ -5,4 +5,4 @@ class CouncilmaticConfig(AppConfig):
     verbose_name = "Councilmatic"
 
     def ready(self):
-        import .signals.handlers
+        import councilmatic_core.signals.handlers
