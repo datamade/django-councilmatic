@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import councilmatic_core.models
 from django.db import migrations, models
-
+import uuid
 
 class Migration(migrations.Migration):
 
@@ -38,6 +38,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='person',
             name='ocd_id',
-            field=models.CharField(default=councilmatic_core.models.get_uuid, max_length=100, primary_key=True, serialize=False, unique=True),
+            field=models.CharField(default=uuid.uuid4, max_length=100, primary_key=True, serialize=False, unique=True),
         ),
     ]
