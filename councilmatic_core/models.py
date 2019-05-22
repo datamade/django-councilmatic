@@ -27,7 +27,19 @@ MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(
     settings, 'MANUAL_HEADSHOTS') else {}
 
 
+class PersonManager(models.Manager):
+    def get_queryset(self, *args, **kwargs):
+        from django.db.models import Prefetch
+
+        qs = super().get_queryset(*args, **kwargs)
+
+        return qs.prefetch_related(
+            Prefetch('memberships', Membership.objects.filter(person__in=qs))
+        )
+
+
 class Person(opencivicdata.core.models.Person):
+    objects = PersonManager()
 
     person = models.OneToOneField(opencivicdata.core.models.Person,
                                   on_delete=models.CASCADE,
@@ -43,7 +55,7 @@ class Person(opencivicdata.core.models.Person):
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
         super().delete(**kwargs)
-    
+
     def __str__(self):
         return self.name
 
@@ -356,7 +368,7 @@ class Bill(opencivicdata.legislative.models.Bill):
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
         super().delete(**kwargs)
-    
+
     def __str__(self):
         return self.friendly_name
 
