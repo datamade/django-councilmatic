@@ -240,12 +240,12 @@ class MembershipManager(models.Manager):
         '''
         TO-DO: This raises an exception –
         DataError: invalid input syntax for type timestamp with time zone: ""
+        See: https://github.com/datamade/django-councilmatic/pull/240#issuecomment-495368046
         '''
-        import pdb
-        pdb.set_trace()
-        return super().get_queryset().annotate(end_date_dt=Cast('end_date',
-                                                                models.DateTimeField()))\
-                                     .annotate(start_date_dt=Cast('start_date', models.DateTimeField()))
+        return super().get_queryset().annotate(
+            end_date_dt=Cast('end_date', models.DateTimeField()),
+            start_date_dt=Cast('start_date', models.DateTimeField())
+        )
 
 
 class Membership(opencivicdata.core.models.Membership):
