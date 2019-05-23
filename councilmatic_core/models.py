@@ -27,20 +27,7 @@ MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(
     settings, 'MANUAL_HEADSHOTS') else {}
 
 
-class PersonManager(models.Manager):
-    def get_queryset(self, *args, **kwargs):
-        from django.db.models import Prefetch
-
-        qs = super().get_queryset(*args, **kwargs)
-
-        return qs.prefetch_related(
-            Prefetch('memberships', Membership.objects.filter(person__in=qs))
-        )
-
-
 class Person(opencivicdata.core.models.Person):
-    objects = PersonManager()
-
     person = models.OneToOneField(opencivicdata.core.models.Person,
                                   on_delete=models.CASCADE,
                                   related_name='councilmatic_person',
@@ -120,12 +107,15 @@ class Person(opencivicdata.core.models.Person):
 
 class Organization(opencivicdata.core.models.Organization):
 
-    organization = models.OneToOneField(opencivicdata.core.models.Organization,
-                                        on_delete=models.CASCADE,
-                                        related_name='councilmatic_organization',
-                                        parent_link=True)
+    class Meta:
+        proxy = True
 
-    slug = models.SlugField(max_length=200)
+#    organization = models.OneToOneField(opencivicdata.core.models.Organization,
+#                                        on_delete=models.CASCADE,
+#                                        related_name='councilmatic_organization',
+#                                        parent_link=True)
+#
+#    slug = models.SlugField(max_length=200)
 
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
@@ -247,6 +237,12 @@ class Post(opencivicdata.core.models.Post):
 
 class MembershipManager(models.Manager):
     def get_queryset(self):
+        '''
+        TO-DO: This raises an exception –
+        DataError: invalid input syntax for type timestamp with time zone: ""
+        '''
+        import pdb
+        pdb.set_trace()
         return super().get_queryset().annotate(end_date_dt=Cast('end_date',
                                                                 models.DateTimeField()))\
                                      .annotate(start_date_dt=Cast('start_date', models.DateTimeField()))
@@ -256,15 +252,15 @@ class Membership(opencivicdata.core.models.Membership):
     class Meta:
         proxy = True
 
-    objects = MembershipManager()
+    # objects = MembershipManager()
 
-    # organization = ProxyForeignKey(
-    #     Organization,
-    #     related_name='memberships',
-    #     # memberships will go away if the org does
-    #     on_delete=models.CASCADE,
-    #     help_text="A link to the Organization in which the Person is a member."
-    # )
+    organization = ProxyForeignKey(
+        Organization,
+        related_name='memberships',
+        # memberships will go away if the org does
+        on_delete=models.CASCADE,
+        help_text="A link to the Organization in which the Person is a member."
+    )
 
     # person = ProxyForeignKey(
     #     Person,
