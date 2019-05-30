@@ -63,7 +63,7 @@ class BillIndex(indexes.SearchIndex):
 
         if last_date:
             last_date = last_date - last_date.utcoffset()
-            return last_date.replace(tzinfo=None).isoformat() + 'Z'
+            return last_date.replace(tzinfo=None)
 
     def prepare_inferred_status(self, obj):
         return obj.inferred_status
