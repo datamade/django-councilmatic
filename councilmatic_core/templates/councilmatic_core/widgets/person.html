@@ -1,5 +1,6 @@
 {% extends "base_widget.html" %}
 {% load extras %}
+{% load static %}
 {% load staticfiles %}
 {% block title %}{{ person.name }}{% endblock %}
 {% block content %}
@@ -13,7 +14,7 @@
                 </small>
             </h1>
             <div class="col-xs-4">
-                <img src='{{person.headshot_url}}' alt='{{person.name}}' title='{{person.name}}' class='img-responsive img-thumbnail' />
+                <img src='{% static person.headshot.url %}' alt='{{person.name}}' title='{{person.name}}' class='img-responsive img-thumbnail' />
             </div>
         </div>
     </div>

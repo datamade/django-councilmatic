@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
@@ -14,8 +15,7 @@ from proxy_overrides.related import ProxyForeignKey
 import opencivicdata.legislative.models
 import opencivicdata.core.models
 
-static_storage = FileSystemStorage(location=settings.STATIC_ROOT, base_url='/')
-
+static_storage = FileSystemStorage(location=os.path.join(settings.BASE_DIR, settings.APP_NAME, 'static'), base_url='/')
 
 # if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
 #     raise ImproperlyConfigured(
