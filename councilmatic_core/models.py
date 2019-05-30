@@ -141,7 +141,8 @@ class Organization(opencivicdata.core.models.Organization):
         """
         grabs all organizations (1) classified as a committee & (2) with at least one member
         """
-        return cls.objects.filter(classification='committee').order_by('name').filter(memberships__end_date_dt__gt=timezone.now()).distinct()
+        return [o for o in cls.objects.filter(classification='committee')
+                if any([m.end_date_dt > timezone.now() for m in o.memberships.all()])]
 
     @property
     def recent_activity(self):
