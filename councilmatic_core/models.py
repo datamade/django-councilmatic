@@ -1,14 +1,16 @@
+import datetime
+
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
+from django.db.models import Case, When, Value
 from django.db.models.functions import Cast
 from django.utils.functional import cached_property
 from django.core.files.storage import FileSystemStorage
 
 from proxy_overrides.related import ProxyForeignKey
-
 import opencivicdata.legislative.models
 import opencivicdata.core.models
 
@@ -86,14 +88,14 @@ class Person(opencivicdata.core.models.Person):
     @property
     def chair_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=timezone.now())
+            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date_dt__gt=timezone.now())
         else:
             return []
 
     @property
     def member_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date__gt=timezone.now())
+            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date_dt__gt=timezone.now())
         else:
             return []
 
@@ -139,7 +141,7 @@ class Organization(opencivicdata.core.models.Organization):
         """
         grabs all organizations (1) classified as a committee & (2) with at least one member
         """
-        return cls.objects.filter(classification='committee').order_by('name').filter(memberships__end_date__gt=timezone.now()).distinct()
+        return cls.objects.filter(classification='committee').order_by('name').filter(memberships__end_date_dt__gt=timezone.now()).distinct()
 
     @property
     def recent_activity(self):
@@ -170,7 +172,7 @@ class Organization(opencivicdata.core.models.Organization):
     @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            chairs = self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=timezone.now()).select_related('person__councilmatic_person')
+            chairs = self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date_dt__gt=timezone.now()).select_related('person__councilmatic_person')
             for chair in chairs:
                 chair.person = chair.person.councilmatic_person
             return chairs
@@ -180,21 +182,21 @@ class Organization(opencivicdata.core.models.Organization):
     @property
     def non_chair_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date__gt=timezone.now())
+            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date_dt__gt=timezone.now())
         else:
             return []
 
     @property
     def all_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(end_date__gt=timezone.now())
+            return self.memberships.filter(end_date_dt__gt=timezone.now())
         else:
             return []
 
     @property
     def vice_chairs(self):
         if hasattr(settings, 'COMMITTEE_VICE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_VICE_CHAIR_TITLE).filter(end_date__gt=timezone.now())
+            return self.memberships.filter(role=settings.COMMITTEE_VICE_CHAIR_TITLE).filter(end_date_dt__gt=timezone.now())
         else:
             return []
 
@@ -226,16 +228,16 @@ class Post(opencivicdata.core.models.Post):
     class Meta:
         proxy = True
 
-    # organization = ProxyForeignKey(
-    #     Organization,
-    #     related_name='posts',
-    #     help_text="The Organization in which the post is held.",
-    #     on_delete=models.CASCADE,
-    # )
+    organization = ProxyForeignKey(
+        Organization,
+        related_name='posts',
+        help_text="The Organization in which the post is held.",
+        on_delete=models.CASCADE,
+    )
 
     @cached_property
     def current_member(self):
-        membership = self.memberships.filter(end_date__gt=timezone.now())\
+        membership = self.memberships.filter(end_date_dt__gt=timezone.now())\
                                      .order_by('-end_date', '-start_date')\
                                      .select_related('person__councilmatic_person').first()
         if membership:
@@ -247,9 +249,17 @@ class Post(opencivicdata.core.models.Post):
 
 class MembershipManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().annotate(end_date_dt=Cast('end_date',
-                                                                models.DateTimeField()))\
-                                     .annotate(start_date_dt=Cast('start_date', models.DateTimeField()))
+        # Handle null end dates
+        non_null_end_date = Case(
+            When(end_date='', then=Value('9999-01-01')),
+            default='end_date',
+            output_field=models.CharField()
+        )
+
+        return super().get_queryset().annotate(
+            end_date_dt=Cast(non_null_end_date, models.DateTimeField()),
+            start_date_dt=Cast('start_date', models.DateTimeField())
+        )
 
 
 class Membership(opencivicdata.core.models.Membership):
@@ -258,22 +268,22 @@ class Membership(opencivicdata.core.models.Membership):
 
     objects = MembershipManager()
 
-    # organization = ProxyForeignKey(
-    #     Organization,
-    #     related_name='memberships',
-    #     # memberships will go away if the org does
-    #     on_delete=models.CASCADE,
-    #     help_text="A link to the Organization in which the Person is a member."
-    # )
+    organization = ProxyForeignKey(
+        Organization,
+        related_name='memberships',
+        # memberships will go away if the org does
+        on_delete=models.CASCADE,
+        help_text="A link to the Organization in which the Person is a member."
+    )
 
-    # person = ProxyForeignKey(
-    #     Person,
-    #     related_name='memberships',
-    #     null=True,
-    #     # Membership will just unlink if the person goes away
-    #     on_delete=models.SET_NULL,
-    #     help_text="A link to the Person that is a member of the Organization."
-    # )
+    person = ProxyForeignKey(
+        Person,
+        related_name='memberships',
+        null=True,
+        # Membership will just unlink if the person goes away
+        on_delete=models.SET_NULL,
+        help_text="A link to the Person that is a member of the Organization."
+    )
 
     post = ProxyForeignKey(
         Post,
@@ -582,8 +592,8 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
     class Meta:
         proxy = True
 
-    #bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
-    #person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
+    bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
+    person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
 
 
 class BillActionManager(models.Manager):
@@ -598,13 +608,14 @@ class BillAction(opencivicdata.legislative.models.BillAction):
 
     objects = BillActionManager()
 
-    # bill = ProxyForeignKey(Bill,
-    #                        related_name='actions',
-    #                        on_delete=models.CASCADE)
-    # organization = ProxyForeignKey(Organization,
-    #                                related_name='actions',
-    #                                # don't let an org delete wipe out a bunch of bill actions
-    #                                on_delete=models.PROTECT)
+    bill = ProxyForeignKey(Bill,
+                           related_name='actions',
+                           on_delete=models.CASCADE)
+
+    organization = ProxyForeignKey(Organization,
+                                   related_name='actions',
+                                   # don't let an org delete wipe out a bunch of bill actions
+                                   on_delete=models.PROTECT)
 
     @property
     def label(self):
@@ -646,6 +657,7 @@ class BillAction(opencivicdata.legislative.models.BillAction):
             if related_entity:
                 return related_entity.organization
 
+
 class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelatedEntity):
     class Meta:
         proxy = True
@@ -654,6 +666,6 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
                              related_name='related_entities',
                              on_delete=models.CASCADE)
 
-    # organization = ProxyForeignKey(Organization,
-    #                                null=True,
-    #                                on_delete=models.SET_NULL)
+    organization = ProxyForeignKey(Organization,
+                                   null=True,
+                                   on_delete=models.SET_NULL)
