@@ -428,7 +428,8 @@ class Organization(models.Model):
         """
         grabs all organizations (1) classified as a committee & (2) with at least one member
         """
-        return cls.objects.filter(classification='committee').order_by('name').filter(memberships__end_date__gt=datetime.now(app_timezone)).distinct()
+        return [o for o in cls.objects.filter(classification='committee')
+                if any([m.non_null_end_date > timezone.now().date() for m in o.memberships.all()])]
 
     @property
     def recent_activity(self):
@@ -459,28 +460,28 @@ class Organization(models.Model):
     @property
     def chairs(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(non_null_end_date__gt=datetime.now(app_timezone))
         else:
             return []
 
     @property
     def non_chair_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(non_null_end_date__gt=datetime.now(app_timezone))
         else:
             return []
 
     @property
     def all_members(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(end_date__gt=datetime.now(app_timezone))
+            return self.memberships.filter(non_null_end_date__gt=datetime.now(app_timezone))
         else:
             return []
 
     @property
     def vice_chairs(self):
         if hasattr(settings, 'COMMITTEE_VICE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_VICE_CHAIR_TITLE).filter(end_date__gt=datetime.now(app_timezone))
+            return self.memberships.filter(role=settings.COMMITTEE_VICE_CHAIR_TITLE).filter(non_null_end_date__gt=datetime.now(app_timezone))
         else:
             return []
 
@@ -615,19 +616,31 @@ class Post(models.Model):
     def current_member(self):
         if self.memberships.all():
             most_recent_member = self.memberships.order_by(
-                '-end_date', '-start_date').first()
-            if most_recent_member.end_date:
-                if most_recent_member.end_date < timezone.now().date():
-                    return None
-                else:
-                    return most_recent_member
-            else:
+                '-non_null_end_date', '-start_date').first()
+            if most_recent_member.non_null_end_date < timezone.now().date():
                 return None
+            else:
+                return most_recent_member
         else:
             return None
 
 
+class MembershipManager(models.Manager):
+    def get_queryset(self):
+        from django.db.models import Value, Case, When
+
+        non_null_end_date = Case(
+            When(end_date=None, then=Value('9999-01-01')),
+            default='end_date',
+            output_field=models.DateTimeField()
+        )
+
+        return super().get_queryset().annotate(non_null_end_date=non_null_end_date)
+
 class Membership(models.Model):
+
+    objects = MembershipManager()
+
     _organization = models.ForeignKey(
         'Organization', related_name='memberships', db_column='organization_id', null=True)
     _person = models.ForeignKey(
