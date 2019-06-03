@@ -10,6 +10,7 @@ from django.db.models import Case, When, Value
 from django.db.models.functions import Cast
 from django.utils.functional import cached_property
 from django.core.files.storage import FileSystemStorage
+from django.urls import reverse
 
 from proxy_overrides.related import ProxyForeignKey
 import opencivicdata.legislative.models
@@ -17,13 +18,13 @@ import opencivicdata.core.models
 
 static_storage = FileSystemStorage(location=os.path.join(settings.BASE_DIR, settings.APP_NAME, 'static'), base_url='/')
 
-# if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
-#     raise ImproperlyConfigured(
-#         'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
+if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
+    raise ImproperlyConfigured(
+        'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
 
-# if not hasattr(settings, 'CITY_COUNCIL_NAME'):
-#     raise ImproperlyConfigured(
-#         'You must define a CITY_COUNCIL_NAME in settings.py')
+if not hasattr(settings, 'CITY_COUNCIL_NAME'):
+    raise ImproperlyConfigured(
+        'You must define a CITY_COUNCIL_NAME in settings.py')
 
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(
     settings, 'MANUAL_HEADSHOTS') else {}
@@ -119,6 +120,11 @@ class Person(opencivicdata.core.models.Person):
         if m and m.end_date_dt > timezone.now():
             return m.post.label
         return ''
+
+    @property
+    def link_html(self):
+        return "<a href='{}'>{}</a>".format(reverse('person', args=[self.slug]), self.name)
+
 
 class Organization(opencivicdata.core.models.Organization):
 
