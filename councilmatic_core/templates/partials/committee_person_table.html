@@ -19,7 +19,7 @@
                     </div>
                 </td>
                 <td>
-                    <a href="{% url 'person' membership.person.slug %}">{{ membership.person.name}}</a>
+                    {{membership.person.link_html|safe}}
                 </td>
                 <td>
                     {{membership.person.current_council_seat}}
@@ -37,7 +37,7 @@
                     </div>
                 </td>
                 <td>
-                    <a href="{% url 'person' membership.person.slug %}">{{ membership.person.name}}</a>
+                    {{membership.person.link_html|safe}}
                 </td>
                 <td>
                     {{membership.person.current_council_seat}}

@@ -25,7 +25,7 @@
                     </td>
                     <td>
                         {% if post.current_member %}
-                            <a href="{% url 'person' post.current_member.person.slug %}">{{ post.current_member.person.name}}</a>
+                            {{ post.current_member.person.link_html|safe }}
                             {% if post.current_member.role == 'Speaker' %}
                                 <br /><span class='label label-default'>Council Speaker</span>
                                 <span class='label label-success'><i class='fa fa-fw fa-check-square-o'></i> Verified</span>
