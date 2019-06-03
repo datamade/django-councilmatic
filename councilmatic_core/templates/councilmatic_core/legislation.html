@@ -108,11 +108,20 @@
                                 <tr>
                                     <td>
                                         <div class="thumbnail-square">
-                                            <img src='{{s.person.headshot.url}}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% if s.person %}
+                                                <img src='{% static s.person.headshot.url %}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% else %}
+                                                <img src='{% static "images/headshot_placeholder.png" %}' alt='{{s.name}}' title='{{s.name}}' class='img-responsive img-thumbnail' />
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td>
-                                        <a href="{% url 'person' s.person.slug %}">{{ s.person.name }}</a> <span class="badge badge-default">Primary Sponsor</span>
+                                        {% if s.person %}
+                                            <a href="{% url 'person' person.slug %}">{{ s.person.name }}</a>
+                                        {% else %}
+                                            {{ s.name }}
+                                        {% endif %}
+                                        <span class="badge badge-default">Primary Sponsor</span>
                                     </td>
                                     <td>
                                         {{s.person.current_council_seat}}
@@ -125,11 +134,19 @@
                                 <tr>
                                     <td>
                                         <div class="thumbnail-square">
-                                            <img src='{{s.person.headshot.url}}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% if s.person %}
+                                                <img src='{% static s.person.headshot.url %}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% else %}
+                                                <img src='{% static "images/headshot_placeholder.png" %}' alt='{{s.name}}' title='{{s.name}}' class='img-responsive img-thumbnail' />
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td>
-                                        <a href="{% url 'person' s.person.slug %}">{{ s.person.name }}</a>
+                                        {% if s.person %}
+                                            <a href="{% url 'person' person.slug %}">{{ s.person.name }}</a>
+                                        {% else %}
+                                            {{ s.name }}
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {{s.person.current_council_seat}}

@@ -19,6 +19,7 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.http import Http404
 from django.utils.translation import gettext as _
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
@@ -388,7 +389,7 @@ class PersonDetailView(DetailView):
                 person.name, settings.CITY_COUNCIL_NAME)
         seo['title'] = '%s - %s' % (person.name,
                                     settings.SITE_META['site_name'])
-        seo['image'] = person.headshot.url
+        seo['image'] = static(person.headshot.url)
         context['seo'] = seo
 
         context['map_geojson'] = None
