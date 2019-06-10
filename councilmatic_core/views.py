@@ -19,7 +19,7 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.http import Http404
 from django.utils.translation import gettext as _
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 
 from haystack.forms import FacetedSearchForm
 from haystack.views import FacetedSearchView
@@ -155,16 +155,7 @@ class IndexView(TemplateView):
             'upcoming_committee_meetings': upcoming_meetings,
         })
 
-        context.update(self.extra_context())
-
         return context
-
-    @property
-    def extra_context(self):
-        """
-        Override this in custom subclass to add more context variables if needed.
-        """
-        return {}
 
     def find_recently_passed(self, bill_model):
         recently_passed = []
@@ -184,13 +175,6 @@ class AboutView(TemplateView):
         context['timestamp'] = timezone.now().strftime('%m%d%Y%s')
 
         return context
-
-    @property
-    def extra_context(self):
-        """
-        Override this in custom subclass to add more context variables if needed.
-        """
-        return {}
 
 
 class CouncilMembersView(ListView):

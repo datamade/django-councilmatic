@@ -1,6 +1,6 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
-{% load staticfiles %}
+{% load static %}
 {% block title %}{{event.name}}{% endblock %}
 {% block content %}
 
@@ -79,7 +79,7 @@
           "@type": "PostalAddress",
           "addressLocality": "{{ CITY_NAME }}"
         },
-        "name": "{{event.location_name}}"
+        "name": "{{event.location.name}}"
       },
       "name": "{{event.name}}",
       "startDate": "{{ event.start_time.isoformat }}",

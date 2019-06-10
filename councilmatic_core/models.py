@@ -16,6 +16,10 @@ from proxy_overrides.related import ProxyForeignKey
 import opencivicdata.legislative.models
 import opencivicdata.core.models
 
+
+'''
+TO-DO: We don't need these defined for pupa... Is there a way we can perform this check elsewhere?
+'''
 static_storage = FileSystemStorage(location=os.path.join(settings.BASE_DIR, settings.APP_NAME, 'static'), base_url='/')
 
 if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):

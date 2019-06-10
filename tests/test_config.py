@@ -1,6 +1,7 @@
 import sys
 import os
 
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'replacethiswithsomethingsecret'
@@ -54,7 +55,6 @@ INSTALLED_APPS = (
     'haystack',
     'adv_cache_tag',
 )
-
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
