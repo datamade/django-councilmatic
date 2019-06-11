@@ -12,7 +12,7 @@
 
 {% block content %}
 
-{# {% cache 600 person_wrapper person.ocd_id %} #}
+{% cache 600 person_wrapper person.ocd_id %}
 
     <div class="row-fluid">
         <div class="col-sm-12">
@@ -123,7 +123,7 @@
         </div>
 
         <div class='col-sm-8 no-pad-mobile'>
-{# {% endcache  %} #}
+{% endcache  %}
 
             <ul class="nav nav-pills">
                 <li role="presentation" {% if request.GET.view == 'bills' or request.GET.view == None %}class='active' {% endif %}>
