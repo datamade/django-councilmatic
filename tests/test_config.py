@@ -11,8 +11,8 @@ DEBUG = True
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'councilmatic',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'chicago_councilmatic',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -56,12 +56,11 @@ INSTALLED_APPS = (
     'adv_cache_tag',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',

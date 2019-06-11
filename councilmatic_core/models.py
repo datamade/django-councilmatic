@@ -258,16 +258,17 @@ class Post(opencivicdata.core.models.Post):
 class MembershipManager(models.Manager):
     def get_queryset(self):
         # Handle null end dates
-        non_null_end_date = Case(
-            When(end_date='', then=Value('9999-01-01')),
+        end_date_null = Case(
+            When(end_date='', then=None),
             default='end_date',
             output_field=models.CharField()
         )
 
         return super().get_queryset().annotate(
-            end_date_dt=Cast(non_null_end_date, models.DateTimeField()),
+            end_date_dt=Cast(end_date_null, models.DateTimeField()),
             start_date_dt=Cast('start_date', models.DateTimeField())
         )
+
 
 
 class Membership(opencivicdata.core.models.Membership):

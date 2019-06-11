@@ -56,24 +56,21 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
 
             query = '''
-                SELECT DISTINCT url from 
-                councilmatic_core_billdocument as b_doc
-                JOIN change_bill 
-                ON change_bill.ocd_id=b_doc.bill_id
-                WHERE document_type='V'
+                SELECT DISTINCT b_doc_link.url
+                FROM opencivicdata_billdocumentlink AS b_doc_link
+                JOIN opencivicdata_billdocument AS b_doc
+                ON b_doc_link.document_id = b_doc.id
+                JOIN opencivicdata_bill AS b 
+                ON b.id = b_doc.bill_id
+                WHERE b.updated_at >= (NOW() - INTERVAL '1 hour')
                 UNION
-                SELECT DISTINCT url from 
-                councilmatic_core_eventdocument as e_doc 
-                INNER JOIN councilmatic_core_eventagendaitem as e_item
-                ON e_doc.event_id=e_item.event_id
-                WHERE e_item.updated_at >= (NOW() - INTERVAL '1 hour')
-                /* import_data runs up to four times per hour on the production site. */
-                /* Select items updated in the last hour, as a precaution for getting the most recently created ones. */
-                UNION
-                SELECT DISTINCT url from 
-                councilmatic_core_eventdocument as e_doc 
-                INNER JOIN change_event
-                ON change_event.ocd_id=e_doc.event_id
+                SELECT DISTINCT e_doc_link.url
+                FROM opencivicdata_eventdocumentlink AS e_doc_link
+                JOIN opencivicdata_eventdocument as e_doc 
+                ON e_doc_link.document_id = e_doc.id
+                JOIN opencivicdata_event AS e
+                ON e.id = e_doc.event_id
+                WHERE e.updated_at >= (NOW() - INTERVAL '1 hour')
             '''
 
             cursor.execute(query)

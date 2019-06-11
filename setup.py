@@ -23,7 +23,7 @@ setup(
                       'pytz>=2015.4',
                       'django-haystack>=2.8.0,<2.9',
                       'Django>=2.0,<2.2',
-                      'django-proxy-overrides @ git+ssh://git@github.com/datamade/django-proxy-overrides@master',
+                      'django-proxy-overrides>=0.2.1',
                       'python-dateutil>=2.7<2.8',
                       'pysolr>=3.8,<3.9',
                       'psycopg2-binary>=2.7<2.8',
