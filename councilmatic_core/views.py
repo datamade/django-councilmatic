@@ -7,7 +7,6 @@ import requests
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
 
-
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.views.generic import TemplateView, ListView, DetailView
@@ -17,8 +16,6 @@ from django.core.cache import cache
 from django.utils.text import slugify
 from django.utils.decorators import method_decorator
 from django.utils import timezone
-from django.http import Http404
-from django.utils.translation import gettext as _
 from django.templatetags.static import static
 
 from haystack.forms import FacetedSearchForm
@@ -287,7 +284,6 @@ class CommitteeDetailView(DetailView):
     model = Organization
     template_name = 'councilmatic_core/committee.html'
     context_object_name = 'committee'
-
 
     def get_context_data(self, **kwargs):
         context = super(CommitteeDetailView, self).get_context_data(**kwargs)

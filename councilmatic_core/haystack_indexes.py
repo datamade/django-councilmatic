@@ -3,7 +3,6 @@ from haystack import indexes
 from councilmatic_core.templatetags.extras import clean_html
 
 from django.utils import timezone
-from django.db import models
 
 
 class BillIndex(indexes.SearchIndex):

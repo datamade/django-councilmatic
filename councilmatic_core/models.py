@@ -1,4 +1,3 @@
-import datetime
 import os
 
 from django.db import models
@@ -10,7 +9,6 @@ from django.db.models import Case, When, Value
 from django.db.models.functions import Cast
 from django.utils.functional import cached_property
 from django.core.files.storage import FileSystemStorage
-from django.urls import reverse
 
 from proxy_overrides.related import ProxyForeignKey
 import opencivicdata.legislative.models
@@ -235,6 +233,7 @@ class Organization(opencivicdata.core.models.Organization):
 
         return self.name
 
+
 class Post(opencivicdata.core.models.Post):
     class Meta:
         proxy = True
@@ -254,8 +253,6 @@ class Post(opencivicdata.core.models.Post):
         if membership:
             membership.person = membership.person.councilmatic_person
             return membership
-
-
 
 
 class MembershipManager(models.Manager):
