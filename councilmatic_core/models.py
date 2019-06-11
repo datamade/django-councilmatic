@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
-from django.db.models import Case, When, Value
+from django.db.models import Case, When
 from django.db.models.functions import Cast
 from django.utils.functional import cached_property
 from django.core.files.storage import FileSystemStorage
@@ -268,7 +268,6 @@ class MembershipManager(models.Manager):
             end_date_dt=Cast(end_date_null, models.DateTimeField()),
             start_date_dt=Cast('start_date', models.DateTimeField())
         )
-
 
 
 class Membership(opencivicdata.core.models.Membership):

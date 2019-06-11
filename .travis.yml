@@ -25,4 +25,4 @@ group: deprecated-2017Q4
 
 script:
     - flake8 ./councilmatic_core/*.py
-    - pytest
+    - pytest -sv
