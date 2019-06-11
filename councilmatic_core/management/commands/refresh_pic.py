@@ -57,11 +57,11 @@ class Command(BaseCommand):
 
             query = '''
                 SELECT DISTINCT b_doc_link.url
-                FROM opencivicdata_billdocumentlink AS b_doc_link
-                JOIN opencivicdata_billdocument AS b_doc
-                ON b_doc_link.document_id = b_doc.id
+                FROM opencivicdata_billversionlink AS b_version_link
+                JOIN opencivicdata_billversion AS b_version
+                ON b_version_link.document_id = b_version.id
                 JOIN opencivicdata_bill AS b 
-                ON b.id = b_doc.bill_id
+                ON b.id = b_version.bill_id
                 WHERE b.updated_at >= (NOW() - INTERVAL '1 hour')
                 UNION
                 SELECT DISTINCT e_doc_link.url

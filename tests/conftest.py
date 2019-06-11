@@ -8,8 +8,8 @@ from django.conf import settings
 from django.core.management import call_command
 from django.db import connection
 
-from councilmatic_core.models import Bill, Event
-from opencivicdata.legislative.models import BillDocument, BillDocumentLink, EventDocument, EventDocumentLink, LegislativeSession
+from councilmatic_core.models import Bill, Event, BillDocument
+from opencivicdata.legislative.models import BillDocumentLink, EventDocument, EventDocumentLink, LegislativeSession
 
 
 @pytest.fixture(scope='session')
@@ -67,8 +67,8 @@ def metro_event(db):
     return event
 
 @pytest.fixture
-@pytest.mark.django_db
-def metro_bill_document(metro_bill, db):
+@pytest.mark.django_db(transaction=True)
+def metro_bill_document(metro_bill, transactional_db):
     document_info = {
         'bill_id': metro_bill.id,
         'note': 'Board Report',
@@ -77,7 +77,7 @@ def metro_bill_document(metro_bill, db):
     document = BillDocument.objects.create(**document_info)
 
     document_link_info = {
-        'url': 'https://metro.legistar.com/ViewReport.ashx?M=R&N=TextL5&GID=557&ID=5016&GUID=LATEST&Title=Board+Report',
+        'url': 'https://metro.legistar.com/ViewReport.ashx?M=R&N=TextL5&GID=557&ID=5016&GUID=LATEST&Title=Board+Report.pdf',
         'document': document,
     }
 

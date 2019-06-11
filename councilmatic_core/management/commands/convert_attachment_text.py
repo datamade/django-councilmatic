@@ -3,14 +3,14 @@ import logging
 import logging.config
 import sqlalchemy as sa
 import requests
-import textract
 import tempfile
 import itertools
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.db.models import Max
+from django.db.models import Max, Q
 
+from opencivicdata.legislative.models import BillDocumentLink
 from councilmatic_core.models import BillDocument
 
 logging.config.dictConfig(settings.LOGGING)
@@ -40,33 +40,23 @@ class Command(BaseCommand):
     def get_document_url(self):
         with engine.begin() as connection:
             # Only apply this query to most recently updated (or created) bill documents.
-            max_updated = BillDocument.objects.all().aggregate(Max('updated_at'))['updated_at__max']
+            max_updated = BillDocument.objects.all().aggregate(max_updated_at=Max('bill__updated_at'))['max_updated_at']
+
+            is_null = Q(document__councilmatic_document__full_text__isnull=True)
+            is_file = Q(url__iendswith='pdf') | Q(url__iendswith='docx') | Q(url__iendswith='docx')
+            after_max_update = Q(document__bill__updated_at__gt=max_updated)
 
             if max_updated is None or self.update_all:
-                query = '''
-                    SELECT id, url
-                    FROM councilmatic_core_billdocument 
-                    WHERE document_type='A' 
-                    AND full_text is null
-                    AND lower(url) similar to '%(.doc|.docx|.pdf)'
-                    ORDER BY updated_at DESC
-                ''' 
+                qs = BillDocumentLink.objects.filter(is_null & is_file)
             else:
-                query = '''
-                    SELECT id, url
-                    FROM councilmatic_core_billdocument 
-                    WHERE updated_at >= :max_updated
-                    AND document_type='A' 
-                    AND full_text is null
-                    AND lower(url) similar to '%(.doc|.docx|.pdf)'
-                    ORDER BY updated_at DESC
-                '''
+                qs = BillDocumentLink.objects.filter(is_null & is_file & after_max_update)
 
-            result = connection.execution_options(stream_results=True).execute(sa.text(query), max_updated=max_updated)
-
-            yield from result
+            for item in qs:
+                yield item.url, item.document.id
 
     def convert_document_to_plaintext(self):
+        import textract
+
         for document_data in self.get_document_url():
             document_data = dict(document_data)
             url = document_data['url']
@@ -86,10 +76,10 @@ class Command(BaseCommand):
                 try:
                     plain_text = textract.process(tfp.name)
                 except textract.exceptions.ShellError as e:
-                    logger.error('{} - Could not convert Document ID {}!'.format(e, document_id))
+                    logger.error('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
                     continue
 
-                logger.info('Document ID {} - conversion complete'.format(document_id))
+                logger.info('Councilmatic Document ID {} - conversion complete'.format(document_id))
 
             yield {'plain_text': plain_text.decode('utf-8'), 'id': document_id}
             
@@ -108,7 +98,7 @@ class Command(BaseCommand):
         update_statement = '''
             UPDATE councilmatic_core_billdocument as bill_docs
             SET full_text = :plain_text
-            WHERE bill_docs.id = :id  
+            WHERE bill_docs.document_id = :id  
         '''
         
         plaintexts = self.convert_document_to_plaintext()
