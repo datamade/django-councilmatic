@@ -13,7 +13,7 @@ def test_refresh_pic(metro_bill_document,
     and converts their urls to a list of AWS keys.
     '''
     command = RefreshPic()
-    document_urls = command._get_urls()
+    document_urls = list(command._get_urls())
 
     bill_doc_link, = metro_bill_document.links.all()
     event_doc_link, = metro_event_document.links.all()

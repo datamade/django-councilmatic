@@ -1,11 +1,16 @@
-import urllib.parse
+import datetime
+import itertools
 import logging
 import logging.config
+import urllib.parse
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.conf import settings
+import pytz
+
+from opencivicdata.legislative.models import BillDocumentLink, EventDocumentLink
+
 
 for configuration in ['AWS_KEY','AWS_SECRET']:
     if not hasattr(settings, configuration):
@@ -14,6 +19,7 @@ for configuration in ['AWS_KEY','AWS_SECRET']:
 
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     help = 'Refreshes the property image cache by deleting documents that need to be newly created'
@@ -35,47 +41,17 @@ class Command(BaseCommand):
         logger.info(("Removed {} document(s) from the councilmatic-document-cache").format(len(aws_keys)))
 
     def _get_urls(self):
-        '''
-        Three select statements:
+        app_timezone = pytz.timezone(settings.TIME_ZONE)
+        one_hour_ago = app_timezone.localize(datetime.datetime.now()) - datetime.timedelta(hours=1)
+
+        bill_docs = BillDocumentLink.objects.filter(document__bill__versions__isnull=False,
+                                                    document__bill__updated_at__gte=one_hour_ago)\
+                                            .values_list('url', flat=True)
         
-        (1) change_bill
-        Why? The ocr_full_text of a bill presents the same text as on the document. 
-        When a bill's ocr_full_text changes, `import_data` adds that bill to the `change_bill` table. 
-        We can query the `change_bill` table to determine which bill documents (potentially) changed, too. 
+        event_docs = EventDocumentLink.objects.filter(document__event__updated_at__gte=one_hour_ago)\
+                                              .values_list('url', flat=True)
 
-        (2) councilmatic_core_eventagendaitem
-        Why? The event agenda items contain the text of the agenda.
-        `import_data` does not have a "change" table for event agenda items 
-        (otherwise, the database ends up with an overabundance of items: https://github.com/datamade/django-councilmatic/pull/140)
-        If an agenda item has been updated, i.e., newly created, then assume that the event document changed, too.
-
-        (3) change_event
-        Why? The date, name, or other details of the event may have changed, and the document would have been updated in turn.
-
-        '''
-        with connection.cursor() as cursor:
-
-            query = '''
-                SELECT DISTINCT b_doc_link.url
-                FROM opencivicdata_billversionlink AS b_version_link
-                JOIN opencivicdata_billversion AS b_version
-                ON b_version_link.document_id = b_version.id
-                JOIN opencivicdata_bill AS b 
-                ON b.id = b_version.bill_id
-                WHERE b.updated_at >= (NOW() - INTERVAL '1 hour')
-                UNION
-                SELECT DISTINCT e_doc_link.url
-                FROM opencivicdata_eventdocumentlink AS e_doc_link
-                JOIN opencivicdata_eventdocument as e_doc 
-                ON e_doc_link.document_id = e_doc.id
-                JOIN opencivicdata_event AS e
-                ON e.id = e_doc.event_id
-                WHERE e.updated_at >= (NOW() - INTERVAL '1 hour')
-            '''
-
-            cursor.execute(query)
-
-            return [entry[0] for entry in cursor.fetchall()]
+        return itertools.chain(bill_docs, event_docs)
 
     def _create_keys(self, document_urls):
         return [urllib.parse.quote_plus(url) for url in document_urls]

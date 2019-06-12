@@ -9,7 +9,7 @@ from django.core.management import call_command
 from django.db import connection
 
 from councilmatic_core.models import Bill, Event, BillDocument
-from opencivicdata.legislative.models import BillDocumentLink, EventDocument, EventDocumentLink, LegislativeSession
+from opencivicdata.legislative.models import BillDocumentLink, EventDocument, EventDocumentLink, LegislativeSession, BillVersion
 
 
 @pytest.fixture(scope='session')
@@ -82,6 +82,13 @@ def metro_bill_document(metro_bill, transactional_db):
     }
 
     BillDocumentLink.objects.create(**document_link_info)
+
+    version = BillVersion.objects.create(bill=metro_bill,
+                                         note='test',
+                                         date='1992-02-16')
+
+    metro_bill.versions.add(version)
+    metro_bill.save()
 
     return document
 
