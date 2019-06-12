@@ -682,9 +682,8 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
 class BillDocument(opencivicdata.legislative.models.BillDocument):
 
     document = models.OneToOneField(opencivicdata.legislative.models.BillDocument,
-                                on_delete=models.CASCADE,
-                                related_name='councilmatic_document',
-                                parent_link=True)
+                                    on_delete=models.CASCADE,
+                                    related_name='councilmatic_document',
+                                    parent_link=True)
 
     full_text = models.TextField(blank=True, null=True)
-
