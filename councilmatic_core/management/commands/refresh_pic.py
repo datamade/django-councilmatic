@@ -37,7 +37,7 @@ class Command(BaseCommand):
         bucket = s3_conn.get_bucket('councilmatic-document-cache')
 
         bucket.delete_keys(aws_keys)
-    
+
         logger.info(("Removed {} document(s) from the councilmatic-document-cache").format(len(aws_keys)))
 
     def _get_urls(self):
@@ -47,7 +47,7 @@ class Command(BaseCommand):
         bill_docs = BillDocumentLink.objects.filter(document__bill__versions__isnull=False,
                                                     document__bill__updated_at__gte=one_hour_ago)\
                                             .values_list('url', flat=True)
-        
+
         event_docs = EventDocumentLink.objects.filter(document__event__updated_at__gte=one_hour_ago)\
                                               .values_list('url', flat=True)
 

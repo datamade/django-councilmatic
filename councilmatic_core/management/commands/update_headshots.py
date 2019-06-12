@@ -16,11 +16,11 @@ class Command(BaseCommand):
             filename = 'ocd-person-' + councilmatic_person.slug + '.jpg'
             response = requests.get(person.image)
             print(person.image)
-           
+
             with open('/tmp/' + filename, 'wb') as f:
                 f.write(response.content)
 
             with open('/tmp/' + filename, 'rb') as f:
                 django_file = File(f)
                 councilmatic_person.headshot.save(filename, django_file)
-                
+
