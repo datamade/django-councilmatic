@@ -5,24 +5,37 @@ import pytest
 from pytest_django.fixtures import db
 
 from django.conf import settings
-from django.core.management import call_command
 from django.db import connection
 
 from councilmatic_core.models import Bill, Event, BillDocument
-from opencivicdata.legislative.models import BillDocumentLink, EventDocument, EventDocumentLink, LegislativeSession, BillVersion
+from opencivicdata.core.models import Jurisdiction, Division
+from opencivicdata.legislative.models import BillDocumentLink, EventDocument, \
+    EventDocumentLink, LegislativeSession, BillVersion
 
-
-@pytest.fixture(scope='session')
-def django_db_setup(django_db_setup, django_db_blocker):
-    with django_db_blocker.unblock():
-        call_command('loaddata', 'tests/fixtures/test_data.json')
 
 @pytest.fixture
 @pytest.mark.django_db
-def legislative_session(db):
+def jurisdiction(db):
+    division = Division.objects.create(
+        id='ocd-division/country:us/state:il/place:chicago',
+        name='Chicago city'
+    )
+
+    return Jurisdiction.objects.create(**{
+        "created_at": "2019-06-10T19:23:47.116Z",
+        "updated_at": "2019-06-10T19:23:47.116Z",
+        "name": "Chicago City Government",
+        "url": "https://chicago.legistar.com/",
+        "classification": "government",
+        "division": division
+    })
+
+@pytest.fixture
+@pytest.mark.django_db
+def legislative_session(db, jurisdiction):
     session_info = {
         "id": "ee9037fa-59bf-43c7-a2f1-7c853b3e71e2",
-        "jurisdiction": "ocd-jurisdiction/country:us/state:il/place:chicago/government",
+        "jurisdiction": jurisdiction,
         "identifier": "2011",
         "name": "2011 Regular Session",
         "classification": "",
@@ -52,14 +65,14 @@ def metro_bill(db, legislative_session):
 
 @pytest.fixture
 @pytest.mark.django_db
-def metro_event(db):
+def metro_event(db, jurisdiction):
     event_info = {
         'id': 'ocd-event/17fdaaa3-0aba-4df0-9893-2c2e8e94d18d',
         'created_at': '2017-05-27 11:10:46.574-05',
         'updated_at': datetime.datetime.now().isoformat(),
         'name': 'System Safety, Security and Operations Committee',
         'start_date': '2017-05-18 12:15:00-05',
-        'jurisdiction_id': 'ocd-jurisdiction/country:us/state:il/place:chicago/government',
+        'jurisdiction': jurisdiction,
     }
 
     event = Event.objects.create(**event_info)
