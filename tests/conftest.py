@@ -21,12 +21,12 @@ def django_db_setup(django_db_setup, django_db_blocker):
 @pytest.mark.django_db
 def legislative_session(db):
     session_info = {
-        "id": "ee9037fa-59bf-43c7-a2f1-7c853b3e71e2", 
-        "jurisdiction": "ocd-jurisdiction/country:us/state:il/place:chicago/government", 
-        "identifier": "2011", 
-        "name": "2011 Regular Session", 
-        "classification": "", 
-        "start_date": "2011-05-18", 
+        "id": "ee9037fa-59bf-43c7-a2f1-7c853b3e71e2",
+        "jurisdiction": "ocd-jurisdiction/country:us/state:il/place:chicago/government",
+        "identifier": "2011",
+        "name": "2011 Regular Session",
+        "classification": "",
+        "start_date": "2011-05-18",
         "end_date": "2015-05-17",
     }
 
