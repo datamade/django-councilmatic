@@ -6,11 +6,11 @@ import logging.config
 import sqlalchemy as sa
 import datetime
 import signal
-import os
+import json
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.db.models import Max
+from django.db.models import Max, Q
 
 from councilmatic_core.models import Bill
 
@@ -47,7 +47,7 @@ class Command(BaseCommand):
         '''
         This command converts RTF from Legistar into valid HTML.
         The conversion employs "unoconv" - a CLI tool that imports and exports documents in LibreOffice. We run unoconv as a daemon process and kill it when the conversions finish.
-        Three steps occur: (1) querying the database for bill full_text (i.e., the RTF from Legistar), 
+        Three steps occur: (1) querying the database for bill full_text (i.e., the RTF from Legistar),
         (2) iteration over the query results, conversion to html, and creation of an inserts string,
         (3) updating the full_text field with new html.
         '''
@@ -59,46 +59,30 @@ class Command(BaseCommand):
 
     def get_rtf(self):
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-        with engine.begin() as connection:
-            '''
-            The script, by default, only converts the most recently updated bills:
-            the `max_updated` timestamp and the third (last) query option 
-            helps accomplish this. 
-            
-            Specifically, the query determines which bills have been 
-            recently updated (or created) in the Councilmatic database, 
-            by looking for bills with an `updated_at` (i.e.,  max_updated) 
-            timestamp of equal or greater value.
-            '''
-            max_updated = Bill.objects.all().aggregate(Max('updated_at'))['updated_at__max']
+        '''
+        The script, by default, only converts the most recently updated bills:
+        the `max_updated` timestamp and the third (last) query option
+        helps accomplish this.
 
-            if max_updated is None or self.update_all:
-                query = '''
-                    SELECT ocd_id, full_text
-                    FROM councilmatic_core_bill
-                    WHERE full_text is not null
-                    ORDER BY updated_at DESC
-                '''
-            elif self.update_empty:
-                query = '''
-                    SELECT ocd_id, full_text
-                    FROM councilmatic_core_bill
-                    WHERE html_text is null
-                    AND full_text is not null
-                    ORDER BY updated_at DESC
-                '''   
-            else:
-                query = '''
-                    SELECT ocd_id, full_text
-                    FROM councilmatic_core_bill
-                    WHERE updated_at >= :max_updated
-                    AND full_text is not null
-                    ORDER BY updated_at DESC
-                '''
+        Specifically, the query determines which bills have been
+        recently updated (or created) in the Councilmatic database,
+        by looking for bills with an `updated_at` (i.e.,  max_updated)
+        timestamp of equal or greater value.
+        '''
+        max_updated = Bill.objects.all().aggregate(Max('updated_at'))['updated_at__max']
 
-            result = connection.execution_options(stream_results=True).execute(sa.text(query), max_updated=max_updated)
+        has_rtf_text = Q(extras__rtf_text__isnull=False)
+        missing_html_text = Q(extras__html_text__isnull=True)
+        after_max_update = Q(updated_at__gt=max_updated)
 
-            yield from result
+        if max_updated is None or self.update_all:
+            qs = Bill.objects.filter(has_rtf_text)
+        elif self.update_empty:
+            qs = Bill.objects.filter(has_rtf_text & missing_html_text)
+        else:
+            qs = Bill.objects.filter(has_rtf_text & after_max_update)
+
+        yield from qs
 
     def convert_rtf(self):
         rtf_results = self.get_rtf()
@@ -106,10 +90,10 @@ class Command(BaseCommand):
         logger.info('Converting RTF to HTML....')
 
         inserts = ''
-        for bill_data in rtf_results:
-            ocd_id = bill_data['ocd_id']
-            rtf_string = bill_data['full_text']
-           
+        for bill in rtf_results:
+            ocd_id = bill.id
+            rtf_string = bill.extras['rtf_text']
+
             try:
                 # For Python 3.4 and below
                 process = subprocess.Popen(['unoconv', '--stdin', '--stdout', '-f', 'html'], preexec_fn=os.setsid, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -126,16 +110,16 @@ class Command(BaseCommand):
 
             logger.info('Successful conversion of {}'.format(ocd_id))
 
-            yield {'html': html, 'ocd_id': ocd_id}
+            yield {'html': json.dumps(html), 'ocd_id': ocd_id}
 
     def add_html(self):
         html_results = self.convert_rtf()
 
         self.connection.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
         query = '''
-            UPDATE councilmatic_core_bill as bills
-            SET html_text = :html
-            WHERE bills.ocd_id = :ocd_id  
+            UPDATE opencivicdata_bill
+            SET extras = jsonb_set(extras, '{html_text}', :html)
+            WHERE id = :ocd_id
         '''
 
         chunk = []
@@ -145,10 +129,10 @@ class Command(BaseCommand):
             if len(chunk) == 20:
                 with self.connection.begin() as trans:
                     self.connection.execute(sa.text(query), chunk)
-                    
+
                     chunk = []
 
-        # Update bills when less than 1,000 elements in a chunk. 
+        # Update bills when less than 1,000 elements in a chunk.
         if chunk:
             with self.connection.begin() as trans:
                 self.connection.execute(sa.text(query), chunk)
