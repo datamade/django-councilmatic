@@ -1,7 +1,7 @@
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.core.files import File
 from django.conf import settings
-
 
 from opencivicdata.core.models import Person as OCDPerson
 
@@ -15,7 +15,8 @@ class Command(BaseCommand):
             councilmatic_person = person.councilmatic_person
             filename = councilmatic_person.slug + '.jpg'
             response = requests.get(person.image)
-            print(person.image)
+
+            self.stdout.write('Downloading {}'.format(person.image))
 
             with open('/tmp/' + filename, 'wb') as f:
                 f.write(response.content)
@@ -24,3 +25,6 @@ class Command(BaseCommand):
                 django_file = File(f)
                 councilmatic_person.headshot.save(filename, django_file)
 
+        self.stdout.write('Collecting static')
+
+        call_command('collectstatic', verbosity=0, interactive=False)
