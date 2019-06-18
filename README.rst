@@ -28,7 +28,9 @@ Did you make changes to django-councilmatic? Before you make a pull request, run
 
 First, install the test requirements:
 
-`pip install -r tests/requirements.txt`
+.. code-block:: bash
+
+    pip install -r tests/requirements.txt
 
 We test for style with `flake8 <http://flake8.pycqa.org/en/latest/>`_:
 
@@ -42,13 +44,13 @@ We test for functionality with `pytest`:
 
     pytest
 
-If you made material changes to the Councilmatic models, refresh the test fixture from a local instance database. From your instance directory (assuming you've already installed `django-councilmatic` with `pip install -e /path/to/django-councilmatic`), install the test requirements:
+If you made material changes to the Councilmatic models, refresh the test fixture from a local instance database. From your instance directory (assuming you've already installed :code:`django-councilmatic` with :code:`pip install -e /path/to/django-councilmatic`), install the test requirements:
 
 .. code-block:: bash
 
     pip install -r /path/to/django-councilmatic/tests/test_requirements.txt
 
-Add `fixture_magic` to your instance's `INSTALLED_APPS` in `settings.py`.
+Add :code:`fixture_magic` to your instance's :code:`INSTALLED_APPS` in :code:`settings.py`.
 
 Run the management command to update the test fixture.
 
