@@ -13,7 +13,7 @@ class Command(BaseCommand):
     def handle(self, *args, **opetions):
         for person in OCDPerson.objects.exclude(image=''):
             councilmatic_person = person.councilmatic_person
-            filename = 'ocd-person-' + councilmatic_person.slug + '.jpg'
+            filename = councilmatic_person.slug + '.jpg'
             response = requests.get(person.image)
             print(person.image)
 

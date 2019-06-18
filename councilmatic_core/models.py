@@ -15,10 +15,7 @@ import opencivicdata.legislative.models
 import opencivicdata.core.models
 
 
-'''
-TO-DO: We don't need these defined for pupa... Is there a way we can perform this check elsewhere?
-'''
-static_storage = FileSystemStorage(location=os.path.join(settings.BASE_DIR, settings.APP_NAME, 'static'), base_url='/')
+static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_PATH), base_url='/')
 
 if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
     raise ImproperlyConfigured(
@@ -28,8 +25,7 @@ if not hasattr(settings, 'CITY_COUNCIL_NAME'):
     raise ImproperlyConfigured(
         'You must define a CITY_COUNCIL_NAME in settings.py')
 
-MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(
-    settings, 'MANUAL_HEADSHOTS') else {}
+MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
 
 
 class PersonManager(models.Manager):
@@ -51,7 +47,7 @@ class Person(opencivicdata.core.models.Person):
                                   related_name='councilmatic_person',
                                   parent_link=True)
 
-    headshot = models.FileField(upload_to='images',
+    headshot = models.FileField(upload_to='images/headshots',
                                 storage=static_storage,
                                 default='images/headshot_placeholder.png')
 

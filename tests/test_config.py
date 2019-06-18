@@ -39,8 +39,7 @@ DISQUS_SHORTNAME = None
 
 ANALYTICS_TRACKING_CODE = ''
 
-HEADSHOT_PATH = os.path.join(os.path.dirname(__file__), '..'
-                             '/chicago/static/images/')
+STATIC_PATH = os.path.join(os.path.dirname(__file__), '..', 'chicago', 'static')
 
 INSTALLED_APPS = (
     'django.contrib.admin',
