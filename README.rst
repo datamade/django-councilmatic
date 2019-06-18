@@ -32,29 +32,29 @@ First, install the test requirements:
 
 We test for style with `flake8 <http://flake8.pycqa.org/en/latest/>`_:
 
-```bash
-flake8 ./councilmatic_core/*.py
-```
+.. code-block:: bash
+
+    flake8 ./councilmatic_core/*.py
 
 We test for functionality with `pytest`:
 
-```bash
-pytest
-```
+.. code-block:: bash
+
+    pytest
 
 If you made material changes to the Councilmatic models, refresh the test fixture from a local instance database. From your instance directory (assuming you've already installed `django-councilmatic` with `pip install -e /path/to/django-councilmatic`), install the test requirements:
 
-```bash
-pip install -r /path/to/django-councilmatic/tests/test_requirements.txt
-```
+.. code-block:: bash
+
+    pip install -r /path/to/django-councilmatic/tests/test_requirements.txt
 
 Add `fixture_magic` to your instance's `INSTALLED_APPS` in `settings.py`.
 
 Run the management command to update the test fixture.
 
-```bash
-python manage.py make_fixtures
-```
+.. code-block:: bash
+
+    python manage.py make_fixtures
 
 Run the tests and commit your updated fixture with your PR!
 
