@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         Bill = apps.get_model('councilmatic_core', 'Bill')
 
         # Chicago
-        if settings.OCD_CITY_COUNCIL_ID == 'ocd-organization/ef168607-9135-4177-ad8e-c1f7a4806c3a':
+        if settings.OCD_CITY_COUNCIL_NAME == 'Chicago City Council':
             added_space = r'^([A-Za-z]+)\s([-\d]+)$'
 
             with transaction.atomic(), connection.cursor() as cursor:

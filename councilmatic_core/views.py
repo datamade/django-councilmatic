@@ -209,10 +209,7 @@ class CouncilMembersView(ListView):
         return json.dumps(map_geojson)
 
     def get_queryset(self):
-        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            get_kwarg = {'id': settings.OCD_CITY_COUNCIL_ID}
-        else:
-            get_kwarg = {'name': settings.OCD_CITY_COUNCIL_NAME}
+        get_kwarg = {'name': settings.OCD_CITY_COUNCIL_NAME}
 
         return Organization.objects.get(**get_kwarg).posts.all()
 

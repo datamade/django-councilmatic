@@ -17,13 +17,8 @@ import opencivicdata.core.models
 
 static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_PATH), base_url='/')
 
-if not (hasattr(settings, 'OCD_CITY_COUNCIL_ID') or hasattr(settings, 'OCD_CITY_COUNCIL_NAME')):
-    raise ImproperlyConfigured(
-        'You must define a OCD_CITY_COUNCIL_ID or OCD_CITY_COUNCIL_NAME in settings.py')
-
-if not hasattr(settings, 'CITY_COUNCIL_NAME'):
-    raise ImproperlyConfigured(
-        'You must define a CITY_COUNCIL_NAME in settings.py')
+if not hasattr(settings, 'OCD_CITY_COUNCIL_NAME'):
+    raise ImproperlyConfigured('You must define OCD_CITY_COUNCIL_NAME in settings.py')
 
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
 
@@ -100,10 +95,7 @@ class Person(opencivicdata.core.models.Person):
 
     @property
     def latest_council_membership(self):
-        if hasattr(settings, 'OCD_CITY_COUNCIL_ID'):
-            filter_kwarg = {'organization__id': settings.OCD_CITY_COUNCIL_ID}
-        else:
-            filter_kwarg = {'organization__name': settings.OCD_CITY_COUNCIL_NAME}
+        filter_kwarg = {'organization__name': settings.OCD_CITY_COUNCIL_NAME}
 
         city_council_memberships = self.memberships.filter(**filter_kwarg)
 
