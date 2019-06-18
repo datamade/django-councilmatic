@@ -8,7 +8,8 @@ from django.utils import timezone
 class BillIndex(indexes.SearchIndex):
 
     text = indexes.CharField(document=True,
-                             template_name="search/indexes/councilmatic_core/bill_text.txt")
+                             use_template=True,
+                             template_name='search/indexes/councilmatic_core/bill_text.txt')
     slug = indexes.CharField(model_attr='slug', indexed=False)
     id = indexes.CharField(model_attr='id', indexed=False)
     bill_type = indexes.CharField(faceted=True)
