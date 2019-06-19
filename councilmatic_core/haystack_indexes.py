@@ -55,16 +55,6 @@ class BillIndex(indexes.SearchIndex):
     def prepare_full_text(self, obj):
         return clean_html(obj.full_text)
 
-    def prepare_last_action_date(self, obj):
-        from datetime import timedelta
-        last_date = obj.last_action_date
-        if not last_date:
-            last_date = timezone.now() - timedelta(36500)
-
-        if last_date:
-            last_date = last_date - last_date.utcoffset()
-            return last_date.replace(tzinfo=None)
-
     def prepare_inferred_status(self, obj):
         return obj.inferred_status
 
