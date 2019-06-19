@@ -1,8 +1,7 @@
-from councilmatic_core.models import Bill
 from haystack import indexes
-from councilmatic_core.templatetags.extras import clean_html
 
-from django.utils import timezone
+from councilmatic_core.models import Bill
+from councilmatic_core.templatetags.extras import clean_html
 
 
 class BillIndex(indexes.SearchIndex):
