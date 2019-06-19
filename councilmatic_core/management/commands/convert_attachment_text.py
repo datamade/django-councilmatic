@@ -54,6 +54,8 @@ class Command(BaseCommand):
             yield item.url, item.document.id
 
     def convert_document_to_plaintext(self):
+        # textract is a heavy dependency. In order to test this code without
+        # installing it, import the library here.
         import textract
 
         for document_data in self.get_document_url():

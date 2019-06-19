@@ -120,7 +120,7 @@ class PersonDetailFeed(Feed):
         return "Recent sponsored bills from " + obj.name + "."
 
     def items(self, person):
-        sponsored_bills = sorted((s.bill for s in person.primary_sponsorships), key=lambda x: x.last_action_date)[:10]
+        sponsored_bills = [s.bill for s in person.primary_sponsorships][:10]
         recent_sponsored_bills = sponsored_bills[:self.NUM_RECENT_BILLS]
         return recent_sponsored_bills
 

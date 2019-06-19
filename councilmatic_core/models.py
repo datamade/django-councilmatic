@@ -77,7 +77,10 @@ class Person(opencivicdata.core.models.Person):
 
     @property
     def primary_sponsorships(self):
-        return self.billsponsorship_set.filter(primary=True)
+        primary_sponsorships = self.billsponsorship_set.filter(primary=True)\
+                                                       .prefetch_related('bill')
+
+        return sorted((s for s in primary_sponsorships), key=lambda s: s.bill.last_action_date)
 
     @property
     def chair_role_memberships(self):
@@ -589,6 +592,7 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
         proxy = True
 
     bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
+    # This is nullable because Organizations can be sponsors.
     person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
 
 
