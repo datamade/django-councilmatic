@@ -592,7 +592,7 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
         proxy = True
 
     bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
-    # This is nullable because Organizations can be sponsors.
+    organization = ProxyForeignKey(Organization, null=True, on_delete=models.SET_NULL)
     person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
 
 
