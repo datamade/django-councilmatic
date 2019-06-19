@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from django.db import models
@@ -80,7 +81,13 @@ class Person(opencivicdata.core.models.Person):
         primary_sponsorships = self.billsponsorship_set.filter(primary=True)\
                                                        .prefetch_related('bill')
 
-        return sorted((s for s in primary_sponsorships), key=lambda s: s.bill.last_action_date)
+        def sponsorship_sort(sponsorship):
+            '''
+            Sponsorships of bills without recent action dates should appear last.
+            '''
+            return sponsorship.bill.last_action_date or datetime.datetime(datetime.MINYEAR, 1, 1)
+
+        return sorted((s for s in primary_sponsorships), key=sponsorship_sort, reverse=True)
 
     @property
     def chair_role_memberships(self):
