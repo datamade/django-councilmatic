@@ -235,6 +235,11 @@ class Organization(opencivicdata.core.models.Organization):
 
 class Post(opencivicdata.core.models.Post):
 
+    post = models.OneToOneField(opencivicdata.core.models.Post,
+                                on_delete=models.CASCADE,
+                                related_name='councilmatic_post',
+                                parent_link=True)
+
     organization = ProxyForeignKey(
         Organization,
         related_name='posts',

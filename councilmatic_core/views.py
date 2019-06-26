@@ -195,7 +195,7 @@ class CouncilMembersView(ListView):
 
                 feature = {
                     'type': 'Feature',
-                    'geometry': json.loads(post.shape),
+                    'geometry': post.shape,
                     'properties': {
                         'district': post.label,
                         'council_member': council_member,
@@ -379,7 +379,7 @@ class PersonDetailView(DetailView):
 
             feature = {
                 'type': 'Feature',
-                'geometry': json.loads(person.latest_council_membership.post.shape),
+                'geometry': person.latest_council_membership.post.shape,
                 'properties': {
                     'district': person.latest_council_membership.post.label,
                 }
