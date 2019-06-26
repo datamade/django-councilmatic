@@ -26,3 +26,13 @@ group: deprecated-2017Q4
 script:
     - flake8 ./councilmatic_core/*.py
     - pytest -sv
+
+deploy:
+  provider: pypi
+  user: datamade.wheelbuilder
+  password:
+    secure: v9nZlccPLNiKps2DPDkb789XS1ukiiV7V7HSGpVpyrD5KgSzsV14W4CHjpA9tkGebajTz/VL4a2IQUtVwTXA9bgBaDguIpxuDUz5UM7qgy6gYfzmG+nJYqtrXZgBAlPAkTTnwiXTT+dIMO41O9fafVUSxZrspwRQfTuvL1AOwa/4Druv60/Qas57RVek3J/ISfpvdmV/DtawgXroE339+Wg3c1mc2N6olPNJuYFSPKo4pv9WnWSgOSJGPpELeMhFUhzDtTvHrOyU1nugXE/xXQcNa3ejaqPAXWFUnqE3MlQmvq4z3aa0SgKKKtr30CBA/p+ztws5GM8qI06rJC/o6FknjjbNoTycm1TYPb2rGMD7b/vC5R9RjTbuAYacS+mmags36NyBrAdd7AF4E5K9KVUrhjG4c0eMEl9LTq6ItopQm52Z+LHNnMi+8iVTqatzSVzNpMA9biDG8wASw+Zil6YZxa0fwSvM/wF0vekHvoXPPd92xvAfcAgS11gyx3NBfM+1c1FH6l9V5/UkcWwKSzFzGeFUkXw8PhBEozeFT6n59WDWiwUU22Tp6B4+25WO1XImUqyRbMoz2xLcRD+9CaEfYeKyH8IGoVDrqOZDVW62nMWeyesE+/ZMGFbxibdJd/Lsi+Q/DXQKJLSdpfkGDzL8CuTP1Ng95XQgKSPUfZc=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: datamade/django-councilmatic
