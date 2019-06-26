@@ -67,6 +67,5 @@ def create_councilmatic_bill(sender, instance, created, **kwargs):
 @receiver(post_save, sender=OCDPost)
 def create_councilmatic_post(sender, instance, created, **kwargs):
     if created:
-        cp = CouncilmaticPost(post=instance,
-                              shape={})
+        cp = CouncilmaticPost(post=instance)
         cp.save_base(raw=True)

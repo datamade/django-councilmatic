@@ -2,7 +2,7 @@ import datetime
 import os
 
 from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.contrib.gis.db import models as geo_models
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
@@ -247,7 +247,7 @@ class Post(opencivicdata.core.models.Post):
         on_delete=models.CASCADE,
     )
 
-    shape = JSONField()
+    shape = geo_models.GeometryField(null=True)
 
     @cached_property
     def current_member(self):
