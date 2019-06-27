@@ -3,14 +3,16 @@ from django.dispatch import receiver
 from django.utils.text import slugify, Truncator
 
 from opencivicdata.core.models import (Organization as OCDOrganization,
-                                       Person as OCDPerson)
+                                       Person as OCDPerson,
+                                       Post as OCDPost)
 from opencivicdata.legislative.models import (Event as OCDEvent,
                                               Bill as OCDBill)
 
 from councilmatic_core.models import (Organization as CouncilmaticOrganization,
                                       Person as CouncilmaticPerson,
                                       Event as CouncilmaticEvent,
-                                      Bill as CouncilmaticBill)
+                                      Bill as CouncilmaticBill,
+                                      Post as CouncilmaticPost)
 
 
 @receiver(post_save, sender=OCDOrganization)
@@ -61,3 +63,9 @@ def create_councilmatic_bill(sender, instance, created, **kwargs):
         cb = CouncilmaticBill.objects.get(id=instance.id)
     else:
         cb = instance.councilmatic_bill
+
+@receiver(post_save, sender=OCDPost)
+def create_councilmatic_post(sender, instance, created, **kwargs):
+    if created:
+        cp = CouncilmaticPost(post=instance)
+        cp.save_base(raw=True)

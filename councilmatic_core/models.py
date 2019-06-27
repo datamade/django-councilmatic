@@ -2,6 +2,7 @@ import datetime
 import os
 
 from django.db import models
+from django.contrib.gis.db import models as geo_models
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
@@ -233,8 +234,11 @@ class Organization(opencivicdata.core.models.Organization):
 
 
 class Post(opencivicdata.core.models.Post):
-    class Meta:
-        proxy = True
+
+    post = models.OneToOneField(opencivicdata.core.models.Post,
+                                on_delete=models.CASCADE,
+                                related_name='councilmatic_post',
+                                parent_link=True)
 
     organization = ProxyForeignKey(
         Organization,
@@ -242,6 +246,8 @@ class Post(opencivicdata.core.models.Post):
         help_text="The Organization in which the post is held.",
         on_delete=models.CASCADE,
     )
+
+    shape = geo_models.GeometryField(null=True)
 
     @cached_property
     def current_member(self):
