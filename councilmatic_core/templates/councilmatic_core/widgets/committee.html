@@ -1,6 +1,6 @@
 {% extends "base_widget.html" %}
 {% load extras %}
-{% load staticfiles %}
+{% load static %}
 {% block title %}{{ committee.name }}{% endblock %}
 {% block content %}
     <div class="row-fluid">
@@ -31,7 +31,7 @@
                     Chairperson
                 </strong><br/>
                 {% for membership in committee.chairs %}
-                {{ membership.person.link_html | safe }}<br/>
+                    {{ membership.person.link_html|safe}}<br/>
                 {% endfor %}
             </p>
         </div>

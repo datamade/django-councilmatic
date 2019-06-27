@@ -1,6 +1,7 @@
 import sys
 import os
 
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'replacethiswithsomethingsecret'
@@ -10,8 +11,8 @@ DEBUG = True
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'councilmatic',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'chicago_councilmatic',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -38,8 +39,7 @@ DISQUS_SHORTNAME = None
 
 ANALYTICS_TRACKING_CODE = ''
 
-HEADSHOT_PATH = os.path.join(os.path.dirname(__file__), '..'
-                             '/chicago/static/images/')
+STATIC_PATH = os.path.join(os.path.dirname(__file__), '..', 'chicago', 'static')
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -48,20 +48,18 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'opencivicdata.core',
+    'opencivicdata.legislative',
     'councilmatic_core',
     'haystack',
-    'notifications',
-    'django_rq',
-    'password_reset',
     'adv_cache_tag',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',

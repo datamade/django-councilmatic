@@ -4,7 +4,7 @@
 # These settings are required #
 ###############################
 
-OCD_CITY_COUNCIL_ID = 'ocd-organization/ef168607-9135-4177-ad8e-c1f7a4806c3a'
+OCD_CITY_COUNCIL_NAME = 'Chicago City Council'
 CITY_COUNCIL_NAME = 'Chicago City Council'
 OCD_JURISDICTION_ID = 'ocd-jurisdiction/country:us/state:il/place:chicago/government'
 LEGISLATIVE_SESSIONS = ['2007', '2011', '2015'] # the last one in this list should be the current legislative session

@@ -4,7 +4,7 @@ from haystack.query import SearchQuerySet
 
 from django.contrib.syndication.views import Feed
 from django.utils.feedgenerator import Rss201rev2Feed
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.conf import settings
 
 from .models import Person, Bill, Organization, Event
@@ -120,7 +120,7 @@ class PersonDetailFeed(Feed):
         return "Recent sponsored bills from " + obj.name + "."
 
     def items(self, person):
-        sponsored_bills = [s.bill for s in person.primary_sponsorships.order_by('-_bill__last_action_date')[:10]]
+        sponsored_bills = [s.bill for s in person.primary_sponsorships][:10]
         recent_sponsored_bills = sponsored_bills[:self.NUM_RECENT_BILLS]
         return recent_sponsored_bills
 
@@ -187,7 +187,7 @@ class CommitteeDetailActionFeed(Feed):
         return reverse('bill_detail', args=(action.bill.slug,))
 
     def item_pubdate(self, action):
-        return action.date
+        return action.date_dt
 
     def description(self, obj):
         return "Actions for committee %s" % obj.name
@@ -223,7 +223,7 @@ class BillDetailActionFeed(Feed):
         return reverse('bill_detail', args=(action.bill.slug,))
 
     def item_pubdate(self, action):
-        return action.date
+        return action.date_dt
 
     def description(self, obj):
         return "Actions for bill %s" % obj.friendly_name

@@ -1,3 +1,5 @@
+{% load static %}
+
 <div class="table-responsive">
     <table class='table' id='council-members'>
         <thead>
@@ -17,14 +19,14 @@
                     <td>
                         {% if post.current_member %}
                             <div class="thumbnail-square">
-                                <img src='{{post.current_member.person.headshot_url}}' alt='{{post.current_member.person.name}}' title='{{post.current_member.person.name}}' class='img-responsive img-thumbnail' />
+                                <img src='{% static post.current_member.person.headshot.url %}' alt='{{post.current_member.person.name}}' title='{{post.current_member.person.name}}' class='img-responsive img-thumbnail' />
                             </div>
                         {% endif %}
                     </td>
                     <td>
                         {% if post.current_member %}
-                            {{ post.current_member.person.link_html | safe }}
-                            {% if post.current_member.person.is_speaker %}
+                            {{ post.current_member.person.link_html|safe }}
+                            {% if post.current_member.role == 'Speaker' %}
                                 <br /><span class='label label-default'>Council Speaker</span>
                                 <span class='label label-success'><i class='fa fa-fw fa-check-square-o'></i> Verified</span>
                             {% endif %}

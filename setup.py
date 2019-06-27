@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
     README = readme.read()
@@ -9,8 +9,8 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-councilmatic',
-    version='0.10.15',
-    packages=['councilmatic_core'],
+    version='1.0',
+    packages=find_packages(),
     include_package_data=True,
     license='MIT License',  # example license
     description='Core functions for councilmatic.org family',
@@ -18,18 +18,18 @@ setup(
     url='http://councilmatic.org/',
     author='DataMade, LLC',
     author_email='info@datamade.us',
-    install_requires=['requests>=2.7.0,<2.8',
+    install_requires=['requests>=2.20,<2.21',
+                      'opencivicdata>=2.2.1<2.3',
                       'pytz>=2015.4',
-                      'django-haystack>=2.5.0,<2.6',
-                      'Django<1.10',
-                      'pysolr>=3.3.3,<3.4',
-                      'python-dateutil>=2.4,<2.5',
-                      'SQLAlchemy>=1.1.2,<1.2',
-                      'psycopg2>=2.7',
-                      'django-password-reset>=0.9,<1.0',
-                      'django-councilmatic-notifications<0.2',
-                      'django-adv-cache-tag==1.1.0',
-                      'boto==2.38.0'],
+                      'django-haystack>=2.8.0,<2.9',
+                      'Django>=2.0,<2.2',
+                      'django-proxy-overrides>=0.2.1',
+                      'python-dateutil>=2.7<2.8',
+                      'pysolr>=3.8,<3.9',
+                      'psycopg2-binary>=2.7<2.8',
+                      'django-adv-cache-tag==1.1.2',
+                      'boto==2.38.0',
+                      'sqlalchemy'],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

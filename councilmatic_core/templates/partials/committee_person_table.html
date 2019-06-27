@@ -1,3 +1,4 @@
+{% load static %}
 <table class='table' id='council-members'>
     <thead>
         <tr>
@@ -14,14 +15,14 @@
             <tr>
                 <td>
                     <div class="thumbnail-square">
-                        <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                        <img src='{% static membership.person.headshot.url %}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
                     </div>
                 </td>
                 <td>
-                    {{ membership.person.link_html | safe }}
+                    {{membership.person.link_html|safe}}
                 </td>
                 <td>
-                    {{membership.person.latest_council_seat}}
+                    {{membership.person.current_council_seat}}
                 </td>
                 <td>
                     Chairperson
@@ -32,14 +33,14 @@
             <tr>
                 <td>
                     <div class="thumbnail-square">
-                        <img src='{{membership.person.headshot_url}}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
+                        <img src='{% static membership.person.headshot.url %}' alt='{{membership.person.name}}' title='{{membership.person.name}}' class='img-responsive img-thumbnail' />
                     </div>
                 </td>
                 <td>
-                    {{ membership.person.link_html | safe }}
+                    {{membership.person.link_html|safe}}
                 </td>
                 <td>
-                    {{membership.person.latest_council_seat}}
+                    {{membership.person.current_council_seat}}
                 </td>
                 <td>
                     Member

@@ -1,6 +1,6 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
-{% load staticfiles %}
+{% load static %}
 {% load adv_cache %}
 {% block title %}{{CITY_COUNCIL_NAME}} Committees{% endblock %}
 {% block content %}
@@ -34,8 +34,8 @@
                                     <a href="/committee/{{committee.slug}}/">{{ committee.name | committee_topic_only }}</a>
                                 </td>
                                 <td align="left">
-                                    {% for chair in committee.chairs.all %}
-                                        {{ chair.person.link_html | safe }}<br />
+                                    {% for chair in committee.chairs %}
+                                        {{ chair.person.link_html|safe }}
                                     {% endfor %}
                                 </td>
                                 <td>{{ committee.all_members | length }}</td>
@@ -64,8 +64,8 @@
                                     <a href="/committee/{{committee.slug}}/">{{ committee.name | committee_topic_only}}</a>
                                 </td>
                                 <td align="left">
-                                    {% for chair in committee.chairs.all %}
-                                        {{ chair.person.link_html | safe }}<br />
+                                    {% for chair in committee.chairs %}
+                                        {{ chair.person.link_html|safe }}
                                     {% endfor %}
                                 </td>
                                 <td>{{ committee.memberships.all | length }}</td>
@@ -98,7 +98,7 @@
                                 </td>
                                 <td>
                                     {% for chair in committee.chairs.all %}
-                                        {{ chair.person.link_html | safe }}<br />
+                                        {{ chair.person.link_html|safe }}
                                     {% endfor %}
                                 </td>
                                 <td>{{ committee.memberships.all | length }}</td>
@@ -120,7 +120,7 @@
                 {{ ABOUT_BLURBS.COMMITTEES | safe }}
 
                 {% if taskforces %}
-                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees, {{subcommittees | length }} Subcommittees and {{taskforces | length }} Task Forces.</p>
+                <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees.count }} Committees, {{subcommittees | length }} Subcommittees and {{taskforces | length }} Task Forces.</p>
                 {% else %}
                 <p>{{CITY_COUNCIL_NAME}} is currently composed of {{committees | length }} Committees{% if subcommittees %} and {{subcommittees | length }} Subcommittees{% endif %}.</p>
                 {% endif %}

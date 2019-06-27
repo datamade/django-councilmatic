@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load static %}
 {% if next_council_meeting %}
     <h3><i class="fa fa-fw fa-institution"></i> Next City Council Meeting</h3>
     <div class="panel panel-default">
@@ -14,7 +14,7 @@
                     <p class="small text-muted">
                         <i class="fa fa-fw fa-calendar-o"></i> {{next_council_meeting.start_time | date:"D n/d/Y"}}<br/>
                         <i class="fa fa-fw fa-clock-o"></i> {{next_council_meeting.start_time | date:"g:i a"}}<br/>
-                        <i class="fa fa-fw fa-map-marker"></i> {{next_council_meeting.location_name}}<br />
+                        <i class="fa fa-fw fa-map-marker"></i> {{next_council_meeting.location.name}}<br />
                     </p>
                     <a class='btn btn-primary btn-sm' href="{{next_council_meeting.event_page_url}}">
                         Details

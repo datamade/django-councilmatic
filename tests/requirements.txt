@@ -1,0 +1,5 @@
+pytest==3.7.0
+pytest-django==3.3.3
+pytest-mock
+flake8
+git+git://github.com/hancush/django-fixture-magic@fix-merge#egg=django-fixture-magic

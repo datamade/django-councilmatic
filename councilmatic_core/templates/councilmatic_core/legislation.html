@@ -1,6 +1,6 @@
 {% extends "base_with_margins.html" %}
 {% load extras %}
-{% load staticfiles %}
+{% load static %}
 {% block title %}{{ legislation.friendly_name }}{% endblock %}
 {% block content %}
 
@@ -38,7 +38,7 @@
                     {% endwith %}
 
                     <!-- Link to legistar -->
-                    <a href='{{legislation.source_url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank" rel="nofollow">
+                    <a href='{{legislation.web_source.url}}' title='View on the {{CITY_VOCAB.SOURCE}} website' target="_blank" rel="nofollow">
                         <i class='fa fa-fw fa-external-link'></i> View on the {{CITY_VOCAB.SOURCE}} website
                     </a>
 
@@ -104,15 +104,24 @@
                         </thead>
                         <tbody>
                             {% for s in legislation.sponsorships.all %}
-                                {% if s.is_primary %}
+                                {% if s.primary %}
                                 <tr>
                                     <td>
                                         <div class="thumbnail-square">
-                                            <img src='{{s.person.headshot_url}}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% if s.person %}
+                                                <img src='{% static s.person.headshot.url %}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% else %}
+                                                <img src='{% static "images/headshot_placeholder.png" %}' alt='{{s.name}}' title='{{s.name}}' class='img-responsive img-thumbnail' />
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td>
-                                        {{ s.person.link_html | safe }} <span class="badge badge-default">Primary Sponsor</span>
+                                        {% if s.person %}
+                                            {{ s.person.link_html|safe }}
+                                        {% else %}
+                                            {{ s.name }}
+                                        {% endif %}
+                                        <span class="badge badge-default">Primary Sponsor</span>
                                     </td>
                                     <td>
                                         {{s.person.current_council_seat}}
@@ -121,15 +130,23 @@
                                 {% endif %}
                             {% endfor %}
                             {% for s in legislation.sponsorships.all %}
-                                {% if not s.is_primary %}
+                                {% if not s.primary %}
                                 <tr>
                                     <td>
                                         <div class="thumbnail-square">
-                                            <img src='{{s.person.headshot_url}}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% if s.person %}
+                                                <img src='{% static s.person.headshot.url %}' alt='{{s.person.name}}' title='{{s.person.name}}' class='img-responsive img-thumbnail' />
+                                            {% else %}
+                                                <img src='{% static "images/headshot_placeholder.png" %}' alt='{{s.name}}' title='{{s.name}}' class='img-responsive img-thumbnail' />
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td>
-                                        {{ s.person.link_html | safe }}
+                                        {% if s.person %}
+                                            {{ s.person.link_html|safe }}
+                                        {% else %}
+                                            {{ s.name }}
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {{s.person.current_council_seat}}
@@ -158,13 +175,13 @@
                             {% for action in actions %}
                                 <tr>
                                     <td class='nowrap text-muted small'>
-                                        <span datetime='{{action.date | format_date_sort }}'>{{action.date|date:'n/d/y'}}</span>
+                                        <span datetime='{{action.date_dt | format_date_sort }}'>{{action.date_dt|date:'n/d/y'}}</span>
                                     </td>
                                     <td class="small">
                                         <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
-                                        {% if action.related_organization %}
+                                        {% if action.referred_org %}
                                             to
-                                            {{action.related_organization.link_html|safe}}
+                                            {{action.referred_org.link_html|safe}}
                                         {% endif %}
                                     </td>
                                     <td class="small">
@@ -344,7 +361,7 @@
         }
 
         // for reference purposes
-        console.log( "OCD ID: {{legislation.ocd_id}}" )
+        console.log( "OCD ID: {{legislation.id}}" )
 
     </script>
 {% endblock %}

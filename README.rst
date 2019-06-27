@@ -24,17 +24,41 @@ Want to build your own Councilmatic? Check out our `Starter Template <https://gi
 
 Running tests
 ----
-Did you make changes to django-councilmatic? Before you make a pull request, run some tests. We test for style with `flake8 <http://flake8.pycqa.org/en/latest/>`_:
+Did you make changes to django-councilmatic? Before you make a pull request, run some tests.
 
-```bash
-flake8 ./councilmatic_core/*.py
-```
+First, install the test requirements:
 
-We test for functionality with a custom-made `TestCase`. Be sure to specify the owner of your psql databse in the export command:
+.. code-block:: bash
 
-```bash
-export db_user='yourusername' && python runtests.py
-```
+    pip install -r tests/requirements.txt
+
+We test for style with `flake8 <http://flake8.pycqa.org/en/latest/>`_:
+
+.. code-block:: bash
+
+    flake8 ./councilmatic_core/*.py
+
+We test for functionality with `pytest`:
+
+.. code-block:: bash
+
+    pytest
+
+If you made material changes to the Councilmatic models, refresh the test fixture from a local instance database. From your instance directory (assuming you've already installed :code:`django-councilmatic` with :code:`pip install -e /path/to/django-councilmatic`), install the test requirements:
+
+.. code-block:: bash
+
+    pip install -r /path/to/django-councilmatic/tests/test_requirements.txt
+
+Add :code:`fixture_magic` to your instance's :code:`INSTALLED_APPS` in :code:`settings.py`.
+
+Run the management command to update the test fixture.
+
+.. code-block:: bash
+
+    python manage.py make_fixtures
+
+Run the tests and commit your updated fixture with your PR!
 
 Team
 ----

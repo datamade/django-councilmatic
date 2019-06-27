@@ -7,9 +7,16 @@ env:
 
 addons:
   postgresql: '9.4'
+  apt:
+    packages:
+    - postgresql-9.4-postgis-2.3
+
+before_script:
+  - psql -U postgres -c "create extension postgis"
 
 install:
-    - pip install --upgrade -r tests/test_requirements.txt
+    - pip install --upgrade pip
+    - pip install -r tests/requirements.txt --upgrade
     - pip install -e .
 
 sudo: required 
@@ -18,4 +25,4 @@ group: deprecated-2017Q4
 
 script:
     - flake8 ./councilmatic_core/*.py
-    - pytest
+    - pytest -sv
