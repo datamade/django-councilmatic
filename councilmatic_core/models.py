@@ -309,8 +309,16 @@ class Membership(opencivicdata.core.models.Membership):
 
 class EventManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().annotate(start_time=Cast('start_date',
-                                                               models.DateTimeField()))
+        return super().get_queryset().annotate(
+            start_time=Cast(
+                Case(
+                    When(start_date='', then=None),
+                    default='start_date',
+                    output_field=models.CharField()
+                ),
+                models.DateTimeField()
+            )
+        )
 
 
 class Event(opencivicdata.legislative.models.Event):
@@ -611,8 +619,16 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
 
 class BillActionManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().annotate(date_dt=Cast('date',
-                                                            models.DateTimeField()))
+        return super().get_queryset().annotate(
+            date_dt=Cast(
+                Case(
+                    When(date='', then=None),
+                    default='date',
+                    output_field=models.CharField()
+                ),
+                models.DateTimeField()
+            )
+        )
 
 
 class BillAction(opencivicdata.legislative.models.BillAction):
