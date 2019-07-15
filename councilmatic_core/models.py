@@ -25,20 +25,21 @@ if not hasattr(settings, 'OCD_CITY_COUNCIL_NAME'):
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
 
 
-def cast_to_datetime(field):
-    """
-    Cast a given field from a CharField to a DateTimeField, converting empty
-    strings to NULL in the process. Useful for CharFields that store timestamps
-    as strings.
-    """
-    return Cast(
-        Case(
-            When(**{field: '', 'then': None}),
-            default=field,
-            output_field=models.CharField()
-        ),
-        models.DateTimeField()
-    )
+class CastToDateTimeMixin:
+    def cast_to_datetime(self, field):
+        """
+        Cast a given field from a CharField to a DateTimeField, converting empty
+        strings to NULL in the process. Useful for CharFields that store timestamps
+        as strings.
+        """
+        return Cast(
+            Case(
+                When(**{field: '', 'then': None}),
+                default=field,
+                output_field=models.CharField()
+            ),
+            models.DateTimeField()
+        )
 
 
 class PersonManager(models.Manager):
@@ -275,18 +276,11 @@ class Post(opencivicdata.core.models.Post):
             return membership
 
 
-class MembershipManager(models.Manager):
+class MembershipManager(models.Manager, CastToDateTimeMixin):
     def get_queryset(self):
-        # Handle null end dates
-        end_date_null = Case(
-            When(end_date='', then=None),
-            default='end_date',
-            output_field=models.CharField()
-        )
-
         return super().get_queryset().annotate(
-            end_date_dt=Cast(end_date_null, models.DateTimeField()),
-            start_date_dt=Cast('start_date', models.DateTimeField())
+            end_date_dt=self.cast_to_datetime('end_date'),
+            start_date_dt=self.cast_to_datetime('start_date')
         )
 
 
@@ -323,11 +317,12 @@ class Membership(opencivicdata.core.models.Membership):
     )
 
 
-class EventManager(models.Manager):
+class EventManager(models.Manager, CastToDateTimeMixin):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            start_time=cast_to_datetime('start_date')
+            start_time=self.cast_to_datetime('start_date')
         )
+
 
 class Event(opencivicdata.legislative.models.Event):
 
@@ -625,10 +620,10 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
     person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
 
 
-class BillActionManager(models.Manager):
+class BillActionManager(models.Manager, CastToDateTimeMixin):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            date_dt=cast_to_datetime('date')
+            date_dt=self.cast_to_datetime('date')
         )
 
 
