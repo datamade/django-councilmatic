@@ -276,7 +276,7 @@ class Post(opencivicdata.core.models.Post):
             return membership
 
 
-class MembershipManager(models.Manager, CastToDateTimeMixin):
+class MembershipManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
             end_date_dt=self.cast_to_datetime('end_date'),
@@ -317,7 +317,7 @@ class Membership(opencivicdata.core.models.Membership):
     )
 
 
-class EventManager(models.Manager, CastToDateTimeMixin):
+class EventManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
             start_time=self.cast_to_datetime('start_date')
@@ -620,7 +620,7 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
     person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
 
 
-class BillActionManager(models.Manager, CastToDateTimeMixin):
+class BillActionManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
             date_dt=self.cast_to_datetime('date')
