@@ -612,12 +612,10 @@ class Bill(opencivicdata.legislative.models.Bill):
 
 
 class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
-    class Meta:
-        proxy = True
-
     bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
     organization = ProxyForeignKey(Organization, null=True, on_delete=models.SET_NULL)
     person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class BillActionManager(CastToDateTimeMixin, models.Manager):
@@ -628,9 +626,6 @@ class BillActionManager(CastToDateTimeMixin, models.Manager):
 
 
 class BillAction(opencivicdata.legislative.models.BillAction):
-    class Meta:
-        proxy = True
-
     objects = BillActionManager()
 
     bill = ProxyForeignKey(Bill,
@@ -641,6 +636,8 @@ class BillAction(opencivicdata.legislative.models.BillAction):
                                    related_name='actions',
                                    # don't let an org delete wipe out a bunch of bill actions
                                    on_delete=models.PROTECT)
+
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def label(self):
