@@ -1,6 +1,7 @@
 branches:
   only:
     - master
+    - "2.5"
     - "/^v.*$/"
 
 language: python
