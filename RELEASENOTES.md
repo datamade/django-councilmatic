@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 2.5.0
+
+*Changes*
+
+`2.5.0` constitutes a major, backwards incompatible release that factors custom Django models and the `import_data` management command out of `django-councilmatic`. Instead, `django-councilmatic>=2.5.0` extends the Django implementation of the Open Civic Data standard, `python-opencivicdata`, and updates application code throughout to accomodate the model changes. Approaches for further extension of the base models are outlined in the README.
+
+**Release date:** 7-23-2019
+
 ## Version 0.10.15
 
 *Changes*
