@@ -17,7 +17,7 @@ import opencivicdata.legislative.models
 import opencivicdata.core.models
 
 
-static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_PATH), base_url='/')
+static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_ROOT), base_url='/')
 
 if not hasattr(settings, 'OCD_CITY_COUNCIL_NAME'):
     raise ImproperlyConfigured('You must define OCD_CITY_COUNCIL_NAME in settings.py')

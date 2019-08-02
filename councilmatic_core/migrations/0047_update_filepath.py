@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='person',
             name='headshot',
-            field=models.FileField(default='images/headshot_placeholder.png', storage=django.core.files.storage.FileSystemStorage(base_url='/', location=os.path.join(settings.STATIC_PATH)), upload_to='images/headshots'),
+            field=models.FileField(default='images/headshot_placeholder.png', storage=django.core.files.storage.FileSystemStorage(base_url='/', location=os.path.join(settings.STATIC_ROOT)), upload_to='images/headshots'),
         ),
     ]

@@ -39,8 +39,6 @@ DISQUS_SHORTNAME = None
 
 ANALYTICS_TRACKING_CODE = ''
 
-STATIC_PATH = os.path.join(os.path.dirname(__file__), '..', 'chicago', 'static')
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
