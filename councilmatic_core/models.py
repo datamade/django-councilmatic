@@ -19,9 +19,6 @@ import opencivicdata.core.models
 
 static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_ROOT), base_url='/')
 
-if not hasattr(settings, 'OCD_CITY_COUNCIL_NAME'):
-    raise ImproperlyConfigured('You must define OCD_CITY_COUNCIL_NAME in settings.py')
-
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
 
 
