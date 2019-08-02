@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-councilmatic',
-    version='2.5.1',
+    version='2.5.2',
     packages=find_packages(exclude=('tests',)),
     include_package_data=True,
     license='MIT License',  # example license
@@ -24,9 +24,9 @@ setup(
                       'django-haystack>=2.8.0,<2.9',
                       'Django>=2.0,<2.2',
                       'django-proxy-overrides>=0.2.1',
-                      'python-dateutil>=2.7<2.8',
+                      'python-dateutil>=2.7,<2.8',
                       'pysolr>=3.8,<3.9',
-                      'psycopg2-binary>=2.7<2.8',
+                      'psycopg2-binary>=2.7,<2.8',
                       'django-adv-cache-tag==1.1.2',
                       'boto==2.38.0',
                       'sqlalchemy'],
