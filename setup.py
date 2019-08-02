@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-councilmatic',
-    version='2.5.0',
+    version='2.5.1',
     packages=find_packages(exclude=('tests',)),
     include_package_data=True,
     license='MIT License',  # example license
@@ -19,7 +19,7 @@ setup(
     author='DataMade, LLC',
     author_email='info@datamade.us',
     install_requires=['requests>=2.20,<2.21',
-                      'opencivicdata>=2.2.1<2.3',
+                      'opencivicdata>=2.2.1,<2.3',
                       'pytz>=2015.4',
                       'django-haystack>=2.8.0,<2.9',
                       'Django>=2.0,<2.2',
