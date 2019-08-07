@@ -339,8 +339,8 @@ class PersonDetailView(DetailView):
         context = super(PersonDetailView, self).get_context_data(**kwargs)
 
         person = context['person']
-        context['sponsored_legislation'] = Bill.objects.filter(sponsorships__person=person)\
-                                                       .filter(sponsorships__primary=True)\
+        context['sponsored_legislation'] = Bill.objects.filter(sponsorships__person=person,
+                                                               sponsorships__primary=True)\
                                                        .annotate(last_action=Max('actions__date'))\
                                                        .order_by('-last_action')[:10]
 
