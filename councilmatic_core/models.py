@@ -3,7 +3,6 @@ import os
 
 from django.db import models
 from django.contrib.gis.db import models as geo_models
-from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
