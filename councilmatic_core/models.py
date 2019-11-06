@@ -7,7 +7,7 @@ from django.conf import settings
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
 from django.db.models import Case, When
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Now
 from django.utils.functional import cached_property
 from django.core.files.storage import FileSystemStorage
 
@@ -22,7 +22,9 @@ MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSH
 
 
 class CastToDateTimeMixin:
-    def cast_to_datetime(self, field):
+
+    @classmethod
+    def cast_to_datetime(cls, field):
         """
         Cast a given field from a CharField to a DateTimeField, converting empty
         strings to NULL in the process. Useful for CharFields that store timestamps
@@ -38,19 +40,7 @@ class CastToDateTimeMixin:
         )
 
 
-class PersonManager(models.Manager):
-    def get_queryset(self, *args, **kwargs):
-        from django.db.models import Prefetch
-
-        qs = super().get_queryset(*args, **kwargs)
-
-        return qs.prefetch_related(
-            Prefetch('memberships', Membership.objects.filter(person__in=qs))
-        )
-
-
 class Person(opencivicdata.core.models.Person):
-    objects = PersonManager()
 
     person = models.OneToOneField(opencivicdata.core.models.Person,
                                   on_delete=models.CASCADE,
@@ -71,14 +61,15 @@ class Person(opencivicdata.core.models.Person):
         return self.name
 
     @property
+    def current_memberships(self):
+        return self.memberships.filter(end_date_dt__gt=Now())
+
+    @property
     def latest_council_seat(self):
         m = self.latest_council_membership
         if m and m.post:
             return m.post.label
         return ''
-
-    def is_speaker(self):
-        return True if self.memberships.filter(role='Speaker').first() else False
 
     @property
     def headshot_source(self):
@@ -106,14 +97,14 @@ class Person(opencivicdata.core.models.Person):
     @property
     def chair_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date_dt__gt=timezone.now())
+            return self.current_memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
             return []
 
     @property
     def member_role_memberships(self):
         if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date_dt__gt=timezone.now())
+            return self.current_memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
             return []
 
@@ -132,15 +123,14 @@ class Person(opencivicdata.core.models.Person):
     def current_council_seat(self):
         m = self.latest_council_membership
         if m and m.end_date_dt > timezone.now():
-            return m.post.label
-        return ''
+            return m
 
     @property
     def link_html(self):
         return "<a href='{}'>{}</a>".format(reverse('person', args=[self.slug]), self.name)
 
 
-class Organization(opencivicdata.core.models.Organization):
+class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
 
     organization = models.OneToOneField(opencivicdata.core.models.Organization,
                                         on_delete=models.CASCADE,
@@ -161,8 +151,11 @@ class Organization(opencivicdata.core.models.Organization):
         """
         grabs all organizations (1) classified as a committee & (2) with at least one member
         """
-        return [o for o in cls.objects.filter(classification='committee')
-                if any([m.end_date_dt > timezone.now() for m in o.memberships.all()])]
+        return cls.objects\
+            .filter(classification='committee')\
+            .annotate(memberships_end_date_dt=cls.cast_to_datetime('memberships__end_date'))\
+            .filter(memberships_end_date_dt__gte=Now())\
+            .distinct()
 
     @property
     def recent_activity(self):
@@ -280,9 +273,10 @@ class MembershipManager(CastToDateTimeMixin, models.Manager):
         )
 
 
-class Membership(opencivicdata.core.models.Membership):
+class Membership(opencivicdata.core.models.Membership, CastToDateTimeMixin):
     class Meta:
         proxy = True
+        base_manager_name = 'objects'
 
     objects = MembershipManager()
 
