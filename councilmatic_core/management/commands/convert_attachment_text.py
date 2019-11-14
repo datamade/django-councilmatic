@@ -5,6 +5,7 @@ import sqlalchemy as sa
 import requests
 import tempfile
 import itertools
+import tqdm
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -58,10 +59,7 @@ class Command(BaseCommand):
         # installing it, import the library here.
         import textract
 
-        for document_data in self.get_document_url():
-            document_data = dict(document_data)
-            url = document_data['url']
-            document_id = document_data['id']
+        for url, document_id in tqdm.tqdm(self.get_document_url()):
             response = requests.get(url)
             # Sometimes, Metro Legistar has a URL that retuns a bad status code (e.g., 404 from http://metro.legistar1.com/metro/attachments/95d5007e-720b-4cdd-9494-c800392b9265.pdf).
             # Skip these documents.

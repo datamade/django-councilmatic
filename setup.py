@@ -29,7 +29,10 @@ setup(
                       'psycopg2-binary>=2.7,<2.8',
                       'django-adv-cache-tag==1.1.2',
                       'boto==2.38.0',
-                      'sqlalchemy'],
+                      'sqlalchemy',
+                      'tqdm',
+    ],
+    extras_require = {'convert_docs': ['textract']},
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

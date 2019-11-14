@@ -51,7 +51,7 @@ class Person(opencivicdata.core.models.Person):
                                 storage=static_storage,
                                 default='images/headshot_placeholder.png')
 
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True)
 
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
@@ -137,7 +137,7 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
                                         related_name='councilmatic_organization',
                                         parent_link=True)
 
-    slug = models.SlugField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
 
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
@@ -202,10 +202,7 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
 
     @property
     def all_members(self):
-        if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(end_date_dt__gt=timezone.now())
-        else:
-            return []
+        return self.memberships.filter(end_date_dt__gt=timezone.now())
 
     @property
     def vice_chairs(self):
@@ -321,7 +318,7 @@ class Event(opencivicdata.legislative.models.Event):
                                  related_name='councilmatic_event',
                                  parent_link=True)
 
-    slug = models.SlugField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
 
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
@@ -385,7 +382,7 @@ class Bill(opencivicdata.legislative.models.Bill):
                                 related_name='councilmatic_bill',
                                 parent_link=True)
 
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True)
     restrict_view = models.BooleanField(default=False)
 
     def delete(self, **kwargs):
@@ -687,6 +684,10 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
 
 
 class BillDocument(opencivicdata.legislative.models.BillDocument):
+
+    bill = ProxyForeignKey(Bill,
+                           related_name='documents',
+                           on_delete=models.CASCADE)
 
     document = models.OneToOneField(opencivicdata.legislative.models.BillDocument,
                                     on_delete=models.CASCADE,
