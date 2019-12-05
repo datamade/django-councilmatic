@@ -16,7 +16,7 @@ import opencivicdata.legislative.models
 import opencivicdata.core.models
 
 
-static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_ROOT), base_url='/')
+static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_ROOT), base_url='/static')
 
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
 
@@ -681,17 +681,3 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
     organization = ProxyForeignKey(Organization,
                                    null=True,
                                    on_delete=models.SET_NULL)
-
-
-class BillDocument(opencivicdata.legislative.models.BillDocument):
-
-    bill = ProxyForeignKey(Bill,
-                           related_name='documents',
-                           on_delete=models.CASCADE)
-
-    document = models.OneToOneField(opencivicdata.legislative.models.BillDocument,
-                                    on_delete=models.CASCADE,
-                                    related_name='councilmatic_document',
-                                    parent_link=True)
-
-    full_text = models.TextField(blank=True, null=True)
