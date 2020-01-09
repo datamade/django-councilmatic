@@ -93,8 +93,8 @@ class Command(BaseCommand):
         '''
         update_statement = '''
             UPDATE opencivicdata_billdocument AS bill_docs
-            SET extras = jsonb_set(extras, '{full_text}', jsonb :plain_text)
-            WHERE bill_docs.document_id = :id
+            SET extras = jsonb_set(extras, '{full_text}', to_jsonb(cast(:plain_text as text)))
+            WHERE bill_docs.id = :id
         '''
 
         plaintexts = self.convert_document_to_plaintext()
