@@ -11,8 +11,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.db.models import Max, Q
 
-from opencivicdata.legislative.models import BillDocumentLink
-from councilmatic_core.models import BillDocument
+from opencivicdata.legislative.models import BillDocumentLink, BillDocument
 
 logging.config.dictConfig(settings.LOGGING)
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -99,9 +98,9 @@ class Command(BaseCommand):
         More often, this script updates just a handful of documents: so, the incremental, fetch-just-20 approach may prove unnecessary. Possible refactor?
         '''
         update_statement = '''
-            UPDATE councilmatic_core_billdocument AS bill_docs
-            SET full_text = :plain_text
-            WHERE bill_docs.document_id = :id
+            UPDATE opencivicdata_billdocument AS bill_docs
+            SET extras = jsonb_set(extras, '{full_text}', to_jsonb(cast(:plain_text as text)))
+            WHERE bill_docs.id = :id
         '''
 
         plaintexts = self.convert_document_to_plaintext()

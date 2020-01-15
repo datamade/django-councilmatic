@@ -12,7 +12,7 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'chicago_councilmatic',
+        'NAME': 'django_councilmatic',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',

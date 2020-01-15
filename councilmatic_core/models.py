@@ -16,7 +16,7 @@ import opencivicdata.legislative.models
 import opencivicdata.core.models
 
 
-static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_ROOT), base_url='/static')
+static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_ROOT), base_url='/')
 
 MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
 
