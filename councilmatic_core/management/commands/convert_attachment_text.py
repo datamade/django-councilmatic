@@ -82,6 +82,9 @@ class Command(BaseCommand):
                         continue
                     else:
                         raise
+                except UnicodeDecodeError as e:
+                    logger.error('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
+                    continue
 
                 logger.info('Councilmatic Document ID {} - conversion complete'.format(document_id))
 
