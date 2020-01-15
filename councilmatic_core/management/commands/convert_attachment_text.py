@@ -77,6 +77,12 @@ class Command(BaseCommand):
                 except textract.exceptions.ShellError as e:
                     logger.error('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
                     continue
+                except TypeError as e:
+                    if 'decode() argument 1 must be str, not None' in str(e):
+                        logger.error('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
+                        continue
+                    else:
+                        raise
 
                 logger.info('Councilmatic Document ID {} - conversion complete'.format(document_id))
 
