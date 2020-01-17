@@ -682,16 +682,3 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
                                    null=True,
                                    on_delete=models.SET_NULL)
 
-
-class BillDocument(opencivicdata.legislative.models.BillDocument):
-
-    bill = ProxyForeignKey(Bill,
-                           related_name='documents',
-                           on_delete=models.CASCADE)
-
-    document = models.OneToOneField(opencivicdata.legislative.models.BillDocument,
-                                    on_delete=models.CASCADE,
-                                    related_name='councilmatic_document',
-                                    parent_link=True)
-
-    full_text = models.TextField(blank=True, null=True)
