@@ -681,4 +681,3 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
     organization = ProxyForeignKey(Organization,
                                    null=True,
                                    on_delete=models.SET_NULL)
-
