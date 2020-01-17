@@ -33,7 +33,7 @@ def test_convert_attachment_text(metro_bill_document, mocker):
     document_url, document_id = document_urls
 
     assert document_url == metro_bill_document.links.first().url
-    assert document_id == metro_bill_document.document.id
+    assert document_id == metro_bill_document.id
 
 '''
 TO-DO: This should work, but it doesn't; the query is executed, but the result
