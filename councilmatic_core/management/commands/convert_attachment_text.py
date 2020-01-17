@@ -41,7 +41,7 @@ class Command(BaseCommand):
         # Only apply this query to most recently updated (or created) bill documents.
         max_updated = BillDocument.objects.all().aggregate(max_updated_at=Max('bill__updated_at'))['max_updated_at']
 
-        is_null = Q(document__councilmatic_document__full_text__isnull=True)
+        is_null = Q(document__extras__full_text__isnull=True)
         is_file = Q(url__iendswith='pdf') | Q(url__iendswith='docx') | Q(url__iendswith='docx')
         after_max_update = Q(document__bill__updated_at__gt=max_updated)
 

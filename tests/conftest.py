@@ -7,10 +7,10 @@ from pytest_django.fixtures import db
 from django.conf import settings
 from django.db import connection
 
-from councilmatic_core.models import Bill, Event, BillDocument
+from councilmatic_core.models import Bill, Event
 from opencivicdata.core.models import Jurisdiction, Division
 from opencivicdata.legislative.models import BillDocumentLink, EventDocument, \
-    EventDocumentLink, LegislativeSession, BillVersion
+    EventDocumentLink, LegislativeSession, BillVersion, BillDocument
 
 
 @pytest.fixture
