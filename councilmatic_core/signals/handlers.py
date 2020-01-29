@@ -64,6 +64,13 @@ def create_councilmatic_bill(sender, instance, created, **kwargs):
     else:
         cb = instance.councilmatic_bill
 
+    if cb.current_action:
+        cb.last_action_date = cb.current_action.date_dt
+    else:
+        cb.last_action_date = cb.get_last_action_date()
+
+    cb.save()
+
 @receiver(post_save, sender=OCDPost)
 def create_councilmatic_post(sender, instance, created, **kwargs):
     if created:
