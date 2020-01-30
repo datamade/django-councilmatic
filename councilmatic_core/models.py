@@ -384,6 +384,7 @@ class Bill(opencivicdata.legislative.models.Bill):
 
     slug = models.SlugField(unique=True)
     restrict_view = models.BooleanField(default=False)
+    last_action_date = models.DateTimeField(blank=True, null=True)
 
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
@@ -459,11 +460,6 @@ class Bill(opencivicdata.legislative.models.Bill):
         grabs the most recent action on a bill
         """
         return self.actions.last()
-
-    @property
-    def last_action_date(self):
-        if self.current_action:
-            return self.current_action.date_dt
 
     @property
     def first_action(self):
@@ -596,6 +592,27 @@ class Bill(opencivicdata.legislative.models.Bill):
         events = [r.agenda_item.event for r in self.eventrelatedentity_set.filter(
             agenda_item__event__start_date__gte=timezone.now()).all()]
         return list(set(events))
+
+    def get_last_action_date(self):
+        '''
+        Return the date of the most recent action. If there is no action,
+        return the date of the most recent past event for which the bill
+        appears on the agenda. Otherwise, return None.
+        '''
+        current_action = self.current_action
+
+        if current_action:
+            return current_action.date_dt
+
+        try:
+            last_agenda = Event.objects.filter(start_time__lte=timezone.now(),
+                                               agenda__related_entities__bill=self)\
+                                       .latest('start_time')
+        except Event.DoesNotExist:
+            return None
+
+        else:
+            return last_agenda.start_time
 
 
 class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
