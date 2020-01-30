@@ -65,3 +65,9 @@ class BillIndex(indexes.SearchIndex):
 
     def get_updated_field(self):
         return 'updated_at'
+
+    def prepare_last_action_date(self, obj):
+        # Solr seems to be fussy about the time format, and we do not need the time, just the date stamp.
+        # https://lucene.apache.org/solr/guide/7_5/working-with-dates.html#date-formatting
+        if obj.last_action_date:
+            return obj.last_action_date.date()

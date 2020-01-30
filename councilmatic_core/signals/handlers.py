@@ -6,7 +6,8 @@ from opencivicdata.core.models import (Organization as OCDOrganization,
                                        Person as OCDPerson,
                                        Post as OCDPost)
 from opencivicdata.legislative.models import (Event as OCDEvent,
-                                              Bill as OCDBill)
+                                              Bill as OCDBill,
+                                              EventRelatedEntity as OCDEventRelatedEntity)
 
 from councilmatic_core.models import (Organization as CouncilmaticOrganization,
                                       Person as CouncilmaticPerson,
@@ -38,6 +39,7 @@ def create_councilmatic_person(sender, instance, created, **kwargs):
         # just update the child table, not the parent table
         cp.save_base(raw=True)
 
+
 @receiver(post_save, sender=OCDEvent)
 def create_councilmatic_event(sender, instance, created, **kwargs):
     if created:
@@ -49,6 +51,12 @@ def create_councilmatic_event(sender, instance, created, **kwargs):
                                slug=slug)
         # just update the child table, not the parent table
         ce.save_base(raw=True)
+
+    for entity in EventRelatedEntity.objects.filter(agenda_item__event=instance):
+        cb = entity.bill.councilmatic_bill
+        cb.last_action_date = cb.get_last_action_date()
+        cb.save()
+
 
 @receiver(post_save, sender=OCDBill)
 def create_councilmatic_bill(sender, instance, created, **kwargs):
@@ -64,12 +72,9 @@ def create_councilmatic_bill(sender, instance, created, **kwargs):
     else:
         cb = instance.councilmatic_bill
 
-    if cb.current_action:
-        cb.last_action_date = cb.current_action.date_dt
-    else:
-        cb.last_action_date = cb.get_last_action_date()
-
+    cb.last_action_date = cb.get_last_action_date()
     cb.save()
+
 
 @receiver(post_save, sender=OCDPost)
 def create_councilmatic_post(sender, instance, created, **kwargs):

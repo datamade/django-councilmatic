@@ -595,9 +595,24 @@ class Bill(opencivicdata.legislative.models.Bill):
 
     def get_last_action_date(self):
         '''
-        Available for overrides in Councilmatic instances.
+        Return the date of the most recent action. If there is no action,
+        return the date of the most recent past event for which the bill
+        appears on the agenda. Otherwise, return None.
         '''
-        return None
+        current_action = self.current_action
+
+        if current_action:
+            return current_action.date_dt
+
+        try:
+            last_agenda = Event.objects.filter(start_time__lte=timezone.now(),
+                                               agenda__related_entities__bill=self)\
+                                       .latest('start_time')
+        except Event.DoesNotExist:
+            return None
+
+        else:
+            return last_agenda.start_time
 
 
 class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
