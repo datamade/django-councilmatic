@@ -32,7 +32,7 @@ setup(
                       'sqlalchemy',
                       'tqdm',
     ],
-    extras_require = {'convert_docs': ['textract']},
+    extras_require = {'convert_docs': ['textract', 'python-pptx']},
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
