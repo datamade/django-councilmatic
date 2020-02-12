@@ -67,14 +67,14 @@ class Command(BaseCommand):
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 # Don't fail due to server errors, as these tend to resolve themselves.
                 # https://requests.readthedocs.io/en/master/user/quickstart/#errors-and-exceptions
-                logger.error('Document URL {} raised a server error - Could not get attachment text!'.format(url, response.status_code))
+                logger.warning('Document URL {} raised a server error - Could not get attachment text!'.format(url, response.status_code))
                 continue
 
             # Sometimes, Metro Legistar has a URL that retuns a bad status code,
             # e.g., 404 from http://metro.legistar1.com/metro/attachments/95d5007e-720b-4cdd-9494-c800392b9265.pdf.
             # Skip these documents.
             if response.status_code != 200:
-                logger.error('Document URL {} returns {} - Could not get attachment text!'.format(url, response.status_code))
+                logger.warning('Document URL {} returns {} - Could not get attachment text!'.format(url, response.status_code))
                 continue
 
             extension = os.path.splitext(url)[1]
@@ -85,16 +85,16 @@ class Command(BaseCommand):
                 try:
                     plain_text = textract.process(tfp.name)
                 except textract.exceptions.ShellError as e:
-                    logger.error('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
+                    logger.warning('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
                     continue
                 except TypeError as e:
                     if 'decode() argument 1 must be str, not None' in str(e):
-                        logger.error('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
+                        logger.warning('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
                         continue
                     else:
                         raise
                 except UnicodeDecodeError as e:
-                    logger.error('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
+                    logger.warning('{} - Could not convert Councilmatic Document ID {}!'.format(e, document_id))
                     continue
 
                 logger.info('Councilmatic Document ID {} - conversion complete'.format(document_id))
