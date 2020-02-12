@@ -12,10 +12,10 @@ env:
     - db_user=postgres
 
 addons:
-  postgresql: '10'
+  postgresql: '9.5'
   apt:
     packages:
-    - postgresql-10-postgis-2.4
+    - postgresql-9.5-postgis-2.3
 
 before_script:
   - psql -U postgres -c "create extension postgis"
