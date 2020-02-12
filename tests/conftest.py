@@ -81,7 +81,7 @@ def metro_event(db, jurisdiction):
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def metro_bill_document(metro_bill, transactional_db):
+def ocd_bill_document(metro_bill, transactional_db):
     document_info = {
         'bill_id': metro_bill.id,
         'note': 'Board Report',

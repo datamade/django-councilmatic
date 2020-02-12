@@ -15,7 +15,7 @@ DATABASES = {
         'NAME': 'django_councilmatic',
         'USER': '',
         'PASSWORD': '',
-        'HOST': '',
+        'HOST': 'localhost',
         'PORT': 5432,
     }
 }
