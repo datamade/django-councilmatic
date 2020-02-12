@@ -12,10 +12,10 @@ env:
     - db_user=postgres
 
 addons:
-  postgresql: '9.4'
+  postgresql: '10'
   apt:
     packages:
-    - postgresql-9.4-postgis-2.4
+    - postgresql-10-postgis-2.4
 
 before_script:
   - psql -U postgres -c "create extension postgis"
@@ -27,8 +27,8 @@ install:
     - pip install --no-deps https://github.com/opencivicdata/python-opencivicdata/archive/7203a5ecf5adcbbebbe79a8e192a693266d2203b.zip
     - pip install -e .
 
-sudo: required 
-dist: trusty 
+sudo: required
+dist: trusty
 group: deprecated-2017Q4
 
 script:
