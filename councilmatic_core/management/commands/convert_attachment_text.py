@@ -67,7 +67,7 @@ class Command(BaseCommand):
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 # Don't fail due to server errors, as these tend to resolve themselves.
                 # https://requests.readthedocs.io/en/master/user/quickstart/#errors-and-exceptions
-                logger.warning('Document URL {} raised a server error - Could not get attachment text!'.format(url, response.status_code))
+                logger.warning('Document URL {} raised a server error - Could not get attachment text!'.format(url))
                 continue
 
             # Sometimes, Metro Legistar has a URL that retuns a bad status code,
