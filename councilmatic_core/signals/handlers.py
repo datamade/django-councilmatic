@@ -49,13 +49,14 @@ def create_councilmatic_event(sender, instance, created, **kwargs):
 
         ce = CouncilmaticEvent(event=instance,
                                slug=slug)
+
         # just update the child table, not the parent table
         ce.save_base(raw=True)
 
     for entity in OCDEventRelatedEntity.objects.filter(agenda_item__event=instance):
         cb = entity.bill.councilmatic_bill
         cb.last_action_date = cb.get_last_action_date()
-        cb.save()
+        cb.save_base(raw=True)
 
 
 @receiver(post_save, sender=OCDBill)
@@ -65,15 +66,14 @@ def create_councilmatic_bill(sender, instance, created, **kwargs):
 
         cb = CouncilmaticBill(bill=instance,
                               slug=slug)
-        # just update the child table, not the parent table
-        cb.save_base(raw=True)
 
-        cb = CouncilmaticBill.objects.get(id=instance.id)
     else:
         cb = instance.councilmatic_bill
 
     cb.last_action_date = cb.get_last_action_date()
-    cb.save()
+
+    # just update the child table, not the parent table
+    cb.save_base(raw=True)
 
 
 @receiver(post_save, sender=OCDPost)
