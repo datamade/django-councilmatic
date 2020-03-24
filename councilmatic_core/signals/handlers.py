@@ -53,7 +53,7 @@ def create_councilmatic_event(sender, instance, created, **kwargs):
         # just update the child table, not the parent table
         ce.save_base(raw=True)
 
-    for entity in OCDEventRelatedEntity.objects.filter(agenda_item__event=instance):
+    for entity in OCDEventRelatedEntity.objects.filter(agenda_item__event=instance, bill__isnull=False):
         cb = entity.bill.councilmatic_bill
         cb.last_action_date = cb.get_last_action_date()
         cb.save_base(raw=True)
