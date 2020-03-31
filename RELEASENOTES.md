@@ -1,5 +1,17 @@
 # Release notes for django-councilmatic
 
+## Version 2.5.5
+
+Removes the Councilmatic BillDocument model and updates `convert_attachment_text` to deal with the new data structure, as well as some subtler request/conversion failures.
+
+Updates all slug fields to `SlugField`s.
+
+Adds a `current_memberships` method to `Person`.
+
+Adds a `last_action_date` attribute to Bills and updates signals to populate it on bill and event save.
+
+**Release date:** 3-31-2020
+
 ## Version 2.5.0
 
 *Changes*
