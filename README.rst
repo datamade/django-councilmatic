@@ -88,15 +88,6 @@ Run the management command to update the test fixture.
 Run the tests and commit your updated fixture with your PR!
 
 
-Team
-----
-
--  Forest Gregg, DataMade - Open Civic Data (OCD) and Legistar scraping
--  Cathy Deng, DataMade - data models and loading
--  Derek Eder, DataMade - front end
--  Eric van Zanten, DataMade - search and dev ops
-
-
 Patches and Contributions
 -------------------------
 We continue to improve django-councilmatic, and we welcome your ideas! You can make suggestions in the form of `github issues <https://github.com/datamade/django-councilmatic/issues>`_ (bug reports, feature requests, general questions), or you can submit a code contribution via a pull request.
