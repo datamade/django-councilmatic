@@ -23,8 +23,6 @@ before_script:
 install:
     - pip install --upgrade pip
     - pip install -r tests/requirements.txt --upgrade
-    # TODO: Once opencivicdata cuts a release including @fgregg's addition of extras to BillDocument, we can remove this
-    - pip install --no-deps https://github.com/opencivicdata/python-opencivicdata/archive/7203a5ecf5adcbbebbe79a8e192a693266d2203b.zip
     - pip install -e .
 
 sudo: required
