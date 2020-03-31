@@ -2,6 +2,8 @@
 
 ## Version 2.5.5
 
+*Changes*
+
 Removes the Councilmatic BillDocument model and updates `convert_attachment_text` to deal with the new data structure, as well as some subtler request/conversion failures.
 
 Updates all slug fields to `SlugField`s.
