@@ -274,7 +274,7 @@ class CommitteesView(ListView):
     context_object_name = 'committees'
 
     def get_queryset(self):
-        return Organization.committees
+        return Organization.committees()
 
 
 class CommitteeDetailView(DetailView):

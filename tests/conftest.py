@@ -7,10 +7,10 @@ from pytest_django.fixtures import db
 from django.conf import settings
 from django.db import connection
 
-from councilmatic_core.models import Bill, Event, BillDocument
+from councilmatic_core.models import Bill, Event
 from opencivicdata.core.models import Jurisdiction, Division
 from opencivicdata.legislative.models import BillDocumentLink, EventDocument, \
-    EventDocumentLink, LegislativeSession, BillVersion
+    EventDocumentLink, LegislativeSession, BillVersion, BillDocument
 
 
 @pytest.fixture
@@ -81,7 +81,7 @@ def metro_event(db, jurisdiction):
 
 @pytest.fixture
 @pytest.mark.django_db(transaction=True)
-def metro_bill_document(metro_bill, transactional_db):
+def ocd_bill_document(metro_bill, transactional_db):
     document_info = {
         'bill_id': metro_bill.id,
         'note': 'Board Report',
