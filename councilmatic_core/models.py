@@ -374,6 +374,10 @@ class Event(opencivicdata.legislative.models.Event):
                   .exclude(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
                   .order_by('start_time').all()[:3]
 
+    @property
+    def local_start_time(self):
+        return timezone.localtime(self.start_time)
+
 
 class Bill(opencivicdata.legislative.models.Bill):
 
