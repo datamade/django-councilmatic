@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 2.5.6
+
+*Changes*
+
+Adds `local_start_time` property to Councilmatic Event, and uses that start time to group events for display.
+
+**Release date:** 4-14-2020
+
 ## Version 2.5.5
 
 *Changes*
