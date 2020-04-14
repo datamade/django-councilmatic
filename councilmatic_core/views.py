@@ -432,7 +432,7 @@ class EventsView(ListView):
 
         # Did the user set date boundaries?
         date_str = self.request.GET.get('form_datetime')
-        day_grouper = lambda x: x.start_time.date
+        day_grouper = lambda x: x.local_start_time.date
         context['select_date'] = ''
 
         # If yes, then filter for dates.
