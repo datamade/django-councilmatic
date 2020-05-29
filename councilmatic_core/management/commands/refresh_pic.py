@@ -10,7 +10,8 @@ from django.conf import settings
 from django.db.models import Q
 import pytz
 
-from opencivicdata.legislative.models import BillDocumentLink, EventDocumentLink
+from opencivicdata.legislative.models import BillDocumentLink, EventDocumentLink, \
+    EventRelatedEntity
 
 
 for configuration in ['AWS_KEY','AWS_SECRET']:
