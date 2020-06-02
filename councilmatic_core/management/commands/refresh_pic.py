@@ -7,9 +7,11 @@ import urllib.parse
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.db.models import Q
 import pytz
 
-from opencivicdata.legislative.models import BillDocumentLink, EventDocumentLink
+from opencivicdata.legislative.models import BillDocumentLink, EventDocumentLink, \
+    EventRelatedEntity
 
 
 for configuration in ['AWS_KEY','AWS_SECRET']:
@@ -41,15 +43,38 @@ class Command(BaseCommand):
         logger.info(("Removed {} document(s) from the councilmatic-document-cache").format(len(aws_keys)))
 
     def _get_urls(self):
+        '''
+        Get the URLs of bill and event documents if the related bill or event
+        has been updated in the past hour, or if they are releated to an event
+        that is scheduled for a future date, as these are the documents that are
+        most likely to change.
+
+        This is a workaround for a known issue where making changes to data in
+        Legistar (DataMade's source data system) does not always update timestamps
+        that tell us to rescrape entities, toggling the updated timestamps in
+        our database.
+        '''
         app_timezone = pytz.timezone(settings.TIME_ZONE)
         one_hour_ago = app_timezone.localize(datetime.datetime.now()) - datetime.timedelta(hours=1)
 
-        bill_docs = BillDocumentLink.objects.filter(document__bill__versions__isnull=False,
-                                                    document__bill__updated_at__gte=one_hour_ago)\
-                                            .values_list('url', flat=True)
+        has_versions = Q(document__bill__versions__isnull=False)
 
-        event_docs = EventDocumentLink.objects.filter(document__event__updated_at__gte=one_hour_ago)\
-                                              .values_list('url', flat=True)
+        recently_updated = Q(document__bill__updated_at__gte=one_hour_ago)
+
+        bills_on_upcoming_agendas = EventRelatedEntity.objects.filter(
+            bill__isnull=False,
+            agenda_item__event__start_date__gt=one_hour_ago
+        ).values_list('bill__id')
+
+        upcoming = Q(document__bill__id__in=bills_on_upcoming_agendas)
+
+        bill_docs = BillDocumentLink.objects.filter(
+            has_versions & (recently_updated | upcoming)
+        ).values_list('url', flat=True)
+
+        event_docs = EventDocumentLink.objects.filter(
+            Q(document__event__updated_at__gte=one_hour_ago) | Q(document__event__start_date__gt=one_hour_ago)
+        ).values_list('url', flat=True)
 
         return itertools.chain(bill_docs, event_docs)
 
