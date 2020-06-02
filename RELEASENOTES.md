@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 2.5.7
+
+*Changes*
+
+Updates `refresh_pic` logic to remove documents related to recently updated bills and events, as well as documents related to upcoming events.
+
+**Release date:** 6-2-2020
+
 ## Version 2.5.6
 
 *Changes*
