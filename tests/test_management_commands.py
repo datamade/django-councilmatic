@@ -8,18 +8,25 @@ from councilmatic_core.management.commands.convert_attachment_text import Comman
 def test_refresh_pic(ocd_bill_document,
                      metro_event_document):
     '''
-    Test that the `_get_urls` and `_create_keys` successfully finds changed bill and event documents
-    and converts their urls to a list of AWS keys.
+    Test that the `_get_urls` and `_create_keys` successfully finds changed
+    bill and event documents and converts their urls to a list of AWS keys.
     '''
     command = RefreshPic()
     document_urls = list(command._get_urls())
 
+    # Test that each of the URLs we expect exist, and that no other URLs
+    # exist.
+    bill_version_link, = ocd_bill_document.bill.versions.get().links.all()
     bill_doc_link, = ocd_bill_document.links.all()
     event_doc_link, = metro_event_document.links.all()
 
-    assert (bill_doc_link.url in document_urls) == True
-    assert (event_doc_link.url in document_urls) == True
+    assert len(document_urls) == 3
 
+    assert bill_version_link.url in document_urls
+    assert bill_doc_link.url in document_urls
+    assert event_doc_link.url in document_urls
+
+    # Test that creating keys from URLs yields the correct number of keys.
     aws_keys = command._create_keys(document_urls)
 
     assert len(document_urls) == len(aws_keys)

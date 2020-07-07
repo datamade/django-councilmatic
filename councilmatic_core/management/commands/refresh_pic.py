@@ -10,8 +10,8 @@ from django.conf import settings
 from django.db.models import Q
 import pytz
 
-from opencivicdata.legislative.models import BillDocumentLink, EventDocumentLink, \
-    EventRelatedEntity
+from opencivicdata.legislative.models import BillDocumentLink, BillVersionLink, \
+    EventDocumentLink, EventRelatedEntity
 
 
 for configuration in ['AWS_KEY','AWS_SECRET']:
@@ -19,8 +19,11 @@ for configuration in ['AWS_KEY','AWS_SECRET']:
         raise ImproperlyConfigured(
             'Please define {0} in settings_deployment.py'.format(configuration))
 
+
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger(__name__)
+
+app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 
 class Command(BaseCommand):
@@ -31,16 +34,63 @@ class Command(BaseCommand):
         from boto.s3.key import Key
         from boto.exception import S3ResponseError
 
-        document_urls = self._get_urls()
-        aws_keys = self._create_keys(document_urls)
-
         s3_conn = S3Connection(settings.AWS_KEY, settings.AWS_SECRET)
 
+        document_urls = self._get_urls()
+        aws_keys = self._create_keys(document_urls)
         bucket = s3_conn.get_bucket('councilmatic-document-cache')
-
         bucket.delete_keys(aws_keys)
 
         logger.info(("Removed {} document(s) from the councilmatic-document-cache").format(len(aws_keys)))
+
+    @property
+    def local_now(self):
+        return app_timezone.localize(datetime.datetime.now())
+
+    @property
+    def bills_on_upcoming_agendas(self):
+        if not hasattr(self, '_bills_on_upcoming_agendas'):
+            self._bills_on_upcoming_agendas = EventRelatedEntity.objects.filter(
+                bill__isnull=False,
+                agenda_item__event__start_date__gte=self.local_now
+            ).values_list('bill__id')
+        return self._bills_on_upcoming_agendas
+
+    def _get_bill_versions(self, window_start):
+        '''
+        Retrieve URLs of updated and upcoming versions, i.e., the bills
+        themselves.
+        '''
+        recently_updated = Q(version__bill__updated_at__gte=window_start)
+        upcoming = Q(version__bill__id__in=self.bills_on_upcoming_agendas)
+
+        return BillVersionLink.objects.filter(
+            recently_updated | upcoming
+        ).values_list('url', flat=True)
+
+    def _get_bill_documents(self, window_start):
+        '''
+        Retrieve URLs of updated and upcoming documents, i.e., attachments
+        to bills (versions).
+        '''
+        has_versions = Q(document__bill__versions__isnull=False)
+        recently_updated = Q(document__bill__updated_at__gte=window_start)
+        upcoming = Q(document__bill__id__in=self.bills_on_upcoming_agendas)
+
+        return BillDocumentLink.objects.filter(
+            has_versions & (recently_updated | upcoming)
+        ).values_list('url', flat=True)
+
+    def _get_event_documents(self, window_start):
+        '''
+        Retrieve URLs of updated and upcoming event documents, i.e., agendas.
+        '''
+        recently_updated = Q(document__event__updated_at__gte=window_start)
+        upcoming = Q(document__event__start_date__gte=self.local_now)
+
+        return EventDocumentLink.objects.filter(
+            recently_updated | upcoming
+        ).values_list('url', flat=True)
 
     def _get_urls(self):
         '''
@@ -54,29 +104,13 @@ class Command(BaseCommand):
         that tell us to rescrape entities, toggling the updated timestamps in
         our database.
         '''
-        app_timezone = pytz.timezone(settings.TIME_ZONE)
         one_hour_ago = app_timezone.localize(datetime.datetime.now()) - datetime.timedelta(hours=1)
 
-        has_versions = Q(document__bill__versions__isnull=False)
-
-        recently_updated = Q(document__bill__updated_at__gte=one_hour_ago)
-
-        bills_on_upcoming_agendas = EventRelatedEntity.objects.filter(
-            bill__isnull=False,
-            agenda_item__event__start_date__gt=one_hour_ago
-        ).values_list('bill__id')
-
-        upcoming = Q(document__bill__id__in=bills_on_upcoming_agendas)
-
-        bill_docs = BillDocumentLink.objects.filter(
-            has_versions & (recently_updated | upcoming)
-        ).values_list('url', flat=True)
-
-        event_docs = EventDocumentLink.objects.filter(
-            Q(document__event__updated_at__gte=one_hour_ago) | Q(document__event__start_date__gt=one_hour_ago)
-        ).values_list('url', flat=True)
-
-        return itertools.chain(bill_docs, event_docs)
+        return itertools.chain(
+            self._get_bill_versions(one_hour_ago),
+            self._get_bill_documents(one_hour_ago),
+            self._get_event_documents(one_hour_ago)
+        )
 
     def _create_keys(self, document_urls):
         return [urllib.parse.quote_plus(url) for url in document_urls]

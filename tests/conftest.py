@@ -10,7 +10,8 @@ from django.db import connection
 from councilmatic_core.models import Bill, Event
 from opencivicdata.core.models import Jurisdiction, Division
 from opencivicdata.legislative.models import BillDocumentLink, EventDocument, \
-    EventDocumentLink, LegislativeSession, BillVersion, BillDocument
+    EventDocumentLink, LegislativeSession, BillVersion, BillDocument, \
+    BillVersionLink
 
 
 @pytest.fixture
@@ -90,7 +91,7 @@ def ocd_bill_document(metro_bill, transactional_db):
     document = BillDocument.objects.create(**document_info)
 
     document_link_info = {
-        'url': 'https://metro.legistar.com/ViewReport.ashx?M=R&N=TextL5&GID=557&ID=5016&GUID=LATEST&Title=Board+Report.pdf',
+        'url': 'http://metro.legistar1.com/metro/attachments/e041786b-a42a-4d03-bd3e-06d5b3113de2.pdf',
         'document': document,
     }
 
@@ -99,6 +100,11 @@ def ocd_bill_document(metro_bill, transactional_db):
     version = BillVersion.objects.create(bill=metro_bill,
                                          note='test',
                                          date='1992-02-16')
+
+    BillVersionLink.objects.create(
+        version=version,
+        url='https://metro.legistar.com/ViewReport.ashx?M=R&N=TextL5&GID=557&ID=5016&GUID=LATEST&Title=Board+Report.pdf'
+    )
 
     metro_bill.versions.add(version)
     metro_bill.save()
