@@ -23,11 +23,20 @@ for configuration in ['AWS_KEY','AWS_SECRET']:
 logging.config.dictConfig(settings.LOGGING)
 logger = logging.getLogger(__name__)
 
-app_timezone = pytz.timezone(settings.TIME_ZONE)
-
 
 class Command(BaseCommand):
     help = 'Refreshes the property image cache by deleting documents that need to be newly created'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.local_now = pytz.timezone(settings.TIME_ZONE)\
+                             .localize(datetime.datetime.now())
+
+        self.bills_on_upcoming_agendas = EventRelatedEntity.objects.filter(
+            bill__isnull=False,
+            agenda_item__event__start_date__gte=self.local_now
+        ).values_list('bill__id')
 
     def handle(self, *args, **options):
         from boto.s3.connection import S3Connection
@@ -41,20 +50,8 @@ class Command(BaseCommand):
         bucket = s3_conn.get_bucket('councilmatic-document-cache')
         bucket.delete_keys(aws_keys)
 
-        logger.info(("Removed {} document(s) from the councilmatic-document-cache").format(len(aws_keys)))
-
-    @property
-    def local_now(self):
-        return app_timezone.localize(datetime.datetime.now())
-
-    @property
-    def bills_on_upcoming_agendas(self):
-        if not hasattr(self, '_bills_on_upcoming_agendas'):
-            self._bills_on_upcoming_agendas = EventRelatedEntity.objects.filter(
-                bill__isnull=False,
-                agenda_item__event__start_date__gte=self.local_now
-            ).values_list('bill__id')
-        return self._bills_on_upcoming_agendas
+        success_message = 'Removed {} document(s) from the councilmatic-document-cache'.format(len(aws_keys))
+        logger.info(success_message)
 
     def _get_bill_versions(self, window_start):
         '''
@@ -104,7 +101,7 @@ class Command(BaseCommand):
         that tell us to rescrape entities, toggling the updated timestamps in
         our database.
         '''
-        one_hour_ago = app_timezone.localize(datetime.datetime.now()) - datetime.timedelta(hours=1)
+        one_hour_ago = self.local_now - datetime.timedelta(hours=1)
 
         return itertools.chain(
             self._get_bill_versions(one_hour_ago),
