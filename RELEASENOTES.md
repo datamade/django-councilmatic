@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 2.5.8
+
+*Changes*
+
+Updates `refresh_pic` to refresh bill versions, as well as bill documents.
+
+**Release date:** 7-9-2020
+
 ## Version 2.5.7
 
 *Changes*
