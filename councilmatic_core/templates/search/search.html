@@ -275,6 +275,7 @@
 {% endblock %}
 
 {% block extra_js %}
+    {{ selected_facets|json_script:"selected-facets" }}
     <script>
     $(document).ready(function() {
         $("#searchSubscribe").click(function() {
@@ -283,7 +284,7 @@
 
             if ('{{ request.user }}' != 'AnonymousUser') {
                 posturl2 = "/search_check_subscription/"
-                facets2 = JSON.stringify({{selected_facets|safe}});
+                facets2 = $('#selected-facets').text();
                 stuff2 = $.post(posturl2, { query: "{{request.GET.q}}", selected_facets: facets2 },
                     function(data, status) {
                     console.log("returned from post with data: ", data, "status:", status);
@@ -291,7 +292,7 @@
                 console.log("Could not check subscription for interest {{request.GET.q}} with {{facets2}}" );
                 }),
                 posturl = "/search_subscribe/" //+ "{{request.GET.q}}"
-                facets =  JSON.stringify({{selected_facets|safe}});
+                facets =  $('#selected-facets').text();
                 $.post(posturl, { query: "{{request.GET.q}}", selected_facets: facets }).then(function() {
                     $(bullHorn).hide();
                     $(bullHornNew).show();
