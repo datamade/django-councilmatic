@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 2.5.9
+
+*Changes*
+
+Patch XSS vulnerability in search results view.
+
+**Release date:** 8-20-2020
+
 ## Version 2.5.8
 
 *Changes*
