@@ -1,3 +1,4 @@
+from datetime import datetime
 import urllib
 
 from haystack.query import SearchQuerySet
@@ -187,7 +188,8 @@ class CommitteeDetailActionFeed(Feed):
         return reverse('bill_detail', args=(action.bill.slug,))
 
     def item_pubdate(self, action):
-        return action.date_dt
+        action_date = action.date_dt
+        return datetime(action_date.year, action_date.month, action_date.day)
 
     def description(self, obj):
         return "Actions for committee %s" % obj.name
@@ -223,7 +225,8 @@ class BillDetailActionFeed(Feed):
         return reverse('bill_detail', args=(action.bill.slug,))
 
     def item_pubdate(self, action):
-        return action.date_dt
+        action_date = action.date_dt
+        return datetime(action_date.year, action_date.month, action_date.day)
 
     def description(self, obj):
         return "Actions for bill %s" % obj.friendly_name

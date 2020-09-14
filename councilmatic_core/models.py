@@ -24,11 +24,11 @@ MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSH
 class CastToDateTimeMixin:
 
     @classmethod
-    def cast_to_datetime(cls, field):
+    def _cast(cls, field, field_type):
         """
-        Cast a given field from a CharField to a DateTimeField, converting empty
-        strings to NULL in the process. Useful for CharFields that store timestamps
-        as strings.
+        Cast a given field from a CharField to a DateField or a DateTimeField,
+        converting empty strings to NULL in the process. Useful for CharFields
+        that store timestamps as strings.
         """
         return Cast(
             Case(
@@ -36,8 +36,16 @@ class CastToDateTimeMixin:
                 default=field,
                 output_field=models.CharField()
             ),
-            models.DateTimeField()
+            field_type
         )
+
+    @classmethod
+    def cast_to_date(cls, field):
+        return cls._cast(field, models.DateField())
+
+    @classmethod
+    def cast_to_datetime(cls, field):
+        return cls._cast(field, models.DateTimeField())
 
 
 class Person(opencivicdata.core.models.Person):
@@ -62,7 +70,7 @@ class Person(opencivicdata.core.models.Person):
 
     @property
     def current_memberships(self):
-        return self.memberships.filter(end_date_dt__gt=Now())
+        return self.memberships.filter(end_date_dt__gt=Cast(Now(), models.DateField()))
 
     @property
     def latest_council_seat(self):
@@ -122,7 +130,7 @@ class Person(opencivicdata.core.models.Person):
     @property
     def current_council_seat(self):
         m = self.latest_council_membership
-        if m and m.end_date_dt > timezone.now():
+        if m and m.end_date_dt > timezone.now().date():
             return m
 
     @property
@@ -153,8 +161,8 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
         """
         return cls.objects\
             .filter(classification='committee')\
-            .annotate(memberships_end_date_dt=cls.cast_to_datetime('memberships__end_date'))\
-            .filter(memberships_end_date_dt__gte=Now())\
+            .annotate(memberships_end_date_dt=cls.cast_to_date('memberships__end_date'))\
+            .filter(memberships_end_date_dt__gte=Cast(Now(), models.DateField()))\
             .distinct()
 
     @property
@@ -265,8 +273,8 @@ class Post(opencivicdata.core.models.Post):
 class MembershipManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            end_date_dt=self.cast_to_datetime('end_date'),
-            start_date_dt=self.cast_to_datetime('start_date')
+            end_date_dt=self.cast_to_date('end_date'),
+            start_date_dt=self.cast_to_date('start_date')
         )
 
 
@@ -631,7 +639,7 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
 class BillActionManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            date_dt=self.cast_to_datetime('date')
+            date_dt=self.cast_to_date('date')
         )
 
 
