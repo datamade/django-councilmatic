@@ -28,6 +28,7 @@ class ExactHighlighter(Highlighter):
 
         return query_words
 
+
 def to_datetime(date, local=False):
     dt = datetime.datetime(date.year, date.month, date.day)
 
