@@ -70,7 +70,7 @@ class Person(opencivicdata.core.models.Person):
 
     @property
     def current_memberships(self):
-        return self.memberships.filter(end_date_dt__gt=Cast(Now(), models.DateField()))
+        return self.memberships.filter(end_date_dt__gt=Now())
 
     @property
     def latest_council_seat(self):
@@ -130,7 +130,7 @@ class Person(opencivicdata.core.models.Person):
     @property
     def current_council_seat(self):
         m = self.latest_council_membership
-        if m and m.end_date_dt > timezone.now().date():
+        if m and m.end_date_dt > timezone.now():
             return m
 
     @property
@@ -162,7 +162,7 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
         return cls.objects\
             .filter(classification='committee')\
             .annotate(memberships_end_date_dt=cls.cast_to_date('memberships__end_date'))\
-            .filter(memberships_end_date_dt__gte=Cast(Now(), models.DateField()))\
+            .filter(memberships_end_date_dt__gte=Now())\
             .distinct()
 
     @property
@@ -273,8 +273,8 @@ class Post(opencivicdata.core.models.Post):
 class MembershipManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            end_date_dt=self.cast_to_date('end_date'),
-            start_date_dt=self.cast_to_date('start_date')
+            end_date_dt=self.cast_to_datetime('end_date'),
+            start_date_dt=self.cast_to_datetime('start_date')
         )
 
 
@@ -396,7 +396,7 @@ class Bill(opencivicdata.legislative.models.Bill):
 
     slug = models.SlugField(unique=True)
     restrict_view = models.BooleanField(default=False)
-    last_action_date = models.DateTimeField(blank=True, null=True)
+    last_action_date = models.DateField(blank=True, null=True)
 
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
@@ -575,7 +575,7 @@ class Bill(opencivicdata.legislative.models.Bill):
         """
         grabs all bills that have had activity since a given date
         """
-        return cls.objects.filter(last_action_date_dt__gte=date_cutoff)
+        return cls.objects.filter(last_action_date__gte=date_cutoff)
 
     @classmethod
     def new_bills_since(cls, date_cutoff):
@@ -624,7 +624,7 @@ class Bill(opencivicdata.legislative.models.Bill):
             return None
 
         else:
-            return last_agenda.start_time
+            return last_agenda.start_time.date()
 
 
 class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
