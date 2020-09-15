@@ -24,11 +24,11 @@ MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSH
 class CastToDateTimeMixin:
 
     @classmethod
-    def cast_to_datetime(cls, field):
+    def _cast(cls, field, field_type):
         """
-        Cast a given field from a CharField to a DateTimeField, converting empty
-        strings to NULL in the process. Useful for CharFields that store timestamps
-        as strings.
+        Cast a given field from a CharField to a DateField or a DateTimeField,
+        converting empty strings to NULL in the process. Useful for CharFields
+        that store timestamps as strings.
         """
         return Cast(
             Case(
@@ -36,8 +36,16 @@ class CastToDateTimeMixin:
                 default=field,
                 output_field=models.CharField()
             ),
-            models.DateTimeField()
+            field_type
         )
+
+    @classmethod
+    def cast_to_date(cls, field):
+        return cls._cast(field, models.DateField())
+
+    @classmethod
+    def cast_to_datetime(cls, field):
+        return cls._cast(field, models.DateTimeField())
 
 
 class Person(opencivicdata.core.models.Person):
@@ -90,7 +98,7 @@ class Person(opencivicdata.core.models.Person):
             '''
             Sponsorships of bills without recent action dates should appear last.
             '''
-            return sponsorship.bill.last_action_date or datetime.datetime(datetime.MINYEAR, 1, 1)
+            return sponsorship.bill.last_action_date or datetime.date(datetime.MINYEAR, 1, 1)
 
         return sorted((s for s in primary_sponsorships), key=sponsorship_sort, reverse=True)
 
@@ -388,7 +396,7 @@ class Bill(opencivicdata.legislative.models.Bill):
 
     slug = models.SlugField(unique=True)
     restrict_view = models.BooleanField(default=False)
-    last_action_date = models.DateTimeField(blank=True, null=True)
+    last_action_date = models.DateField(blank=True, null=True)
 
     def delete(self, **kwargs):
         kwargs['keep_parents'] = kwargs.get('keep_parents', True)
@@ -567,7 +575,7 @@ class Bill(opencivicdata.legislative.models.Bill):
         """
         grabs all bills that have had activity since a given date
         """
-        return cls.objects.filter(last_action_date_dt__gte=date_cutoff)
+        return cls.objects.filter(last_action_date__gte=date_cutoff)
 
     @classmethod
     def new_bills_since(cls, date_cutoff):
@@ -616,7 +624,7 @@ class Bill(opencivicdata.legislative.models.Bill):
             return None
 
         else:
-            return last_agenda.start_time
+            return last_agenda.start_time.date()
 
 
 class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
@@ -631,7 +639,7 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
 class BillActionManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            date_dt=self.cast_to_datetime('date')
+            date_dt=self.cast_to_date('date')
         )
 
 

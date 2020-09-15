@@ -8,6 +8,7 @@ from django.urls import reverse, reverse_lazy
 from django.conf import settings
 
 from .models import Person, Bill, Organization, Event
+from .utils import to_datetime
 
 
 class CouncilmaticFacetedSearchFeed(Feed):
@@ -71,7 +72,7 @@ class CouncilmaticFacetedSearchFeed(Feed):
         return reverse('bill_detail', args=(bill.slug,))
 
     def item_pubdate(self, bill):
-        return bill.last_action_date
+        return to_datetime(bill.last_action_date)
 
     def description(self, obj):
         return "Bills returned from search"
@@ -114,7 +115,7 @@ class PersonDetailFeed(Feed):
         return reverse('bill_detail', args=(bill.slug,))
 
     def item_pubdate(self, bill):
-        return bill.last_action_date
+        return to_datetime(bill.last_action_date)
 
     def description(self, obj):
         return "Recent sponsored bills from " + obj.name + "."
@@ -187,7 +188,7 @@ class CommitteeDetailActionFeed(Feed):
         return reverse('bill_detail', args=(action.bill.slug,))
 
     def item_pubdate(self, action):
-        return action.date_dt
+        return to_datetime(action.date_dt)
 
     def description(self, obj):
         return "Actions for committee %s" % obj.name
@@ -223,7 +224,7 @@ class BillDetailActionFeed(Feed):
         return reverse('bill_detail', args=(action.bill.slug,))
 
     def item_pubdate(self, action):
-        return action.date_dt
+        return to_datetime(action.date_dt)
 
     def description(self, obj):
         return "Actions for bill %s" % obj.friendly_name

@@ -1,3 +1,7 @@
+import datetime
+import pytz
+
+from django.conf import settings
 from haystack.utils.highlighting import Highlighter
 
 
@@ -23,3 +27,13 @@ class ExactHighlighter(Highlighter):
             query_words = set([word.lower() for word in query.split() if not word.startswith("-")])
 
         return query_words
+
+
+def to_datetime(date, local=False):
+    dt = datetime.datetime(date.year, date.month, date.day)
+
+    if local:
+        return pytz.timezone(settings.TIME_ZONE).localize(dt)
+
+    else:
+        return dt
