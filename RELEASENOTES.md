@@ -1,5 +1,15 @@
 # Release notes for django-councilmatic
 
+## Version 2.6.0
+
+*Changes*
+
+Return a date object from `BillAction.date_dt` and `Bill.last_action_date`.
+Downstream code that references these attributes may need to be updated, e.g.,
+if the code expects a date time object.
+
+**Release date:** 9-15-2020
+
 ## Version 2.5.9
 
 *Changes*
