@@ -161,7 +161,7 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
         """
         return cls.objects\
             .filter(classification='committee')\
-            .annotate(memberships_end_date_dt=cls.cast_to_date('memberships__end_date'))\
+            .annotate(memberships_end_date_dt=cls.cast_to_datetime('memberships__end_date'))\
             .filter(memberships_end_date_dt__gte=Now())\
             .distinct()
 
