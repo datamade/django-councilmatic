@@ -98,7 +98,7 @@ class Person(opencivicdata.core.models.Person):
             '''
             Sponsorships of bills without recent action dates should appear last.
             '''
-            return sponsorship.bill.last_action_date or datetime.datetime(datetime.MINYEAR, 1, 1)
+            return sponsorship.bill.last_action_date or datetime.date(datetime.MINYEAR, 1, 1)
 
         return sorted((s for s in primary_sponsorships), key=sponsorship_sort, reverse=True)
 
