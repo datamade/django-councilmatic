@@ -1,4 +1,3 @@
-from datetime import datetime
 import urllib
 
 from haystack.query import SearchQuerySet
