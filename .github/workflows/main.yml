@@ -17,7 +17,9 @@ jobs:
           - 5432:5432
     steps:
     - name: System dependencies
-      run: sudo apt-get install gdal-bin
+      run: |
+        sudo apt-get update
+        sudo apt-get install gdal-bin
     - uses: actions/checkout@v2
     - name: Set up Python 3.x
       uses: actions/setup-python@v2
