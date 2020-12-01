@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgis/postgis:9.6-2.3
+        image: postgis/postgis:9.6-2.5
         ports:
           - 5432:5432
     steps:
