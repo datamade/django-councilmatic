@@ -15,6 +15,7 @@ jobs:
         image: postgis/postgis:9.6-2.5
         env:
           POSTGRES_DB: django_councilmatic
+          POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
