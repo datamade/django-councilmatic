@@ -26,7 +26,7 @@ setup(
                       'django-proxy-overrides>=0.2.1',
                       'python-dateutil>=2.7,<2.8',
                       'pysolr>=3.8,<3.9',
-                      'psycopg2-binary>=2.7,<2.8',
+                      'psycopg2-binary>=2.7',
                       'django-adv-cache-tag==1.1.2',
                       'boto==2.38.0',
                       'sqlalchemy',
