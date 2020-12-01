@@ -16,6 +16,8 @@ jobs:
         ports:
           - 5432:5432
     steps:
+    - name: System dependencies
+      run: apt-get install binutils libproj-dev gdal-bin
     - uses: actions/checkout@v2
     - name: Set up Python 3.x
       uses: actions/setup-python@v2
