@@ -117,6 +117,7 @@ def city_context(request):
         'CITY_VOCAB',
         'SEARCH_PLACEHOLDER_TEXT',
         'LEGISLATION_TYPE_DESCRIPTIONS',
+        'BILL_STATUS_DESCRIPTIONS',
         'LEGISTAR_URL',
         'DISQUS_SHORTNAME',
         'IMAGES',
