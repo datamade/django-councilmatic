@@ -3,7 +3,7 @@ name: Python package
 on: [push, pull_request]
 
 jobs:
-    format:
+  format:
     # We want all subsequent steps of CI to refer to the fresh version of code,
     # so run this before anything else.
     runs-on: ubuntu-latest
