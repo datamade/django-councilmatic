@@ -9,16 +9,31 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0032_auto_20170912_1301'),
+        ("councilmatic_core", "0032_auto_20170912_1301"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RelatedBill',
+            name="RelatedBill",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('related_bill_identifier', models.CharField(max_length=100)),
-                ('central_bill', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='related_bills', to='councilmatic_core.Bill')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("related_bill_identifier", models.CharField(max_length=100)),
+                (
+                    "central_bill",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="related_bills",
+                        to="councilmatic_core.Bill",
+                    ),
+                ),
             ],
         ),
     ]

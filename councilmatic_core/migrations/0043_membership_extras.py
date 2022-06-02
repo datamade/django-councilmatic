@@ -9,13 +9,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0042_eventagendaitem_plain_text'),
+        ("councilmatic_core", "0042_eventagendaitem_plain_text"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='membership',
-            name='extras',
+            model_name="membership",
+            name="extras",
             field=django.contrib.postgres.fields.jsonb.JSONField(default=dict),
         ),
     ]

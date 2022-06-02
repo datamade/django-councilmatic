@@ -7,24 +7,25 @@ from opencivicdata.core.models import Person as OCDPerson
 
 import requests
 
+
 class Command(BaseCommand):
-    help = 'Attach headshots to councilmembers'
+    help = "Attach headshots to councilmembers"
 
     def handle(self, *args, **opetions):
-        for person in OCDPerson.objects.exclude(image=''):
+        for person in OCDPerson.objects.exclude(image=""):
             councilmatic_person = person.councilmatic_person
-            filename = councilmatic_person.slug + '.jpg'
+            filename = councilmatic_person.slug + ".jpg"
             response = requests.get(person.image)
 
-            self.stdout.write('Downloading {}'.format(person.image))
+            self.stdout.write("Downloading {}".format(person.image))
 
-            with open('/tmp/' + filename, 'wb') as f:
+            with open("/tmp/" + filename, "wb") as f:
                 f.write(response.content)
 
-            with open('/tmp/' + filename, 'rb') as f:
+            with open("/tmp/" + filename, "rb") as f:
                 django_file = File(f)
                 councilmatic_person.headshot.save(filename, django_file)
 
-        self.stdout.write('Collecting static')
+        self.stdout.write("Collecting static")
 
-        call_command('collectstatic', verbosity=0, interactive=False)
+        call_command("collectstatic", verbosity=0, interactive=False)

@@ -8,18 +8,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0022_auto_20161014_1350'),
+        ("councilmatic_core", "0022_auto_20161014_1350"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='actionrelatedentity',
-            name='organization_ocd_id',
+            model_name="actionrelatedentity",
+            name="organization_ocd_id",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AlterField(
-            model_name='actionrelatedentity',
-            name='person_ocd_id',
+            model_name="actionrelatedentity",
+            name="person_ocd_id",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
     ]

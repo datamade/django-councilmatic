@@ -8,27 +8,30 @@ from django.db import migrations
 from django.db import connection, transaction
 from django.utils.text import slugify
 
+
 class Migration(migrations.Migration):
     def unmangle_identifier(apps, schema_editor):
-        '''
+        """
         The `fix_bill_id` function mangled nearly all Chicago bill identifiers by adding a space, e.g., 'Or2018-1245' (original) becomes 'Or 2018-1245' (mangled).
 
-        
-        This migration unmangles identifiers and changes the slugs accordingly.
-        '''
 
-        Bill = apps.get_model('councilmatic_core', 'Bill')
+        This migration unmangles identifiers and changes the slugs accordingly.
+        """
+
+        Bill = apps.get_model("councilmatic_core", "Bill")
 
         # Chicago
-        if settings.OCD_CITY_COUNCIL_NAME == 'Chicago City Council':
-            added_space = r'^([A-Za-z]+)\s([-\d]+)$'
+        if settings.OCD_CITY_COUNCIL_NAME == "Chicago City Council":
+            added_space = r"^([A-Za-z]+)\s([-\d]+)$"
 
             with transaction.atomic(), connection.cursor() as cursor:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     DECLARE bills_cursor CURSOR FOR
                     SELECT identifier FROM councilmatic_core_bill as bill
                     WHERE bill.identifier ~* '(^([A-Za-z]+)\s([-\d]+)$)'
-                """)
+                """
+                )
 
                 while True:
                     cursor.execute("FETCH 4000 FROM bills_cursor")
@@ -36,28 +39,37 @@ class Migration(migrations.Migration):
 
                     if not bill_chunk:
                         break
-                    else: 
+                    else:
                         for bill in bill_chunk:
                             identifier = bill[0]
                             match = re.match(added_space, identifier)
-                            unmangled_identifier = '{mangled_prefix}{count}'.format(mangled_prefix=match.group(1), 
-                                                                                    count=match.group(2))
+                            unmangled_identifier = "{mangled_prefix}{count}".format(
+                                mangled_prefix=match.group(1), count=match.group(2)
+                            )
 
-                            print('{} becomes {}'.format(identifier, unmangled_identifier))
+                            print(
+                                "{} becomes {}".format(identifier, unmangled_identifier)
+                            )
                             try:
-                                duplicate = Bill.objects.get(identifier=unmangled_identifier)
-                                print('{} - duplicate found. Deleting.'.format(unmangled_identifier))
+                                duplicate = Bill.objects.get(
+                                    identifier=unmangled_identifier
+                                )
+                                print(
+                                    "{} - duplicate found. Deleting.".format(
+                                        unmangled_identifier
+                                    )
+                                )
                                 duplicate.delete()
-                            except Bill.DoesNotExist: 
+                            except Bill.DoesNotExist:
                                 pass
 
                             new_slug = slugify(unmangled_identifier)
-                            Bill.objects.filter(identifier=identifier).update(identifier=unmangled_identifier, slug=new_slug)
+                            Bill.objects.filter(identifier=identifier).update(
+                                identifier=unmangled_identifier, slug=new_slug
+                            )
 
     dependencies = [
-        ('councilmatic_core', '0037_auto_20180326_1631'),
+        ("councilmatic_core", "0037_auto_20180326_1631"),
     ]
 
-    operations = [
-        migrations.RunPython(unmangle_identifier)
-    ]
+    operations = [migrations.RunPython(unmangle_identifier)]

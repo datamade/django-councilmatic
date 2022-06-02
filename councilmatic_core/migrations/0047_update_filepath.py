@@ -9,13 +9,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0046_subclass_ocd_billdocument'),
+        ("councilmatic_core", "0046_subclass_ocd_billdocument"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='person',
-            name='headshot',
-            field=models.FileField(default='images/headshot_placeholder.png', storage=django.core.files.storage.FileSystemStorage(base_url='/', location=os.path.join(settings.STATIC_ROOT)), upload_to='images/headshots'),
+            model_name="person",
+            name="headshot",
+            field=models.FileField(
+                default="images/headshot_placeholder.png",
+                storage=django.core.files.storage.FileSystemStorage(
+                    base_url="/", location=os.path.join(settings.STATIC_ROOT)
+                ),
+                upload_to="images/headshots",
+            ),
         ),
     ]

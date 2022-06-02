@@ -8,55 +8,55 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0020_auto_20161013_1704'),
+        ("councilmatic_core", "0020_auto_20161013_1704"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='billdocument',
-            name='document',
+            model_name="billdocument",
+            name="document",
         ),
         migrations.RemoveField(
-            model_name='eventdocument',
-            name='document',
+            model_name="eventdocument",
+            name="document",
         ),
         migrations.RemoveField(
-            model_name='eventdocument',
-            name='updated_at',
+            model_name="eventdocument",
+            name="updated_at",
         ),
         migrations.AddField(
-            model_name='billdocument',
-            name='full_text',
+            model_name="billdocument",
+            name="full_text",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='billdocument',
-            name='note',
-            field=models.TextField(default=''),
+            model_name="billdocument",
+            name="note",
+            field=models.TextField(default=""),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='billdocument',
-            name='url',
+            model_name="billdocument",
+            name="url",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='eventdocument',
-            name='full_text',
+            model_name="eventdocument",
+            name="full_text",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='eventdocument',
-            name='note',
-            field=models.TextField(default=''),
+            model_name="eventdocument",
+            name="note",
+            field=models.TextField(default=""),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='eventdocument',
-            name='url',
+            model_name="eventdocument",
+            name="url",
             field=models.TextField(blank=True),
         ),
         migrations.DeleteModel(
-            name='Document',
+            name="Document",
         ),
     ]

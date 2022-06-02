@@ -8,39 +8,39 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0014_auto_20161012_1419'),
+        ("councilmatic_core", "0014_auto_20161012_1419"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='person',
-            name='email',
+            model_name="person",
+            name="email",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='person',
-            name='headshot',
+            model_name="person",
+            name="headshot",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='person',
-            name='slug',
-            field=models.CharField(default='', max_length=255, unique=True),
+            model_name="person",
+            name="slug",
+            field=models.CharField(default="", max_length=255, unique=True),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='person',
-            name='source_note',
+            model_name="person",
+            name="source_note",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='person',
-            name='source_url',
+            model_name="person",
+            name="source_url",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='person',
-            name='website_url',
+            model_name="person",
+            name="website_url",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

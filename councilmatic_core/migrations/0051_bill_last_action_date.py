@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0050_remove_billdocument'),
+        ("councilmatic_core", "0050_remove_billdocument"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bill',
-            name='last_action_date',
+            model_name="bill",
+            name="last_action_date",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]
