@@ -1,5 +1,5 @@
 pytest==3.7.0
 pytest-django==3.3.3
 pytest-mock
-flake8
 git+https://github.com/hancush/django-fixture-magic@fix-merge
+dj-database-url

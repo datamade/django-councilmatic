@@ -23,7 +23,7 @@ setup(
         "opencivicdata>=3.1.0",
         "pytz>=2015.4",
         "django-haystack>=3.1,<3.2",
-        "Django>=2.2.13,<2.3",
+        "Django>=3.2,<3.3",
         "django-proxy-overrides>=0.2.1",
         "python-dateutil>=2.7,<2.8",
         "pysolr>=3.8,<3.9",

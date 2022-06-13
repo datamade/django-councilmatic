@@ -1,6 +1,8 @@
 import sys
 import os
 
+import dj_database_url
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -9,21 +11,21 @@ USING_NOTIFICATIONS = False
 
 DEBUG = True
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": "postgres",
-        "USER": "postgres",
-        "PASSWORD": "postgres",
-        "HOST": "localhost",
-        "PORT": 5433,
-    }
-}
+# Database
+# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+
+DATABASES = {}
+
+DATABASES["default"] = dj_database_url.parse(
+    f"postgres://postgres:postgres@localhost:{os.getenv('PG_PORT', 5432)}/django_councilmatic",
+    conn_max_age=600,
+    ssl_require=True if os.getenv('POSTGRES_REQUIRE_SSL') else False,
+    engine='django.contrib.gis.db.backends.postgis'
+)
 
 HAYSTACK_CONNECTIONS = {
-    "default": {
-        "ENGINE": "haystack.backends.solr_backend.SolrEngine",
-        "URL": "http://127.0.0.1:8983/solr",
+    'default': {
+        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
     },
 }
 
@@ -96,16 +98,6 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 ADV_CACHE_INCLUDE_PK = True
-
-RQ_QUEUES = {
-    "default": {
-        "HOST": "localhost",
-        "PORT": 6379,
-        "DB": 0,
-        "PASSWORD": "",
-        "DEFAULT_TIMEOUT": 360,
-    }
-}
 
 AWS_KEY = ""
 AWS_SECRET = ""
