@@ -19,13 +19,13 @@ DATABASES = {}
 DATABASES["default"] = dj_database_url.parse(
     f"postgres://postgres:postgres@localhost:{os.getenv('PG_PORT', 5432)}/django_councilmatic",
     conn_max_age=600,
-    ssl_require=True if os.getenv('POSTGRES_REQUIRE_SSL') else False,
-    engine='django.contrib.gis.db.backends.postgis'
+    ssl_require=True if os.getenv("POSTGRES_REQUIRE_SSL") else False,
+    engine="django.contrib.gis.db.backends.postgis",
 )
 
 HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    "default": {
+        "ENGINE": "haystack.backends.simple_backend.SimpleEngine",
     },
 }
 
