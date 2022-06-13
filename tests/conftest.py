@@ -65,8 +65,9 @@ def metro_bill(db, legislative_session):
     file_directory = os.path.dirname(__file__)
     absolute_file_directory = os.path.abspath(file_directory)
 
-
-    with open(os.path.join(absolute_file_directory, 'fixtures', 'bill_text.rtf'), 'r') as f:
+    with open(
+        os.path.join(absolute_file_directory, "fixtures", "bill_text.rtf"), "r"
+    ) as f:
         bill_text = f.read()
 
     bill_info = {
@@ -76,7 +77,7 @@ def metro_bill(db, legislative_session):
         "created_at": "2017-01-16 15:00:30.329048-06",
         "updated_at": datetime.datetime.now().isoformat(),
         "legislative_session": legislative_session,
-        "extras": {"rtf_text": bill_text}
+        "extras": {"rtf_text": bill_text},
     }
 
     bill = Bill.objects.create(**bill_info)

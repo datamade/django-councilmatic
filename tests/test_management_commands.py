@@ -56,7 +56,9 @@ def test_convert_attachment_text(ocd_bill_document, mocker, transactional_db):
 
     ocd_bill_document.refresh_from_db()
 
+
 @pytest.mark.django_db(transaction=True)
 def test_convert_rtf(metro_bill, transactional_db):
     import pdb
+
     pdb.set_trace()
