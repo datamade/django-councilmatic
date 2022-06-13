@@ -1,4 +1,5 @@
 import datetime
+import os
 from uuid import uuid4
 
 import pytest
@@ -61,6 +62,13 @@ def legislative_session(db, jurisdiction):
 @pytest.fixture
 @pytest.mark.django_db
 def metro_bill(db, legislative_session):
+    file_directory = os.path.dirname(__file__)
+    absolute_file_directory = os.path.abspath(file_directory)
+
+
+    with open(os.path.join(absolute_file_directory, 'fixtures', 'bill_text.rtf'), 'r') as f:
+        bill_text = f.read()
+
     bill_info = {
         "id": "8ad8fe5a-59a0-4e06-88bd-58d6d0e5ef1a",
         "title": "CONSIDER: A. AUTHORIZING the CEO to execute Modification No. 2 to Contract C1153, Advanced Utility Relocations (Westwood/UCLA Station), with Steve Bubalo Construction Company for supply and installation of equipment for a traffic Video Detection System (VDS) required by Los Angeles Department of Transportation (LADOT), in the amount of $567,554, increasing the total contract value from $11,439,000 to $12,006,554; and B. APPROVING an increase in Contract Modification Authority (CMA) to Contract C1153, Advanced Utility Relocations (Westwood/UCLA Station), increasing the current CMA from $1,143,900 to $2,287,800.",
@@ -68,6 +76,7 @@ def metro_bill(db, legislative_session):
         "created_at": "2017-01-16 15:00:30.329048-06",
         "updated_at": datetime.datetime.now().isoformat(),
         "legislative_session": legislative_session,
+        "extras": {"rtf_text": bill_text}
     }
 
     bill = Bill.objects.create(**bill_info)

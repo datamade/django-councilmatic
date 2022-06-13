@@ -1,5 +1,7 @@
 import pytest
 
+from django.core.management import call_command
+
 from councilmatic_core.management.commands.refresh_pic import Command as RefreshPic
 from councilmatic_core.management.commands.convert_attachment_text import (
     Command as ConvertAttachmentText,
@@ -53,4 +55,8 @@ def test_convert_attachment_text(ocd_bill_document, mocker, transactional_db):
     command.add_plain_text()
 
     ocd_bill_document.refresh_from_db()
-    assert ocd_bill_document.extras["full_text"] == expected_full_text
+
+@pytest.mark.django_db(transaction=True)
+def test_convert_rtf(metro_bill, transactional_db):
+    import pdb
+    pdb.set_trace()

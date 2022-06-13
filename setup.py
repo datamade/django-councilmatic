@@ -30,7 +30,6 @@ setup(
         "psycopg2>=2.8,<2.9",
         "django-adv-cache-tag==1.1.2",
         "boto==2.38.0",
-        "sqlalchemy",
         "tqdm",
     ],
     extras_require={"convert_docs": ["textract"]},
