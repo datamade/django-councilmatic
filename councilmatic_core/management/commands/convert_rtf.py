@@ -63,7 +63,9 @@ class Command(BaseCommand):
 
         try:
             self.add_html()
+            self.connection.commit()
         finally:
+            self.connection.close()
             listener.terminate()
 
     def get_rtf(self):
@@ -92,18 +94,19 @@ class Command(BaseCommand):
             ocd_id = bill.id
             rtf_string = bill.extras["rtf_text"]
 
+            process = subprocess.Popen(
+                ['unoconv', '--stdin', '--stdout', '-f', 'html'],
+                preexec_fn=os.setsid,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
             try:
-                process = subprocess.Popen(
-                    ["unoconv", "--stdin", "--stdout", "-f", "html"],
-                    preexec_fn=os.setsid,
-                    stdout=subprocess.PIPE,
-                    stdin=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
+                stdout_data, _ = process.communicate(
+                    input=rtf_string.encode(),
+                    timeout=30
                 )
-                html_data, stderr_data = process.communicate(
-                    input=rtf_string.encode(), timeout=15  # TODO: Empty???
-                )
-                html = html_data.decode("utf-8")
 
             except subprocess.TimeoutExpired as e:
                 os.killpg(os.getpgid(process.pid), signal.SIGTERM)
@@ -113,11 +116,19 @@ class Command(BaseCommand):
 
                 continue
 
-            print(rtf_string, html_data, html, ocd_id)
+            else:
+                html = stdout_data.decode('utf-8')
+
+            try:
+                assert html
+
+            except AssertionError:
+                logger.error(f"Converted RTF text for bill {ocd_id} is empty")
+                continue
 
             logger.info("Successful conversion of {}".format(ocd_id))
 
-            yield (json.dumps(html), ocd_id)
+            yield json.dumps(html), ocd_id
 
     def add_html(self):
         with self.connection.cursor() as cursor:

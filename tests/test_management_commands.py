@@ -1,6 +1,7 @@
-import pytest
+import os
 
 from django.core.management import call_command
+import pytest
 
 from councilmatic_core.management.commands.refresh_pic import Command as RefreshPic
 from councilmatic_core.management.commands.convert_attachment_text import (
@@ -59,6 +60,14 @@ def test_convert_attachment_text(ocd_bill_document, mocker, transactional_db):
 
 @pytest.mark.django_db(transaction=True)
 def test_convert_rtf(metro_bill, transactional_db):
-    import pdb
+    call_command("convert_rtf", "--update_all")
 
-    pdb.set_trace()
+    metro_bill.refresh_from_db()
+
+    file_directory = os.path.dirname(__file__)
+    absolute_file_directory = os.path.abspath(file_directory)
+
+    with open(os.path.join(absolute_file_directory, 'fixtures', 'bill_text.html'), 'r') as f:
+        expected_html = f.read()
+
+    assert metro_bill.extras['html_text'] == expected_html
