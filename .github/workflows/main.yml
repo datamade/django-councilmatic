@@ -35,7 +35,7 @@ jobs:
     needs: format
     container:
       runs-on: ubuntu-latest
-      container: centerforopenscience/unoconv
+      image: centerforopenscience/unoconv
     services:
       postgres:
         image: postgis/postgis:14-3.2
