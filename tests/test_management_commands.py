@@ -67,7 +67,9 @@ def test_convert_rtf(metro_bill, transactional_db):
     file_directory = os.path.dirname(__file__)
     absolute_file_directory = os.path.abspath(file_directory)
 
-    with open(os.path.join(absolute_file_directory, 'fixtures', 'bill_text.html'), 'r') as f:
+    with open(
+        os.path.join(absolute_file_directory, "fixtures", "bill_text.html"), "r"
+    ) as f:
         expected_html = f.read()
 
-    assert metro_bill.extras['html_text'] == expected_html
+    assert metro_bill.extras["html_text"] == expected_html

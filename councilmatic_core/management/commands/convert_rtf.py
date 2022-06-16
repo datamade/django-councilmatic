@@ -95,17 +95,16 @@ class Command(BaseCommand):
             rtf_string = bill.extras["rtf_text"]
 
             process = subprocess.Popen(
-                ['unoconv', '--stdin', '--stdout', '-f', 'html'],
+                ["unoconv", "--stdin", "--stdout", "-f", "html"],
                 preexec_fn=os.setsid,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
             )
 
             try:
                 stdout_data, _ = process.communicate(
-                    input=rtf_string.encode(),
-                    timeout=30
+                    input=rtf_string.encode(), timeout=30
                 )
 
             except subprocess.TimeoutExpired as e:
@@ -117,7 +116,7 @@ class Command(BaseCommand):
                 continue
 
             else:
-                html = stdout_data.decode('utf-8')
+                html = stdout_data.decode("utf-8")
 
             try:
                 assert html
