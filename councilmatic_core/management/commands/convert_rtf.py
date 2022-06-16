@@ -95,6 +95,7 @@ class Command(BaseCommand):
                 html = stdout_data.decode("utf-8")
 
             import time
+
             time.sleep(10)
 
             try:
