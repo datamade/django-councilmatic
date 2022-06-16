@@ -72,4 +72,8 @@ def test_convert_rtf(metro_bill, transactional_db):
     ) as f:
         expected_html = f.read()
 
+    print(metro_bill.extras.keys())
+    metro_bill.refresh_from_db()
+    print(metro_bill.extras.keys())
+
     assert metro_bill.extras["html_text"] == expected_html
