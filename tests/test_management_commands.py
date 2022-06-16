@@ -37,7 +37,7 @@ def test_refresh_pic(ocd_bill_document, metro_event_document):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_convert_attachment_text(ocd_bill_document, mocker, transactional_db):
+def test_convert_attachment_text(ocd_bill_document, mocker):
     command = ConvertAttachmentText()
     command.update_all = True
 
@@ -58,8 +58,8 @@ def test_convert_attachment_text(ocd_bill_document, mocker, transactional_db):
     ocd_bill_document.refresh_from_db()
 
 
-@pytest.mark.django_db(transaction=True)
-def test_convert_rtf(metro_bill, transactional_db):
+@pytest.mark.django_db
+def test_convert_rtf(metro_bill):
     call_command("convert_rtf", "--update_all")
 
     metro_bill.refresh_from_db()
@@ -71,9 +71,5 @@ def test_convert_rtf(metro_bill, transactional_db):
         os.path.join(absolute_file_directory, "fixtures", "bill_text.html"), "r"
     ) as f:
         expected_html = f.read()
-
-    print(metro_bill.extras.keys())
-    metro_bill.refresh_from_db()
-    print(metro_bill.extras.keys())
 
     assert metro_bill.extras["html_text"] == expected_html

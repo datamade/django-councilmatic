@@ -1,19 +1,12 @@
 import os
-import sys
 import subprocess
 import logging
 import logging.config
-import datetime
 import signal
-import json
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from django.db import connection
 from django.db.models import Max, Q
-
-import psycopg2
-from psycopg2.extras import execute_batch
 
 from councilmatic_core.models import Bill
 
@@ -41,17 +34,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        django_conn = connection.get_connection_params()
-
-        conn_kwargs = {
-            "user": django_conn.get("user", ""),
-            "password": django_conn.get("password", ""),
-            "host": django_conn.get("host", ""),
-            "port": django_conn.get("port", ""),
-            "dbname": django_conn.get("database", ""),
-        }
-
-        self.connection = psycopg2.connect(**conn_kwargs)
         self.update_all = options["update_all"]
         self.update_empty = options["update_empty"]
 
@@ -63,15 +45,10 @@ class Command(BaseCommand):
 
         try:
             self.add_html()
-            self.connection.commit()
         finally:
-            self.connection.close()
             listener.terminate()
 
     def get_rtf(self):
-        with self.connection.cursor() as cursor:
-            cursor.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-
         max_updated = Bill.objects.all().aggregate(Max("updated_at"))["updated_at__max"]
 
         has_rtf_text = Q(extras__rtf_text__isnull=False)
@@ -127,19 +104,11 @@ class Command(BaseCommand):
 
             logger.info("Successful conversion of {}".format(ocd_id))
 
-            yield json.dumps(html), ocd_id
+            bill.extras['html_text'] = html
+
+            yield bill
 
     def add_html(self):
-        with self.connection.cursor() as cursor:
-            cursor.execute("SET local timezone to '{}'".format(settings.TIME_ZONE))
-
-        query = """
-            UPDATE opencivicdata_bill
-            SET extras = jsonb_set(extras, '{html_text}', %s)
-            WHERE id = %s
-        """
-
-        with self.connection.cursor() as cursor:
-            execute_batch(cursor, query, self.get_html(), page_size=25)
+        Bill.objects.bulk_update(self.get_html(), ['extras'], batch_size=100)
 
         logger.info("Bills have valid, viewable HTML!")
