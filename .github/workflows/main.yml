@@ -34,8 +34,6 @@ jobs:
   test:
     needs: format
     runs-on: ubuntu-latest
-    container:
-      image: centerforopenscience/unoconv
     services:
       postgres:
         image: postgis/postgis:14-3.2
@@ -54,7 +52,7 @@ jobs:
     - name: System dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install gdal-bin
+        sudo apt-get install gdal-bin libreoffice unoconv
     - uses: actions/checkout@v2
     - name: Set up Python 3.x
       uses: actions/setup-python@v2
