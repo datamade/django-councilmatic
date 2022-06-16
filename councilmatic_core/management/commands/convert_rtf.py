@@ -104,11 +104,11 @@ class Command(BaseCommand):
 
             logger.info("Successful conversion of {}".format(ocd_id))
 
-            bill.extras['html_text'] = html
+            bill.extras["html_text"] = html
 
             yield bill
 
     def add_html(self):
-        Bill.objects.bulk_update(self.get_html(), ['extras'], batch_size=100)
+        Bill.objects.bulk_update(self.get_html(), ["extras"], batch_size=100)
 
         logger.info("Bills have valid, viewable HTML!")
