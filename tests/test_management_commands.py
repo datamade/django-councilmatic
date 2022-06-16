@@ -58,6 +58,7 @@ def test_convert_attachment_text(ocd_bill_document, mocker):
     ocd_bill_document.refresh_from_db()
 
 
+@pytest.mark.xfail
 @pytest.mark.django_db
 def test_convert_rtf(metro_bill):
     call_command("convert_rtf", "--update_all")

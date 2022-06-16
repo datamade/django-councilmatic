@@ -94,10 +94,6 @@ class Command(BaseCommand):
             else:
                 html = stdout_data.decode("utf-8")
 
-            import time
-
-            time.sleep(10)
-
             try:
                 assert html
 
