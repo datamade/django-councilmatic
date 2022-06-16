@@ -1,6 +1,13 @@
 name: Python package
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - master
+      - 2.5
+      - 3.0
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   format:

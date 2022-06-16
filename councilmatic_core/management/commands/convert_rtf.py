@@ -89,17 +89,19 @@ class Command(BaseCommand):
 
                 logger.error(e)
                 logger.error("Look at bill {}".format(ocd_id))
-
                 continue
 
             else:
                 html = stdout_data.decode("utf-8")
 
+            import time
+            time.sleep(10)
+
             try:
                 assert html
 
             except AssertionError:
-                logger.error(f"Converted RTF text for bill {ocd_id} is empty")
+                logger.error(f"Converted HTML for bill {ocd_id} is empty")
                 continue
 
             logger.info("Successful conversion of {}".format(ocd_id))
