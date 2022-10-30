@@ -18,7 +18,7 @@ setup(
     url='http://councilmatic.org/',
     author='DataMade, LLC',
     author_email='info@datamade.us',
-    install_requires=['requests>=2.20,<2.21',
+    install_requires=['requests>=2.20',
                       'opencivicdata>=3.1.0',
                       'pytz>=2015.4',
                       'django-haystack>=2.8.0,<2.9',
