@@ -3,10 +3,6 @@ import os
 from uuid import uuid4
 
 import pytest
-from pytest_django.fixtures import db
-
-from django.conf import settings
-from django.db import connection
 
 from councilmatic_core.models import Bill, Event
 from opencivicdata.core.models import Jurisdiction, Division
@@ -72,7 +68,7 @@ def metro_bill(db, legislative_session):
 
     bill_info = {
         "id": "8ad8fe5a-59a0-4e06-88bd-58d6d0e5ef1a",
-        "title": "CONSIDER: A. AUTHORIZING the CEO to execute Modification No. 2 to Contract C1153, Advanced Utility Relocations (Westwood/UCLA Station), with Steve Bubalo Construction Company for supply and installation of equipment for a traffic Video Detection System (VDS) required by Los Angeles Department of Transportation (LADOT), in the amount of $567,554, increasing the total contract value from $11,439,000 to $12,006,554; and B. APPROVING an increase in Contract Modification Authority (CMA) to Contract C1153, Advanced Utility Relocations (Westwood/UCLA Station), increasing the current CMA from $1,143,900 to $2,287,800.",
+        "title": "CONSIDER: A. AUTHORIZING the CEO to execute Modification No. 2 to Contract C1153, Advanced Utility Relocations (Westwood/UCLA Station), with Steve Bubalo Construction Company for supply and installation of equipment for a traffic Video Detection System (VDS) required by Los Angeles Department of Transportation (LADOT), in the amount of $567,554, increasing the total contract value from $11,439,000 to $12,006,554; and B. APPROVING an increase in Contract Modification Authority (CMA) to Contract C1153, Advanced Utility Relocations (Westwood/UCLA Station), increasing the current CMA from $1,143,900 to $2,287,800.",  # noqa
         "identifier": "2018-0285",
         "created_at": "2017-01-16 15:00:30.329048-06",
         "updated_at": datetime.datetime.now().isoformat(),
@@ -125,7 +121,7 @@ def ocd_bill_document(metro_bill, transactional_db):
 
     BillVersionLink.objects.create(
         version=version,
-        url="https://metro.legistar.com/ViewReport.ashx?M=R&N=TextL5&GID=557&ID=5016&GUID=LATEST&Title=Board+Report.pdf",
+        url="https://metro.legistar.com/ViewReport.ashx?M=R&N=TextL5&GID=557&ID=5016&GUID=LATEST&Title=Board+Report.pdf",  # noqa
     )
 
     metro_bill.versions.add(version)
@@ -145,7 +141,7 @@ def metro_event_document(metro_event, db):
     document = EventDocument.objects.create(**document_info)
 
     document_link_info = {
-        "url": "http://metro.legistar1.com/metro/meetings/2017/5/1216_A_System_Safety,_Security_and_Operations_Committee_17-05-18_Agenda.pdf",
+        "url": "http://metro.legistar1.com/metro/meetings/2017/5/1216_A_System_Safety,_Security_and_Operations_Committee_17-05-18_Agenda.pdf",  # noqa
         "document": document,
     }
 

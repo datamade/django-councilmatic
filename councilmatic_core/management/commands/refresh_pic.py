@@ -45,8 +45,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from boto.s3.connection import S3Connection
-        from boto.s3.key import Key
-        from boto.exception import S3ResponseError
 
         s3_conn = S3Connection(settings.AWS_KEY, settings.AWS_SECRET)
 

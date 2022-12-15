@@ -3,11 +3,7 @@ from django.template.defaultfilters import stringfilter
 from django.utils.html import strip_tags
 import re
 
-from django.utils.safestring import mark_safe
-from django.core.serializers import serialize
-import json
-from django.db.models.query import QuerySet
-from urllib.parse import urlsplit, parse_qs, parse_qsl, urlencode
+from urllib.parse import urlsplit, parse_qs, urlencode
 
 register = template.Library()
 
@@ -118,12 +114,6 @@ def format_date_sort(s, fmt="%Y%m%d%H%M"):
         return s.strftime(fmt)
     else:
         return "0"
-
-
-"""
-This tag updates the current URL params to reflect one of five sort options: date (asc, desc), title (asc, desc), and relevance.
-The `order_by_filter.html` partial calls this tag. 
-"""
 
 
 @register.simple_tag

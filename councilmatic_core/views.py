@@ -165,7 +165,6 @@ class IndexView(TemplateView):
         recently_passed = []
         # Do you want to show recently passed bills? CUSTOMIZE FOR COUNCILMATIC.
         # Otherwise avoid any unnecessary iterative processes when loading the index.
-        # Example: https://github.com/datamade/django-councilmatic/blob/154028d1bc4639fa1ec1af75139cab544abdd315/councilmatic_core/views.py#L139
 
         return recently_passed
 
@@ -454,7 +453,7 @@ class EventsView(ListView):
 
         # Did the user set date boundaries?
         date_str = self.request.GET.get("form_datetime")
-        day_grouper = lambda x: x.local_start_time.date
+        day_grouper = lambda x: x.local_start_time.date  # noqa E731
         context["select_date"] = ""
 
         # If yes, then filter for dates.

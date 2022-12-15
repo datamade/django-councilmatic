@@ -90,8 +90,6 @@ class CouncilmaticFacetedSearchFeed(Feed):
 
     def items(self, query):
         l_items = query[:20]
-        # turn these into bills. XXX: should override in subclasses, e.g. NYCCouncilmaticFacetedSearchFeed,
-        # to access methods like inferred_status()
         pks = [i.pk for i in l_items]
         bills = self.bill_model.objects.filter(pk__in=pks).order_by("-last_action_date")
         return bills
@@ -121,11 +119,8 @@ class PersonDetailFeed(Feed):
         )
 
     def link(self, obj):
-        # return the Councilmatic URL for the person
-        # XXX maybe put this in models.py:Person.get_absolute_url() instead (https://docs.djangoproject.com/en/1.9/ref/models/instances/ , https://docs.djangoproject.com/en/1.9/ref/contrib/syndication/)
         return reverse("person", args=(obj.slug,))
 
-    # Return sponsored legislation a la https://nyc.councilmatic.org/person/margaret-s-chin/
     def item_link(self, bill):
         # return the Councilmatic URL for the bill
         return reverse("bill_detail", args=(bill.slug,))
@@ -256,7 +251,8 @@ class BillDetailActionFeed(Feed):
 
 class EventsFeed(Feed):
     """
-    Return the last 20 announced events as per, e.g., https://nyc.councilmatic.org/events/
+    Return the last 20 announced events as per, e.g.,
+    https://nyc.councilmatic.org/events/
     """
 
     title_template = "feeds/events_item_title.html"

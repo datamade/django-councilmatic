@@ -66,7 +66,7 @@ def test_person_routes(route_setup, client):
 
 
 @pytest.mark.django_db
-def test_person_routes(route_setup, client):
+def test_event_routes(route_setup, client):
     assert client.get("/events/").status_code == 200
 
     for event in Event.objects.all():
