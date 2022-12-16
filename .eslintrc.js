@@ -2,7 +2,7 @@ module.exports = {
   globals: {
     __PATH_PREFIX__: true,
   },
-  extends: ["eslint:recommended", "plugin:react/recommended", "prettier"],
+  extends: ["eslint:recommended", "prettier"],
   rules: {
     indent: ["error", 2],
     "no-console": "off",

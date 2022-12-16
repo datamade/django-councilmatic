@@ -12,7 +12,7 @@ repos:
     rev: 22.3.0
     hooks:
       - id: black
-        exclude: ^({{ cookiecutter.module_name }}/migrations/)
+        exclude: ^(councilmatic_core/migrations/)
 
   # Flake8 config (Python linter)
   # See ./.flake8 for additional configs
@@ -46,6 +46,7 @@ repos:
     rev: "1f7d592"
     hooks:
       - id: eslint
+        exclude: ^(councilmatic_core/static/js/lib/)
         additional_dependencies:
           - eslint@8.19.0
           - eslint-plugin-react@7.30.1
