@@ -21,10 +21,11 @@ module.exports = {
   parserOptions: {
     sourceType: "module",
     allowImportExportEverywhere: true,
+    ecmaVersion: 2022,
   },
   env: {
     browser: true,
     node: true,
-    es2022: true,
+    es2021: true,
   },
 }
