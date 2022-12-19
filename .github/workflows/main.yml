@@ -12,6 +12,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+
     services:
       postgres:
         image: postgis/postgis:14-3.2
@@ -32,11 +36,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install gdal-bin libreoffice unoconv nodejs
       - uses: actions/checkout@v2
-      - name: Set up Python 3.x
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          # Semantic version range syntax or exact version of a Python version
-          python-version: "3.x"
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
