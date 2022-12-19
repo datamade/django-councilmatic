@@ -12,7 +12,7 @@
 
 {% block content %}
 
-  {% cache 600 person_wrapper person.ocd_id %}
+  {% cache 600 person_wrapper person.id %}
 
     <div class="row-fluid">
       <div class="col-sm-12">
@@ -229,7 +229,7 @@
 {% block extra_js %}
   {% if USING_NOTIFICATIONS %}
     <script>
-      console.log("{{person.ocd_id}}")
+      console.log("{{person.id}}")
       $(document).ready(function() {
         $("#personSubscribe").click(function() {
           var bullHorn    = $(this).parents().find(".createSubscription");

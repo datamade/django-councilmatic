@@ -40,7 +40,10 @@ setup(
         "License :: OSI Approved :: BSD License",  # example license
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        # Replace these appropriately if you are stuck on Python 2.
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
