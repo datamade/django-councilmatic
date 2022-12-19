@@ -46,6 +46,7 @@ jobs:
       - name: Test with pytest
         run: |
           flake8 councilmatic_core tests
+          black --check --exclude councilmatic_core/migrations/* councilmatic_core tests
           npx eslint councilmatic_core/static/js/*.js
           pytest -sxv
 

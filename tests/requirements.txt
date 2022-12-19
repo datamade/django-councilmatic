@@ -4,3 +4,4 @@ pytest-mock
 git+https://github.com/hancush/django-fixture-magic@fix-merge
 dj-database-url
 flake8
+black
