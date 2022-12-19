@@ -45,14 +45,9 @@ jobs:
           npm install --legacy-peer-deps
       - name: Test with pytest
         run: |
-          result=0
-          trap 'result=1' ERR
-
           flake8 councilmatic_core tests
           npx eslint councilmatic_core/static/js/*.js
           pytest -sxv
-
-          exit "$result"
 
   publish:
     needs: test
