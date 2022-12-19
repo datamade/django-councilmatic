@@ -8,26 +8,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0010_auto_20160120_1248'),
+        ("councilmatic_core", "0010_auto_20160120_1248"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='organization',
-            name='id',
+            model_name="organization",
+            name="id",
         ),
         migrations.RemoveField(
-            model_name='post',
-            name='id',
+            model_name="post",
+            name="id",
         ),
         migrations.AlterField(
-            model_name='organization',
-            name='ocd_id',
-            field=models.CharField(max_length=100, primary_key=True, serialize=False, unique=True),
+            model_name="organization",
+            name="ocd_id",
+            field=models.CharField(
+                max_length=100, primary_key=True, serialize=False, unique=True
+            ),
         ),
         migrations.AlterField(
-            model_name='post',
-            name='ocd_id',
-            field=models.CharField(max_length=100, primary_key=True, serialize=False, unique=True),
+            model_name="post",
+            name="ocd_id",
+            field=models.CharField(
+                max_length=100, primary_key=True, serialize=False, unique=True
+            ),
         ),
     ]

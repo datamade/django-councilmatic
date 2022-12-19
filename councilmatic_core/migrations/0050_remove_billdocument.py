@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0049_auto_20191114_1142'),
+        ("councilmatic_core", "0049_auto_20191114_1142"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='BillDocument',
+            name="BillDocument",
         ),
     ]

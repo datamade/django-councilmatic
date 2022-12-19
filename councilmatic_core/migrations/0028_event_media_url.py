@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0027_merge'),
+        ("councilmatic_core", "0027_merge"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='media_url',
+            model_name="event",
+            name="media_url",
             field=models.CharField(default=None, max_length=255, null=True),
         ),
     ]

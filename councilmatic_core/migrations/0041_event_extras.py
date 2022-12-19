@@ -9,26 +9,29 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0040_mediaevent_meta'),
+        ("councilmatic_core", "0040_mediaevent_meta"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='extras',
+            model_name="event",
+            name="extras",
             field=django.contrib.postgres.fields.jsonb.JSONField(default=dict),
         ),
-        migrations.RunSQL('''
+        migrations.RunSQL(
+            """
             UPDATE councilmatic_core_event
               SET extras = json_build_object('guid', guid)::jsonb
               WHERE guid IS NOT NULL
-        ''', reverse_sql='''
+        """,
+            reverse_sql="""
             UPDATE councilmatic_core_event
               SET guid = extras->>'guid'
               WHERE extras->'guid' IS NOT NULL
-        '''),
+        """,
+        ),
         migrations.RemoveField(
-            model_name='event',
-            name='guid',
+            model_name="event",
+            name="guid",
         ),
     ]

@@ -9,13 +9,18 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0024_auto_20161017_1201'),
+        ("councilmatic_core", "0024_auto_20161017_1201"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='eventagendaitem',
-            name='bill',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='related_agenda_items', to='councilmatic_core.Bill'),
+            model_name="eventagendaitem",
+            name="bill",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="related_agenda_items",
+                to="councilmatic_core.Bill",
+            ),
         ),
     ]

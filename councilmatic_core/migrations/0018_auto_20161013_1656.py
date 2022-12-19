@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0017_auto_20161013_1656'),
+        ("councilmatic_core", "0017_auto_20161013_1656"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='bill',
-            name='abstract',
+            model_name="bill",
+            name="abstract",
             field=models.TextField(blank=True, null=True),
         ),
     ]

@@ -8,18 +8,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0021_auto_20161014_1349'),
+        ("councilmatic_core", "0021_auto_20161014_1349"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='billdocument',
-            name='full_text',
+            model_name="billdocument",
+            name="full_text",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='eventdocument',
-            name='full_text',
+            model_name="eventdocument",
+            name="full_text",
             field=models.TextField(blank=True, null=True),
         ),
     ]

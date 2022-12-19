@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0041_event_extras'),
+        ("councilmatic_core", "0041_event_extras"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='eventagendaitem',
-            name='plain_text',
+            model_name="eventagendaitem",
+            name="plain_text",
             field=models.TextField(null=True),
         ),
     ]

@@ -6,25 +6,29 @@ from councilmatic_core.templatetags.extras import clean_html
 
 class BillIndex(indexes.SearchIndex):
 
-    text = indexes.CharField(document=True,
-                             use_template=True,
-                             template_name='search/indexes/councilmatic_core/bill_text.txt')
-    slug = indexes.CharField(model_attr='slug', indexed=False)
-    id = indexes.CharField(model_attr='id', indexed=False)
+    text = indexes.CharField(
+        document=True,
+        use_template=True,
+        template_name="search/indexes/councilmatic_core/bill_text.txt",
+    )
+    slug = indexes.CharField(model_attr="slug", indexed=False)
+    id = indexes.CharField(model_attr="id", indexed=False)
     bill_type = indexes.CharField(faceted=True)
-    identifier = indexes.CharField(model_attr='identifier')
-    description = indexes.CharField(model_attr='title', boost=1.25)
-    source_url = indexes.CharField(model_attr='sources__url', indexed=False)
-    source_note = indexes.CharField(model_attr='sources__note')
-    abstract = indexes.CharField(model_attr='abstracts__abstract', boost=1.25, default='')
+    identifier = indexes.CharField(model_attr="identifier")
+    description = indexes.CharField(model_attr="title", boost=1.25)
+    source_url = indexes.CharField(model_attr="sources__url", indexed=False)
+    source_note = indexes.CharField(model_attr="sources__note")
+    abstract = indexes.CharField(
+        model_attr="abstracts__abstract", boost=1.25, default=""
+    )
 
     friendly_name = indexes.CharField()
     sort_name = indexes.CharField()
     sponsorships = indexes.MultiValueField(faceted=True)
     actions = indexes.MultiValueField()
     controlling_body = indexes.MultiValueField(faceted=True)
-    full_text = indexes.CharField(model_attr='full_text', default='')
-    ocr_full_text = indexes.CharField(model_attr='ocr_full_text', default='')
+    full_text = indexes.CharField(model_attr="full_text", default="")
+    ocr_full_text = indexes.CharField(model_attr="ocr_full_text", default="")
     last_action_date = indexes.DateTimeField()
     inferred_status = indexes.CharField(faceted=True)
     legislative_session = indexes.CharField(faceted=True)
@@ -64,7 +68,7 @@ class BillIndex(indexes.SearchIndex):
         return clean_html(obj.ocr_full_text)
 
     def get_updated_field(self):
-        return 'updated_at'
+        return "updated_at"
 
     def prepare_last_action_date(self, obj):
         if obj.last_action_date:

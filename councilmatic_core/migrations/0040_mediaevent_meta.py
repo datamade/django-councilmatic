@@ -10,19 +10,22 @@ from django.utils.timezone import utc
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0039_multi_event_media'),
+        ("councilmatic_core", "0039_multi_event_media"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='eventmedia',
-            name='note',
+            model_name="eventmedia",
+            name="note",
             field=models.CharField(max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='eventmedia',
-            name='updated_at',
-            field=models.DateTimeField(auto_now=True, default=datetime.datetime(2018, 4, 12, 16, 15, 50, 262081, tzinfo=utc)),
+            model_name="eventmedia",
+            name="updated_at",
+            field=models.DateTimeField(
+                auto_now=True,
+                default=datetime.datetime(2018, 4, 12, 16, 15, 50, 262081, tzinfo=utc),
+            ),
             preserve_default=False,
         ),
     ]

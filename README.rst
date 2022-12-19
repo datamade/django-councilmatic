@@ -59,12 +59,6 @@ First, install the test requirements:
 
     pip install -r tests/requirements.txt
 
-We test for style with `flake8 <http://flake8.pycqa.org/en/latest/>`_:
-
-.. code-block:: bash
-
-    flake8 ./councilmatic_core/*.py
-
 We test for functionality with `pytest`:
 
 .. code-block:: bash
@@ -96,7 +90,6 @@ How to contribute code:
 
 - Fork the project.
 - Make your feature addition or bug fix.
-- Bonus points for running tests to check python style (:code:`pip install flake8` and then :code:`flake8 .`).
 - Send us a pull request with a description of your work! Don't worry if it isn't perfect - think of a PR as a start of a conversation, rather than a finished product.
 
 
