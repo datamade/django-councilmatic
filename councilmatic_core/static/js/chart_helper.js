@@ -348,23 +348,48 @@ ChartHelper.initQualityChart = function (el) {
 }
 
 ChartHelper.pointInterval = function (interval) {
-  if (interval == "year") return 365 * 24 * 3600 * 1000
-  if (interval == "quarter") return 3 * 30.4 * 24 * 3600 * 1000
-  if (interval == "month")
+  if (interval == "year") {
+    return 365 * 24 * 3600 * 1000
+  }
+  if (interval == "quarter") {
+    return 3 * 30.4 * 24 * 3600 * 1000
+  }
+  if (interval == "month") {
     //this is very hacky. months have different day counts, so our point interval is the average - 30.4
     return 30.4 * 24 * 3600 * 1000
-  if (interval == "week") return 7 * 24 * 3600 * 1000
-  if (interval == "day") return 24 * 3600 * 1000
-  if (interval == "hour") return 3600 * 1000
-  else return 1
+  }
+  if (interval == "week") {
+    return 7 * 24 * 3600 * 1000
+  }
+  if (interval == "day") {
+    return 24 * 3600 * 1000
+  }
+  if (interval == "hour") {
+    return 3600 * 1000
+  } else {
+    return 1
+  }
 }
 
 ChartHelper.toolTipDateFormat = function (interval, x) {
-  if (interval == "year") return Highcharts.dateFormat("%Y", x)
-  if (interval == "quarter") return Highcharts.dateFormat("%B %Y", x)
-  if (interval == "month") return Highcharts.dateFormat("%B %Y", x)
-  if (interval == "week") return Highcharts.dateFormat("%e %b %Y", x)
-  if (interval == "day") return Highcharts.dateFormat("%e %b %Y", x)
-  if (interval == "hour") return Highcharts.dateFormat("%H:00", x)
-  else return 1
+  if (interval == "year") {
+    return Highcharts.dateFormat("%Y", x)
+  }
+  if (interval == "quarter") {
+    return Highcharts.dateFormat("%B %Y", x)
+  }
+  if (interval == "month") {
+    return Highcharts.dateFormat("%B %Y", x)
+  }
+  if (interval == "week") {
+    return Highcharts.dateFormat("%e %b %Y", x)
+  }
+  if (interval == "day") {
+    return Highcharts.dateFormat("%e %b %Y", x)
+  }
+  if (interval == "hour") {
+    return Highcharts.dateFormat("%H:00", x)
+  } else {
+    return 1
+  }
 }
