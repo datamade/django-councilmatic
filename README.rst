@@ -4,6 +4,10 @@ django-councilmatic
 The django-councilmatic app provides the core functionality for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the Open Civic Data standard and ultimately makes Councilmatic easier to re-deploy in new cities.
 
 
+Requirements
+------------
+- Python >= 3.6
+
 Features
 --------
 
@@ -15,7 +19,6 @@ The `Councilmatic family <http://www.councilmatic.org/>`_ includes:
 
 - Philly Councilmatic (the original and first Councilmatic, by Mjumbe Poe, an important predecessor to DataMade's django-councilmatic)
 - `Chicago Councilmatic <https://github.com/datamade/chi-councilmatic>`_
-- `New York City Councilmatic <https://github.com/datamade/nyc-councilmatic>`_
 - `Los Angeles Metro Board <https://github.com/datamade/la-metro-councilmatic>`_
 
 
@@ -96,6 +99,6 @@ How to contribute code:
 Copyright
 ---------
 
-Copyright (c) 2019 Participatory Politics Foundation and DataMade.
+Copyright (c) 2023 Participatory Politics Foundation and DataMade.
 Released under the `MIT
 License <https://github.com/datamade/django-councilmatic/blob/master/LICENSE>`__.
