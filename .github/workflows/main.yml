@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - 2.5
-      - 3.0
+      - 3.x
   pull_request:
   workflow_dispatch:
 
