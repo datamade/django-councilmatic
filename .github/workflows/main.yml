@@ -63,7 +63,7 @@ jobs:
         with:
           python-version: "3.x"
       - name: Build and publish
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+        if: contains(fromJson('["push", "workflow_dispatch"]'), github.event_name) && startsWith(github.event.ref, 'refs/tags')
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
