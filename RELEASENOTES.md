@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 3.1
+
+_Changes_
+
+Loosens request dependency.
+
+**Release date:** 02-09-2023
+
 ## Version 3.0
 
 _Changes_
