@@ -105,7 +105,6 @@ class CouncilmaticSearchForm(FacetedSearchForm):
         super(CouncilmaticSearchForm, self).__init__(*args, **kwargs)
 
     def no_query_found(self):
-
         return self.searchqueryset.all()
 
 
@@ -139,7 +138,6 @@ def city_context(request):
 
 
 class IndexView(TemplateView):
-
     template_name = "councilmatic_core/index.html"
     bill_model = Bill
     event_model = Event
@@ -189,7 +187,6 @@ class CouncilMembersView(ListView):
 
         for post in self.object_list:
             if post.shape:
-
                 council_member = "Vacant"
                 detail_link = ""
                 if post.current_member:
@@ -258,7 +255,6 @@ class BillDetailView(DetailView):
 
             if settings.USING_NOTIFICATIONS:
                 for bas in user.billactionsubscriptions.all():
-
                     if bill == bas.bill:
                         context["user_subscribed"] = True
                         break
@@ -414,7 +410,6 @@ class PersonDetailView(DetailView):
         context["user_subscribed"] = False
 
         if settings.USING_NOTIFICATIONS:
-
             if self.request.user.is_authenticated:
                 user = self.request.user
                 context["user"] = user
@@ -542,7 +537,6 @@ class EventDetailView(DetailView):
 
 
 def flush(request, flush_key):
-
     try:
         if flush_key == settings.FLUSH_KEY:
             cache.clear()

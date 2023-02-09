@@ -5,7 +5,6 @@ from councilmatic_core.templatetags.extras import clean_html
 
 
 class BillIndex(indexes.SearchIndex):
-
     text = indexes.CharField(
         document=True,
         use_template=True,

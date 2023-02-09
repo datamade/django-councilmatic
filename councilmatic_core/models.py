@@ -53,7 +53,6 @@ class CastToDateTimeMixin:
 
 
 class Person(opencivicdata.core.models.Person):
-
     person = models.OneToOneField(
         opencivicdata.core.models.Person,
         on_delete=models.CASCADE,
@@ -154,7 +153,6 @@ class Person(opencivicdata.core.models.Person):
 
 
 class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
-
     organization = models.OneToOneField(
         opencivicdata.core.models.Organization,
         on_delete=models.CASCADE,
@@ -257,7 +255,6 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
         link_fmt = '<a href="{0}">{1}</a>'
 
         if self.classification == "committee":
-
             try:
                 link_path = reverse(
                     "{}:committee_detail".format(settings.APP_NAME), args=(self.slug,)
@@ -268,7 +265,6 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
             return link_fmt.format(link_path, self.name)
 
         if self.classification == "legislature":
-
             try:
                 link_path = reverse("{}:council_members".format(settings.APP_NAME))
             except NoReverseMatch:
@@ -280,7 +276,6 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
 
 
 class Post(opencivicdata.core.models.Post):
-
     post = models.OneToOneField(
         opencivicdata.core.models.Post,
         on_delete=models.CASCADE,
@@ -366,7 +361,6 @@ class EventManager(CastToDateTimeMixin, models.Manager):
 
 
 class Event(opencivicdata.legislative.models.Event):
-
     event = models.OneToOneField(
         opencivicdata.legislative.models.Event,
         on_delete=models.CASCADE,
@@ -384,7 +378,6 @@ class Event(opencivicdata.legislative.models.Event):
 
     @property
     def event_page_url(self):
-
         try:
             link = reverse(
                 "{}:event_detail".format(settings.APP_NAME), args=(self.slug,)
@@ -451,7 +444,6 @@ class Event(opencivicdata.legislative.models.Event):
 
 
 class Bill(opencivicdata.legislative.models.Bill):
-
     bill = models.OneToOneField(
         opencivicdata.legislative.models.Bill,
         on_delete=models.CASCADE,
@@ -577,7 +569,6 @@ class Bill(opencivicdata.legislative.models.Bill):
         so that bill listings can still have some useful tags populated
         """
         if self.actions.all():
-
             orgs = set(
                 [
                     a.organization.name
@@ -594,7 +585,6 @@ class Bill(opencivicdata.legislative.models.Bill):
                 and self.controlling_body
                 and self.controlling_body[0].name != settings.CITY_COUNCIL_NAME
             ):
-
                 orgs = self.controlling_body
 
             return list(orgs)
