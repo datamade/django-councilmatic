@@ -48,7 +48,7 @@ jobs:
           npm install --legacy-peer-deps
       - name: Test with pytest
         run: |
-          flake8 councilmatic_core tests
-          black --check --exclude councilmatic_core/migrations/* councilmatic_core tests
+          flake8 councilmatic_core tests --exclude councilmatic_core/migrations
+          black --check councilmatic_core tests --exclude councilmatic_core/migrations
           npx eslint councilmatic_core/static/js/*.js
           pytest -sxv
