@@ -3,6 +3,8 @@ import os
 
 import dj_database_url
 
+from .test_config_jurisdiction import *  # noqa
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -118,5 +120,3 @@ LOGGING = {
     },
     "root": {"handlers": ["console"], "level": "INFO"},
 }
-
-from .test_config_jurisdiction import *
