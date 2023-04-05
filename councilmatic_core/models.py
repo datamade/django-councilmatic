@@ -66,6 +66,11 @@ class Person(opencivicdata.core.models.Person):
         default="images/headshot_placeholder.png",
     )
 
+    # The root Person model from OCD has a biography field, however it is overwritten
+    # if a Person is updated. This field is for storing biographic information provided
+    # via Councilmatic.
+    councilmatic_biography = models.TextField(null=True, blank=True)
+
     slug = models.SlugField(unique=True)
 
     def delete(self, **kwargs):
