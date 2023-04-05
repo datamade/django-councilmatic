@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 3.2
+
+_Changes_
+
+Adds councilmatic_bio attribute to Person model.
+
+**Release date:** 04-05-2023
+
 ## Version 3.1
 
 _Changes_
