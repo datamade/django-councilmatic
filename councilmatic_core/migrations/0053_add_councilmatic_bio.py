@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0052_convert_last_action_date_to_datefield'),
+        ("councilmatic_core", "0052_convert_last_action_date_to_datefield"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='person',
-            name='councilmatic_biography',
+            model_name="person",
+            name="councilmatic_biography",
             field=models.TextField(blank=True, null=True),
         ),
     ]
