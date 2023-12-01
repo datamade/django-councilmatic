@@ -1,5 +1,11 @@
 # Release notes for django-councilmatic
 
+## Version 4.0
+
+_Changes_
+
+Gut out everything except the models and signal handlers
+
 ## Version 3.2
 
 _Changes_
