@@ -66,10 +66,26 @@ def create_councilmatic_event(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=OCDBill)
 def create_councilmatic_bill(sender, instance, created, **kwargs):
+    # the save_base also triggers a signal, so we check that
+    # we have richer kwargs indicative of a normal save
+    if "raw" not in kwargs:
+        return
+
     if created:
         slug = slugify(instance.identifier)
 
-        cb = CouncilmaticBill(bill=instance, slug=slug)
+        try:
+            obj = CouncilmaticBill.objects.get(slug=slug)
+        except CouncilmaticBill.DoesNotExist:
+            cb = CouncilmaticBill(bill=instance, slug=slug)
+        else:
+            # we should onlly be in this path if
+            # there is a new bill that has the same slug
+            assert obj.bill != instance
+
+            ocd_part = instance.id.rsplit("-", 1)[-1]
+            long_slug = slug + "-" + ocd_part
+            cb = CouncilmaticBill(bill=instance, slug=long_slug)
 
     else:
         cb = instance.councilmatic_bill
