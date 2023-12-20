@@ -8,9 +8,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0011_auto_20161013_1541'),
-        ('councilmatic_core', '0026_auto_20161017_1641'),
+        ("councilmatic_core", "0011_auto_20161013_1541"),
+        ("councilmatic_core", "0026_auto_20161017_1641"),
     ]
 
-    operations = [
-    ]
+    operations = []

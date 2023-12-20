@@ -9,32 +9,46 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0038_auto_20180403_1003'),
+        ("councilmatic_core", "0038_auto_20180403_1003"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EventMedia',
+            name="EventMedia",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('url', models.CharField(max_length=555)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("url", models.CharField(max_length=555)),
             ],
         ),
         migrations.AddField(
-            model_name='eventmedia',
-            name='event',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='media_urls', to='councilmatic_core.Event'),
+            model_name="eventmedia",
+            name="event",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="media_urls",
+                to="councilmatic_core.Event",
+            ),
         ),
-        migrations.RunSQL('''
+        migrations.RunSQL(
+            """
             INSERT INTO councilmatic_core_eventmedia (event_id, url)
               SELECT
                 ocd_id,
                 media_url
               FROM councilmatic_core_event AS event
               WHERE media_url IS NOT NULL
-        '''),
+        """
+        ),
         migrations.RemoveField(
-            model_name='event',
-            name='media_url',
+            model_name="event",
+            name="media_url",
         ),
     ]

@@ -8,13 +8,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0033_relatedbill'),
+        ("councilmatic_core", "0033_relatedbill"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='guid',
-            field=models.CharField(default=None, max_length=255, null=True, unique=True),
+            model_name="event",
+            name="guid",
+            field=models.CharField(
+                default=None, max_length=255, null=True, unique=True
+            ),
         ),
     ]

@@ -17,13 +17,16 @@ import opencivicdata.legislative.models
 import opencivicdata.core.models
 
 
-static_storage = FileSystemStorage(location=os.path.join(settings.STATIC_ROOT), base_url='/')
+static_storage = FileSystemStorage(
+    location=os.path.join(settings.STATIC_ROOT), base_url="/"
+)
 
-MANUAL_HEADSHOTS = settings.MANUAL_HEADSHOTS if hasattr(settings, 'MANUAL_HEADSHOTS') else {}
+MANUAL_HEADSHOTS = (
+    settings.MANUAL_HEADSHOTS if hasattr(settings, "MANUAL_HEADSHOTS") else {}
+)
 
 
 class CastToDateTimeMixin:
-
     @classmethod
     def _cast(cls, field, field_type):
         """
@@ -33,11 +36,11 @@ class CastToDateTimeMixin:
         """
         return Cast(
             Case(
-                When(**{field: '', 'then': None}),
+                When(**{field: "", "then": None}),
                 default=field,
-                output_field=models.CharField()
+                output_field=models.CharField(),
             ),
-            field_type
+            field_type,
         )
 
     @classmethod
@@ -50,20 +53,28 @@ class CastToDateTimeMixin:
 
 
 class Person(opencivicdata.core.models.Person):
+    person = models.OneToOneField(
+        opencivicdata.core.models.Person,
+        on_delete=models.CASCADE,
+        related_name="councilmatic_person",
+        parent_link=True,
+    )
 
-    person = models.OneToOneField(opencivicdata.core.models.Person,
-                                  on_delete=models.CASCADE,
-                                  related_name='councilmatic_person',
-                                  parent_link=True)
+    headshot = models.FileField(
+        upload_to="images/headshots",
+        storage=static_storage,
+        default="images/headshot_placeholder.png",
+    )
 
-    headshot = models.FileField(upload_to='images/headshots',
-                                storage=static_storage,
-                                default='images/headshot_placeholder.png')
+    # The root Person model from OCD has a biography field, however it is overwritten
+    # if a Person is updated. This field is for storing biographic information provided
+    # via Councilmatic.
+    councilmatic_biography = models.TextField(null=True, blank=True)
 
     slug = models.SlugField(unique=True)
 
     def delete(self, **kwargs):
-        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
         super().delete(**kwargs)
 
     def __str__(self):
@@ -78,7 +89,7 @@ class Person(opencivicdata.core.models.Person):
         m = self.latest_council_membership
         if m and m.post:
             return m.post.label
-        return ''
+        return ""
 
     @property
     def headshot_source(self):
@@ -86,45 +97,50 @@ class Person(opencivicdata.core.models.Person):
         if sources:
             return sources.get().note
         elif self.headshot:
-            return settings.CITY_VOCAB['SOURCE']
+            return settings.CITY_VOCAB["SOURCE"]
         else:
             return None
 
     @property
     def primary_sponsorships(self):
-        primary_sponsorships = self.billsponsorship_set.filter(primary=True)\
-                                                       .prefetch_related('bill')
+        primary_sponsorships = self.billsponsorship_set.filter(
+            primary=True
+        ).prefetch_related("bill")
 
         def sponsorship_sort(sponsorship):
-            '''
+            """
             Sponsorships of bills without recent action dates should appear last.
-            '''
-            return sponsorship.bill.last_action_date or pytz.utc.localize(datetime.date(datetime.MINYEAR, 1, 1))
+            """
+            return sponsorship.bill.last_action_date or pytz.utc.localize(
+                datetime.date(datetime.MINYEAR, 1, 1)
+            )
 
-        return sorted((s for s in primary_sponsorships), key=sponsorship_sort, reverse=True)
+        return sorted(
+            (s for s in primary_sponsorships), key=sponsorship_sort, reverse=True
+        )
 
     @property
     def chair_role_memberships(self):
-        if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
+        if hasattr(settings, "COMMITTEE_CHAIR_TITLE"):
             return self.current_memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
         else:
             return []
 
     @property
     def member_role_memberships(self):
-        if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
+        if hasattr(settings, "COMMITTEE_MEMBER_TITLE"):
             return self.current_memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE)
         else:
             return []
 
     @property
     def latest_council_membership(self):
-        filter_kwarg = {'organization__name': settings.OCD_CITY_COUNCIL_NAME}
+        filter_kwarg = {"organization__name": settings.OCD_CITY_COUNCIL_NAME}
 
         city_council_memberships = self.memberships.filter(**filter_kwarg)
 
         if city_council_memberships.count():
-            return city_council_memberships.order_by('-start_date', '-end_date').first()
+            return city_council_memberships.order_by("-start_date", "-end_date").first()
 
         return None
 
@@ -136,20 +152,23 @@ class Person(opencivicdata.core.models.Person):
 
     @property
     def link_html(self):
-        return "<a href='{}'>{}</a>".format(reverse('person', args=[self.slug]), self.name)
+        return "<a href='{}'>{}</a>".format(
+            reverse("person", args=[self.slug]), self.name
+        )
 
 
 class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
-
-    organization = models.OneToOneField(opencivicdata.core.models.Organization,
-                                        on_delete=models.CASCADE,
-                                        related_name='councilmatic_organization',
-                                        parent_link=True)
+    organization = models.OneToOneField(
+        opencivicdata.core.models.Organization,
+        on_delete=models.CASCADE,
+        related_name="councilmatic_organization",
+        parent_link=True,
+    )
 
     slug = models.SlugField(max_length=200, unique=True)
 
     def delete(self, **kwargs):
-        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
         super().delete(**kwargs)
 
     def __str__(self):
@@ -160,23 +179,28 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
         """
         grabs all organizations (1) classified as a committee & (2) with at least one member
         """
-        return cls.objects\
-            .filter(classification='committee')\
-            .annotate(memberships_end_date_dt=cls.cast_to_datetime('memberships__end_date'))\
-            .filter(memberships_end_date_dt__gte=Now())\
+        return (
+            cls.objects.filter(classification="committee")
+            .annotate(
+                memberships_end_date_dt=cls.cast_to_datetime("memberships__end_date")
+            )
+            .filter(memberships_end_date_dt__gte=Now())
             .distinct()
+        )
 
     @property
     def recent_activity(self):
         # setting arbitrary max of 300 b/c otherwise page will take forever to
         # load
-        return self.actions.order_by('-date', '-bill__identifier', '-order')[:300]
+        return self.actions.order_by("-date", "-bill__identifier", "-order")[:300]
 
     @property
     def recent_events(self):
         # need to look up event participants by name
-        events = Event.objects.filter(participants__entity_type='organization', participants__name=self.name)
-        events = events.order_by('-start_date').all()
+        events = Event.objects.filter(
+            participants__entity_type="organization", participants__name=self.name
+        )
+        events = events.order_by("-start_date").all()
         return events
 
     @property
@@ -185,17 +209,24 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
         grabs events in the future
         """
         # need to look up event participants by name
-        events = Event.objects\
-                      .filter(participants__entity_type='organization', participants__name=self.name)\
-                      .filter(start_time__gt=timezone.now())\
-                      .order_by('start_time')\
-                      .all()
+        events = (
+            Event.objects.filter(
+                participants__entity_type="organization", participants__name=self.name
+            )
+            .filter(start_time__gt=timezone.now())
+            .order_by("start_time")
+            .all()
+        )
         return events
 
     @property
     def chairs(self):
-        if hasattr(settings, 'COMMITTEE_CHAIR_TITLE'):
-            chairs = self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE).filter(end_date_dt__gt=timezone.now()).select_related('person__councilmatic_person')
+        if hasattr(settings, "COMMITTEE_CHAIR_TITLE"):
+            chairs = (
+                self.memberships.filter(role=settings.COMMITTEE_CHAIR_TITLE)
+                .filter(end_date_dt__gt=timezone.now())
+                .select_related("person__councilmatic_person")
+            )
             for chair in chairs:
                 chair.person = chair.person.councilmatic_person
             return chairs
@@ -204,8 +235,10 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
 
     @property
     def non_chair_members(self):
-        if hasattr(settings, 'COMMITTEE_MEMBER_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(end_date_dt__gt=timezone.now())
+        if hasattr(settings, "COMMITTEE_MEMBER_TITLE"):
+            return self.memberships.filter(role=settings.COMMITTEE_MEMBER_TITLE).filter(
+                end_date_dt__gt=timezone.now()
+            )
         else:
             return []
 
@@ -215,8 +248,10 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
 
     @property
     def vice_chairs(self):
-        if hasattr(settings, 'COMMITTEE_VICE_CHAIR_TITLE'):
-            return self.memberships.filter(role=settings.COMMITTEE_VICE_CHAIR_TITLE).filter(end_date_dt__gt=timezone.now())
+        if hasattr(settings, "COMMITTEE_VICE_CHAIR_TITLE"):
+            return self.memberships.filter(
+                role=settings.COMMITTEE_VICE_CHAIR_TITLE
+            ).filter(end_date_dt__gt=timezone.now())
         else:
             return []
 
@@ -224,21 +259,21 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
     def link_html(self):
         link_fmt = '<a href="{0}">{1}</a>'
 
-        if self.classification == 'committee':
-
+        if self.classification == "committee":
             try:
-                link_path = reverse('{}:committee_detail'.format(settings.APP_NAME), args=(self.slug,))
+                link_path = reverse(
+                    "{}:committee_detail".format(settings.APP_NAME), args=(self.slug,)
+                )
             except NoReverseMatch:
-                link_path = reverse('committee_detail', args=(self.slug,))
+                link_path = reverse("committee_detail", args=(self.slug,))
 
             return link_fmt.format(link_path, self.name)
 
-        if self.classification == 'legislature':
-
+        if self.classification == "legislature":
             try:
-                link_path = reverse('{}:council_members'.format(settings.APP_NAME))
+                link_path = reverse("{}:council_members".format(settings.APP_NAME))
             except NoReverseMatch:
-                link_path = reverse('council_members')
+                link_path = reverse("council_members")
 
             return link_fmt.format(link_path, self.name)
 
@@ -246,15 +281,16 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
 
 
 class Post(opencivicdata.core.models.Post):
-
-    post = models.OneToOneField(opencivicdata.core.models.Post,
-                                on_delete=models.CASCADE,
-                                related_name='councilmatic_post',
-                                parent_link=True)
+    post = models.OneToOneField(
+        opencivicdata.core.models.Post,
+        on_delete=models.CASCADE,
+        related_name="councilmatic_post",
+        parent_link=True,
+    )
 
     organization = ProxyForeignKey(
         Organization,
-        related_name='posts',
+        related_name="posts",
         help_text="The Organization in which the post is held.",
         on_delete=models.CASCADE,
     )
@@ -263,9 +299,12 @@ class Post(opencivicdata.core.models.Post):
 
     @cached_property
     def current_member(self):
-        membership = self.memberships.filter(end_date_dt__gt=timezone.now())\
-                                     .order_by('-end_date', '-start_date')\
-                                     .select_related('person__councilmatic_person').first()
+        membership = (
+            self.memberships.filter(end_date_dt__gt=timezone.now())
+            .order_by("-end_date", "-start_date")
+            .select_related("person__councilmatic_person")
+            .first()
+        )
         if membership:
             membership.person = membership.person.councilmatic_person
             return membership
@@ -273,85 +312,95 @@ class Post(opencivicdata.core.models.Post):
 
 class MembershipManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
-        return super().get_queryset().annotate(
-            end_date_dt=self.cast_to_datetime('end_date'),
-            start_date_dt=self.cast_to_datetime('start_date')
+        return (
+            super()
+            .get_queryset()
+            .annotate(
+                end_date_dt=self.cast_to_datetime("end_date"),
+                start_date_dt=self.cast_to_datetime("start_date"),
+            )
         )
 
 
 class Membership(opencivicdata.core.models.Membership, CastToDateTimeMixin):
     class Meta:
         proxy = True
-        base_manager_name = 'objects'
+        base_manager_name = "objects"
 
     objects = MembershipManager()
 
     organization = ProxyForeignKey(
         Organization,
-        related_name='memberships',
+        related_name="memberships",
         # memberships will go away if the org does
         on_delete=models.CASCADE,
-        help_text="A link to the Organization in which the Person is a member."
+        help_text="A link to the Organization in which the Person is a member.",
     )
 
     person = ProxyForeignKey(
         Person,
-        related_name='memberships',
+        related_name="memberships",
         null=True,
         # Membership will just unlink if the person goes away
         on_delete=models.SET_NULL,
-        help_text="A link to the Person that is a member of the Organization."
+        help_text="A link to the Person that is a member of the Organization.",
     )
 
     post = ProxyForeignKey(
         Post,
-        related_name='memberships',
+        related_name="memberships",
         null=True,
         # Membership will just unlink if the post goes away
         on_delete=models.SET_NULL,
-        help_text="	The Post held by the member in the Organization."
+        help_text="	The Post held by the member in the Organization.",
     )
 
 
 class EventManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
-        return super().get_queryset().annotate(
-            start_time=self.cast_to_datetime('start_date')
+        return (
+            super()
+            .get_queryset()
+            .annotate(start_time=self.cast_to_datetime("start_date"))
         )
 
 
 class Event(opencivicdata.legislative.models.Event):
-
-    event = models.OneToOneField(opencivicdata.legislative.models.Event,
-                                 on_delete=models.CASCADE,
-                                 related_name='councilmatic_event',
-                                 parent_link=True)
+    event = models.OneToOneField(
+        opencivicdata.legislative.models.Event,
+        on_delete=models.CASCADE,
+        related_name="councilmatic_event",
+        parent_link=True,
+    )
 
     slug = models.SlugField(max_length=200, unique=True)
 
     def delete(self, **kwargs):
-        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
         super().delete(**kwargs)
 
     objects = EventManager()
 
     @property
     def event_page_url(self):
-
         try:
-            link = reverse('{}:event_detail'.format(settings.APP_NAME), args=(self.slug,))
+            link = reverse(
+                "{}:event_detail".format(settings.APP_NAME), args=(self.slug,)
+            )
         except NoReverseMatch:
-            link = reverse('event_detail', args=(self.slug,))
+            link = reverse("event_detail", args=(self.slug,))
 
         return link
 
     @property
     def link_html(self):
-        return '<a href="{0}" title="View Event Details">{1}</a>'.format(self.event_page_url, self.name)
+        return '<a href="{0}" title="View Event Details">{1}</a>'.format(
+            self.event_page_url, self.name
+        )
 
     @property
     def clean_agenda_items(self):
-        agenda_items = self.agenda.order_by('order').all()
+        agenda_items = self.agenda.order_by("order").all()
         agenda_deduped = []
         descriptions_seen = []
         for a in agenda_items:
@@ -363,25 +412,36 @@ class Event(opencivicdata.legislative.models.Event):
 
     @classmethod
     def next_city_council_meeting(cls):
-        if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
-            return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                              .filter(start_time__gt=timezone.now()).order_by('start_time').first()
+        if hasattr(settings, "CITY_COUNCIL_MEETING_NAME"):
+            return (
+                cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)
+                .filter(start_time__gt=timezone.now())
+                .order_by("start_time")
+                .first()
+            )
         else:
             return None
 
     @classmethod
     def most_recent_past_city_council_meeting(cls):
-        if hasattr(settings, 'CITY_COUNCIL_MEETING_NAME'):
-            return cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                .filter(start_time__lt=timezone.now()).order_by('-start_time').first()
+        if hasattr(settings, "CITY_COUNCIL_MEETING_NAME"):
+            return (
+                cls.objects.filter(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)
+                .filter(start_time__lt=timezone.now())
+                .order_by("-start_time")
+                .first()
+            )
         else:
             return None
 
     @classmethod
     def upcoming_committee_meetings(cls):
-        return cls.objects.filter(start_time__gt=timezone.now())\
-                  .exclude(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)\
-                  .order_by('start_time').all()[:3]
+        return (
+            cls.objects.filter(start_time__gt=timezone.now())
+            .exclude(name__icontains=settings.CITY_COUNCIL_MEETING_NAME)
+            .order_by("start_time")
+            .all()[:3]
+        )
 
     @property
     def local_start_time(self):
@@ -389,18 +449,19 @@ class Event(opencivicdata.legislative.models.Event):
 
 
 class Bill(opencivicdata.legislative.models.Bill):
-
-    bill = models.OneToOneField(opencivicdata.legislative.models.Bill,
-                                on_delete=models.CASCADE,
-                                related_name='councilmatic_bill',
-                                parent_link=True)
+    bill = models.OneToOneField(
+        opencivicdata.legislative.models.Bill,
+        on_delete=models.CASCADE,
+        related_name="councilmatic_bill",
+        parent_link=True,
+    )
 
     slug = models.SlugField(unique=True)
     restrict_view = models.BooleanField(default=False)
     last_action_date = models.DateField(blank=True, null=True)
 
     def delete(self, **kwargs):
-        kwargs['keep_parents'] = kwargs.get('keep_parents', True)
+        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
         super().delete(**kwargs)
 
     def __str__(self):
@@ -408,27 +469,27 @@ class Bill(opencivicdata.legislative.models.Bill):
 
     @property
     def bill_type(self):
-        type = self.extras.get('local_classification')
+        type = self.extras.get("local_classification")
         if not type:
-            type, = self.classification
+            (type,) = self.classification
 
         return type
 
     @property
     def full_text(self):
-        return self.extras.get('rtf_text')
+        return self.extras.get("rtf_text")
 
     @property
     def ocr_full_text(self):
-        return self.extras.get('plain_text')
+        return self.extras.get("plain_text")
 
     @property
     def html_text(self):
-        return self.extras.get('html_text')
+        return self.extras.get("html_text")
 
     @property
     def web_source(self):
-        return self.sources.filter(note='web').get()
+        return self.sources.filter(note="web").get()
 
     @property
     def controlling_body(self):
@@ -438,7 +499,8 @@ class Bill(opencivicdata.legislative.models.Bill):
 
         if self.current_action:
             related_orgs = self.current_action.related_entities.filter(
-                entity_type='organization').all()
+                entity_type="organization"
+            ).all()
             # when a bill is referred from city council
             # to a committee, controlling body is the organization
             # the bill was referred to (a related org)
@@ -465,7 +527,7 @@ class Bill(opencivicdata.legislative.models.Bill):
         """
         returns all actions ordered by date in descending order
         """
-        return self.actions.order_by('-order')
+        return self.actions.order_by("-order")
 
     @property
     def current_action(self):
@@ -483,9 +545,7 @@ class Bill(opencivicdata.legislative.models.Bill):
 
     @property
     def date_passed(self):
-        return self.actions\
-                   .filter(classification='passage')\
-                   .last().date_dt
+        return self.actions.filter(classification="passage").last().date_dt
 
     @property
     def friendly_name(self):
@@ -514,14 +574,22 @@ class Bill(opencivicdata.legislative.models.Bill):
         so that bill listings can still have some useful tags populated
         """
         if self.actions.all():
+            orgs = set(
+                [
+                    a.organization.name
+                    for a in self.actions.all()
+                    if (
+                        a.organization.name != "Mayor"
+                        and a.organization.name != settings.CITY_COUNCIL_NAME
+                    )
+                ]
+            )
 
-            orgs = set([a.organization.name for a in self.actions.all() if
-                        (a.organization.name != 'Mayor' and
-                         a.organization.name != settings.CITY_COUNCIL_NAME)])
-
-            if not orgs and self.controlling_body and \
-                    self.controlling_body[0].name != settings.CITY_COUNCIL_NAME:
-
+            if (
+                not orgs
+                and self.controlling_body
+                and self.controlling_body[0].name != settings.CITY_COUNCIL_NAME
+            ):
                 orgs = self.controlling_body
 
             return list(orgs)
@@ -586,7 +654,8 @@ class Bill(opencivicdata.legislative.models.Bill):
         """
         all_bills_since = cls.bills_since(date_cutoff)
         new_bills_since = [
-            b for b in all_bills_since if b.first_action.date >= date_cutoff]
+            b for b in all_bills_since if b.first_action.date >= date_cutoff
+        ]
         return new_bills_since
 
     @classmethod
@@ -597,30 +666,35 @@ class Bill(opencivicdata.legislative.models.Bill):
         """
         all_bills_since = cls.bills_since(date_cutoff)
         updated_bills_since = [
-            b for b in all_bills_since if b.first_action.date < date_cutoff]
+            b for b in all_bills_since if b.first_action.date < date_cutoff
+        ]
         return updated_bills_since
 
     @property
     def unique_related_upcoming_events(self):
-        events = [r.agenda_item.event for r in self.eventrelatedentity_set.filter(
-            agenda_item__event__start_date__gte=timezone.now()).all()]
+        events = [
+            r.agenda_item.event
+            for r in self.eventrelatedentity_set.filter(
+                agenda_item__event__start_date__gte=timezone.now()
+            ).all()
+        ]
         return list(set(events))
 
     def get_last_action_date(self):
-        '''
+        """
         Return the date of the most recent action. If there is no action,
         return the date of the most recent past event for which the bill
         appears on the agenda. Otherwise, return None.
-        '''
+        """
         current_action = self.current_action
 
         if current_action:
             return current_action.date_dt
 
         try:
-            last_agenda = Event.objects.filter(start_time__lte=timezone.now(),
-                                               agenda__related_entities__bill=self)\
-                                       .latest('start_time')
+            last_agenda = Event.objects.filter(
+                start_time__lte=timezone.now(), agenda__related_entities__bill=self
+            ).latest("start_time")
         except Event.DoesNotExist:
             return None
 
@@ -632,16 +706,14 @@ class BillSponsorship(opencivicdata.legislative.models.BillSponsorship):
     class Meta:
         proxy = True
 
-    bill = ProxyForeignKey(Bill, related_name='sponsorships', on_delete=models.CASCADE)
+    bill = ProxyForeignKey(Bill, related_name="sponsorships", on_delete=models.CASCADE)
     organization = ProxyForeignKey(Organization, null=True, on_delete=models.SET_NULL)
     person = ProxyForeignKey(Person, null=True, on_delete=models.SET_NULL)
 
 
 class BillActionManager(CastToDateTimeMixin, models.Manager):
     def get_queryset(self):
-        return super().get_queryset().annotate(
-            date_dt=self.cast_to_date('date')
-        )
+        return super().get_queryset().annotate(date_dt=self.cast_to_date("date"))
 
 
 class BillAction(opencivicdata.legislative.models.BillAction):
@@ -650,51 +722,51 @@ class BillAction(opencivicdata.legislative.models.BillAction):
 
     objects = BillActionManager()
 
-    bill = ProxyForeignKey(Bill,
-                           related_name='actions',
-                           on_delete=models.CASCADE)
+    bill = ProxyForeignKey(Bill, related_name="actions", on_delete=models.CASCADE)
 
-    organization = ProxyForeignKey(Organization,
-                                   related_name='actions',
-                                   # don't let an org delete wipe out a bunch of bill actions
-                                   on_delete=models.PROTECT)
+    organization = ProxyForeignKey(
+        Organization,
+        related_name="actions",
+        # don't let an org delete wipe out a bunch of bill actions
+        on_delete=models.PROTECT,
+    )
 
     @property
     def label(self):
         c = self.classification
         if not c:
-            return 'default'
+            return "default"
         c = c[0]
 
-        if c == 'committee-passage':
-            return 'success'
-        if c == 'passage':
-            return 'success'
-        if c == 'executive-signature':
-            return 'success'
-        if c == 'amendment-passage':
-            return 'success'
+        if c == "committee-passage":
+            return "success"
+        if c == "passage":
+            return "success"
+        if c == "executive-signature":
+            return "success"
+        if c == "amendment-passage":
+            return "success"
 
-        if c == 'amendment-introduction':
-            return 'default'
-        if c == 'introduction':
-            return 'default'
-        if c == 'committee-referral':
-            return 'default'
-        if c == 'filing':
-            return 'default'
-        if c == 'executive-received':
-            return 'default'
+        if c == "amendment-introduction":
+            return "default"
+        if c == "introduction":
+            return "default"
+        if c == "committee-referral":
+            return "default"
+        if c == "filing":
+            return "default"
+        if c == "executive-received":
+            return "default"
 
-        if c == 'deferred':
-            return 'primary'
+        if c == "deferred":
+            return "primary"
 
         else:
-            return 'default'
+            return "default"
 
     @cached_property
     def referred_org(self):
-        if self.description == 'Referred':
+        if self.description == "Referred":
             related_entity = self.related_entities.get()
             if related_entity:
                 return related_entity.organization
@@ -704,10 +776,8 @@ class BillActionRelatedEntity(opencivicdata.legislative.models.BillActionRelated
     class Meta:
         proxy = True
 
-    action = ProxyForeignKey(BillAction,
-                             related_name='related_entities',
-                             on_delete=models.CASCADE)
+    action = ProxyForeignKey(
+        BillAction, related_name="related_entities", on_delete=models.CASCADE
+    )
 
-    organization = ProxyForeignKey(Organization,
-                                   null=True,
-                                   on_delete=models.SET_NULL)
+    organization = ProxyForeignKey(Organization, null=True, on_delete=models.SET_NULL)

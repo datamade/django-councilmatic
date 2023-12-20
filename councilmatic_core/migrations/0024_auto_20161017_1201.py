@@ -9,31 +9,36 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0023_auto_20161014_1648'),
+        ("councilmatic_core", "0023_auto_20161014_1648"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='agendaitembill',
-            name='agenda_item',
+            model_name="agendaitembill",
+            name="agenda_item",
         ),
         migrations.RemoveField(
-            model_name='agendaitembill',
-            name='bill',
+            model_name="agendaitembill",
+            name="bill",
         ),
         migrations.AddField(
-            model_name='eventagendaitem',
-            name='bill',
-            field=models.ForeignKey(default='', on_delete=django.db.models.deletion.CASCADE, related_name='related_agenda_items', to='councilmatic_core.Bill'),
+            model_name="eventagendaitem",
+            name="bill",
+            field=models.ForeignKey(
+                default="",
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="related_agenda_items",
+                to="councilmatic_core.Bill",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='eventagendaitem',
-            name='note',
-            field=models.CharField(default='', max_length=255),
+            model_name="eventagendaitem",
+            name="note",
+            field=models.CharField(default="", max_length=255),
             preserve_default=False,
         ),
         migrations.DeleteModel(
-            name='AgendaItemBill',
+            name="AgendaItemBill",
         ),
     ]

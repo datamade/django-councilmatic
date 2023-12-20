@@ -1,30 +1,7 @@
 django-councilmatic
 ===================
 
-The django-councilmatic app provides the core functionality for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council. It is built upon the Open Civic Data standard and ultimately makes Councilmatic easier to re-deploy in new cities.
-
-
-Features
---------
-
-- Models for bills, people, organizations, events, and more
-- Base views for Bill, Person, Organization, and Event listing and detail pages
-- Search infrastructure powered by :code:`django-haystack` and Solr
-
-The `Councilmatic family <http://www.councilmatic.org/>`_ includes:
-
-- Philly Councilmatic (the original and first Councilmatic, by Mjumbe Poe, an important predecessor to DataMade's django-councilmatic)
-- `Chicago Councilmatic <https://github.com/datamade/chi-councilmatic>`_
-- `New York City Councilmatic <https://github.com/datamade/nyc-councilmatic>`_
-- `Los Angeles Metro Board <https://github.com/datamade/la-metro-councilmatic>`_
-
-
-Councilmatic in your city
--------------------------
-If you're interested in bringing Councilmatic to your city, `contact us <mailto:info@councilmatic.org>`_! We'd love to help.
-
-Want to build your own Councilmatic? Check out our `Starter Template <https://github.com/datamade/councilmatic-starter-template>`_. It contains everything you need to create your own Councilmatic from scratch.
-
+The django-councilmatic app provides the core models for the `Councilmatic family <http://www.councilmatic.org/>`_, a set of web apps for keeping tabs on local city council.
 
 Extending Open Civic Data/Councilmatic models
 ---------------------------------------------
@@ -48,61 +25,9 @@ django-councilmatic makes extensive use of proxy models to add custom managers a
 If you wish to customize the class of related objects, first proxy an OCD model, then override one or more of its related object attributes with an instance of `ProxyForeignKey`. See `councilmatic_core.models.BillAction <https://github.com/datamade/django-councilmatic/blob/449ff74d3968b0f34016698d4ee89ff50a7b33ef/councilmatic_core/models.py#L612>`_ for an example.
 
 
-Running tests
--------------
-
-Did you make changes to django-councilmatic? Before you make a pull request, run some tests.
-
-First, install the test requirements:
-
-.. code-block:: bash
-
-    pip install -r tests/requirements.txt
-
-We test for style with `flake8 <http://flake8.pycqa.org/en/latest/>`_:
-
-.. code-block:: bash
-
-    flake8 ./councilmatic_core/*.py
-
-We test for functionality with `pytest`:
-
-.. code-block:: bash
-
-    pytest
-
-If you made material changes to the Councilmatic models, refresh the test fixture from a local instance database. From your instance directory (assuming you've already installed :code:`django-councilmatic` with :code:`pip install -e /path/to/django-councilmatic`), install the test requirements:
-
-.. code-block:: bash
-
-    pip install -r /path/to/django-councilmatic/tests/test_requirements.txt
-
-Add :code:`fixture_magic` to your instance's :code:`INSTALLED_APPS` in :code:`settings.py`.
-
-Run the management command to update the test fixture.
-
-.. code-block:: bash
-
-    python manage.py make_fixtures
-
-Run the tests and commit your updated fixture with your PR!
-
-
-Patches and Contributions
--------------------------
-We continue to improve django-councilmatic, and we welcome your ideas! You can make suggestions in the form of `github issues <https://github.com/datamade/django-councilmatic/issues>`_ (bug reports, feature requests, general questions), or you can submit a code contribution via a pull request.
-
-How to contribute code:
-
-- Fork the project.
-- Make your feature addition or bug fix.
-- Bonus points for running tests to check python style (:code:`pip install flake8` and then :code:`flake8 .`).
-- Send us a pull request with a description of your work! Don't worry if it isn't perfect - think of a PR as a start of a conversation, rather than a finished product.
-
-
 Copyright
 ---------
 
-Copyright (c) 2019 Participatory Politics Foundation and DataMade.
+Copyright (c) 2023 Participatory Politics Foundation and DataMade.
 Released under the `MIT
 License <https://github.com/datamade/django-councilmatic/blob/master/LICENSE>`__.

@@ -1,0 +1,25 @@
+name: Publish to PyPI
+
+on: push
+
+jobs:
+  build-and-publish:
+    name: Publish to PyPI
+    if: startsWith(github.event.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          pip install twine wheel
+          pip wheel -w dist --no-deps .
+          python setup.py sdist
+          twine upload --skip-existing dist/*
+        continue-on-error: true

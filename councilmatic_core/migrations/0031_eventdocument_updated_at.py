@@ -10,13 +10,13 @@ from django.utils.timezone import utc
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0030_eventagendaitem_notes'),
+        ("councilmatic_core", "0030_eventagendaitem_notes"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='eventdocument',
-            name='updated_at',
+            model_name="eventdocument",
+            name="updated_at",
             field=models.DateTimeField(default=None, null=True),
             preserve_default=False,
         ),

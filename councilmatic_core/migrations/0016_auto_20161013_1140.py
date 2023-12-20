@@ -8,17 +8,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0015_auto_20161012_1626'),
+        ("councilmatic_core", "0015_auto_20161012_1626"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='legislativesession',
-            name='id',
+            model_name="legislativesession",
+            name="id",
         ),
         migrations.AlterField(
-            model_name='legislativesession',
-            name='identifier',
+            model_name="legislativesession",
+            name="identifier",
             field=models.CharField(max_length=255, primary_key=True, serialize=False),
         ),
     ]

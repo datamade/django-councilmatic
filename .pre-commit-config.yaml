@@ -1,0 +1,16 @@
+repos:
+  # Black config (Python formatter)
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        exclude: ^(councilmatic_core/migrations/)
+
+  # Flake8 config (Python linter)
+  # See ./.flake8 for additional configs
+  - repo: https://github.com/pycqa/flake8
+    rev: "9f60881"
+    hooks:
+      - id: flake8
+        args: [--config=.flake8]
+

@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0012_auto_20161012_1218'),
+        ("councilmatic_core", "0012_auto_20161012_1218"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='organization',
-            name='source_url',
+            model_name="organization",
+            name="source_url",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

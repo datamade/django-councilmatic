@@ -9,23 +9,38 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0004_auto_20171005_2028'),
-        ('councilmatic_core', '0047_update_filepath'),
+        ("core", "0004_auto_20171005_2028"),
+        ("councilmatic_core", "0047_update_filepath"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='Post',
+            name="Post",
         ),
         migrations.CreateModel(
-            name='Post',
+            name="Post",
             fields=[
-                ('post', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, related_name='councilmatic_post', serialize=False, to='core.Post')),
-                ('shape', django.contrib.gis.db.models.fields.GeometryField(null=True, srid=4326)),
+                (
+                    "post",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        related_name="councilmatic_post",
+                        serialize=False,
+                        to="core.Post",
+                    ),
+                ),
+                (
+                    "shape",
+                    django.contrib.gis.db.models.fields.GeometryField(
+                        null=True, srid=4326
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
-            bases=('core.post',),
+            bases=("core.post",),
         ),
     ]

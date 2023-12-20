@@ -8,13 +8,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('councilmatic_core', '0043_membership_extras'),
+        ("councilmatic_core", "0043_membership_extras"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bill',
-            name='restrict_view',
+            model_name="bill",
+            name="restrict_view",
             field=models.BooleanField(default=False),
         ),
     ]
