@@ -16,13 +16,12 @@ from proxy_overrides.related import ProxyForeignKey
 import opencivicdata.legislative.models
 import opencivicdata.core.models
 
-
 static_storage = FileSystemStorage(
     location=os.path.join(settings.STATIC_ROOT), base_url="/"
 )
 
-MANUAL_HEADSHOTS = (
-    settings.MANUAL_HEADSHOTS if hasattr(settings, "MANUAL_HEADSHOTS") else {}
+HEADSHOT_STORAGE_BACKEND = getattr(
+    settings, "COUNCILMATIC_HEADSHOT_STORAGE_BACKEND", static_storage
 )
 
 
@@ -62,7 +61,7 @@ class Person(opencivicdata.core.models.Person):
 
     headshot = models.FileField(
         upload_to="images/headshots",
-        storage=static_storage,
+        storage=HEADSHOT_STORAGE_BACKEND,
         default="images/headshot_placeholder.png",
     )
 
@@ -352,7 +351,7 @@ class Membership(opencivicdata.core.models.Membership, CastToDateTimeMixin):
         null=True,
         # Membership will just unlink if the post goes away
         on_delete=models.SET_NULL,
-        help_text="	The Post held by the member in the Organization.",
+        help_text=" The Post held by the member in the Organization.",
     )
 
 

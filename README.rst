@@ -6,7 +6,7 @@ The django-councilmatic app provides the core functionality for the `Councilmati
 
 Requirements
 ------------
-- Python >= 3.6
+- Python >= 3.8
 
 Features
 --------

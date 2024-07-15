@@ -262,7 +262,6 @@ class EventsFeed(Feed):
 
     title = settings.CITY_COUNCIL_NAME + " " + "Recent Events"
     link = reverse_lazy("events")
-    description = "Recently announced events."
 
     def item_link(self, event):
         # return the Councilmatic URL for the event
@@ -272,7 +271,7 @@ class EventsFeed(Feed):
         return event.start_time
 
     def description(self, obj):
-        return "Events"
+        return "Recently Announced Events"
 
     def items(self, obj):
         return Event.objects.all()[: self.NUM_RECENT_EVENTS]
