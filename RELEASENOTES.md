@@ -1,5 +1,13 @@
 # Release notes for django-councilmatic
 
+## Version 3.3
+
+_Changes_
+
+Allows storage backend for Person headshots to be configured via `COUNCILMATIC_HEADSHOT_STORAGE_BACKEND` setting.
+
+**Release date:** 07-15-2024
+
 ## Version 3.2
 
 _Changes_
