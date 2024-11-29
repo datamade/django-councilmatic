@@ -227,6 +227,10 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
                 .select_related("person__councilmatic_person")
             )
             for chair in chairs:
+                if chair.person is None:
+                    # Silently continue if a None person was added in scraping, 
+                    # instead of crashing the site.
+                    continue
                 chair.person = chair.person.councilmatic_person
             return chairs
         else:
@@ -304,7 +308,10 @@ class Post(opencivicdata.core.models.Post):
             .select_related("person__councilmatic_person")
             .first()
         )
-        if membership:
+        if membership and membership.person:
+            # Added `and membership.person` to silently
+            # handle the situation where a None membership gets added.
+            # And return nothing, instead of crashing the app.
             membership.person = membership.person.councilmatic_person
             return membership
 

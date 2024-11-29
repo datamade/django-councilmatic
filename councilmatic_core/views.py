@@ -320,7 +320,6 @@ class CommitteeDetailView(DetailView):
                 for ces in user.committeeeventsubscriptions.all():
                     if committee == ces.committee:
                         context["user_subscribed_events"] = True
-
         return context
 
 
