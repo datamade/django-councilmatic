@@ -1,5 +1,11 @@
 # Release notes for django-councilmatic
 
+## Version 5.0
+
+_Changes_
+
+Add optional search (django-haystack) and CMS (wagtail) layers. Drop support for Python<=3.9, Django<4.2.
+
 ## Version 4.0
 
 _Changes_

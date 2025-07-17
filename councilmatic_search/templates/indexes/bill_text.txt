@@ -1,0 +1,9 @@
+{{ object.identifier }}
+{{ object.friendly_name }}
+{{ object.classification }}
+{{ object.description }}
+{{ object.abstract }}
+{{ object.full_text }}
+{% for t in object.topics %}
+	{{ t }}
+{% endfor %}

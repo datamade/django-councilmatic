@@ -60,17 +60,6 @@ class Person(opencivicdata.core.models.Person):
         parent_link=True,
     )
 
-    headshot = models.FileField(
-        upload_to="images/headshots",
-        storage=static_storage,
-        default="images/headshot_placeholder.png",
-    )
-
-    # The root Person model from OCD has a biography field, however it is overwritten
-    # if a Person is updated. This field is for storing biographic information provided
-    # via Councilmatic.
-    councilmatic_biography = models.TextField(null=True, blank=True)
-
     slug = models.SlugField(unique=True)
 
     def delete(self, **kwargs):
@@ -90,16 +79,6 @@ class Person(opencivicdata.core.models.Person):
         if m and m.post:
             return m.post.label
         return ""
-
-    @property
-    def headshot_source(self):
-        sources = self.sources.filter(url=self.headshot.url)
-        if sources:
-            return sources.get().note
-        elif self.headshot:
-            return settings.CITY_VOCAB["SOURCE"]
-        else:
-            return None
 
     @property
     def primary_sponsorships(self):

@@ -1,0 +1,17 @@
+{% load councilmaticcms_tags wagtailcore_tags %}
+
+<div class="row border-bottom p-2">
+    {% for column in block.value.columns %}
+        <div class="{% col_class_list breakpoints block.value.columns|length %} {% display_class_list breakpoints forloop.counter %} fw-bold">{{ column.heading }}</div>
+    {% endfor %}
+</div>
+
+{% for row in block.value.rows %}
+    <div class="row border-bottom p-2">
+        {% for cell in row %}
+            <div class="{% col_class_list breakpoints block.value.columns|length %}">
+                {% include_block cell %}
+            </div>
+        {% endfor %}
+    </div>
+{% endfor %}
