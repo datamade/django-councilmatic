@@ -12,7 +12,7 @@ requirements = {
     ],
     "search": [
         "django-haystack[elasticsearch]",
-        "textract",
+        "textract-py3",
     ],
     "cms": [
         "wagtail>=5",
