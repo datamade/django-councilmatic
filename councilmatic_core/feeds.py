@@ -29,6 +29,19 @@ class CouncilmaticFacetedSearchFeed(Feed):
     def url_with_querystring(self, path, **kwargs):
         return path + "?" + urllib.parse.urlencode(kwargs)
 
+    @staticmethod
+    def _narrow_facet(results, facet):
+        # Split on the first ":" only so facet values that contain a colon
+        # (#262) don't blow up with "too many values to unpack".
+        facet_name, sep, facet_value = facet.partition(":")
+        if not sep:
+            return results
+        facet_name = facet_name.rsplit("_exact")[0]
+        # Quote the value so Solr-meaningful characters inside it (slashes,
+        # parentheses, colons, etc., per #276) aren't parsed as query syntax.
+        escaped = facet_value.replace("\\", "\\\\").replace('"', '\\"')
+        return results.narrow('%s:"%s"' % (facet_name, escaped))
+
     def get_object(self, request):
         self.queryDict = request.GET
 
@@ -44,14 +57,11 @@ class CouncilmaticFacetedSearchFeed(Feed):
 
             if facets:
                 for facet in facets:
-                    (facet_name, facet_value) = facet.split(":")
-                    facet_name = facet_name.rsplit("_exact")[0]
-                    results = results.narrow("%s:%s" % (facet_name, facet_value))
+                    results = self._narrow_facet(results, facet)
         elif facets:
+            results = all_results
             for facet in facets:
-                (facet_name, facet_value) = facet.split(":")
-                facet_name = facet_name.rsplit("_exact")[0]
-                results = all_results.narrow("%s:%s" % (facet_name, facet_value))
+                results = self._narrow_facet(results, facet)
 
         return results.order_by("-last_action_date")
 
