@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-councilmatic"
+version = "5.0"
+description = "Core models and optional search and CMS layers for councilmatic.org family"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "DataMade, LLC", email = "info@datamade.us" }]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+dependencies = [
+    "Django>=4.2,<5",
+    "opencivicdata>=3.1",
+    "django-proxy-overrides>=0.2.1",
+]
+
+[project.optional-dependencies]
+search = [
+    "django-haystack[elasticsearch]",
+    "textract-py3",
+]
+cms = [
+    "wagtail>=5",
+    "django-storages[s3]",
+]
+all = ["django-councilmatic[search,cms]"]
+
+[project.urls]
+Homepage = "http://councilmatic.org/"
+
+[tool.setuptools.packages.find]
+include = ["councilmatic_core*", "councilmatic_search*", "councilmatic_cms*"]

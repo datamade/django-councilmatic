@@ -1,4 +1,6 @@
 include LICENSE
-include README.rst
+include README.md
 recursive-include councilmatic_core/migrations *
 
+global-exclude *.py[cod]
+prune **/__pycache__
