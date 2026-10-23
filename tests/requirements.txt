@@ -1,0 +1,6 @@
+pytest>7.0
+pytest-django
+pytest-mock
+dj-database-url
+flake8
+black

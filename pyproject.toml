@@ -29,12 +29,15 @@ dependencies = [
     "Django>=4.2,<5",
     "opencivicdata>=3.1",
     "django-proxy-overrides>=0.2.1",
+    "pytz",
 ]
 
 [project.optional-dependencies]
 search = [
     "django-haystack[elasticsearch]",
     "textract-py3",
+    "requests",
+    "tqdm",
 ]
 cms = [
     "wagtail>=5",
