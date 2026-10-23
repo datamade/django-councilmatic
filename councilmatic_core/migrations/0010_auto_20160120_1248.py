@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-from django.utils.timezone import utc
 import datetime
 
 
@@ -18,7 +17,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 46, 57, 767919, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 46, 57, 767919, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -27,7 +26,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 4, 415901, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 4, 415901, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -36,7 +35,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 8, 919814, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 8, 919814, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -45,7 +44,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 14, 71987, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 14, 71987, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -54,7 +53,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 18, 455922, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 18, 455922, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -63,7 +62,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 23, 135929, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 23, 135929, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -72,7 +71,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 27, 383947, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 27, 383947, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -81,7 +80,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 32, 151960, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 32, 151960, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -90,7 +89,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 36, 336258, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 36, 336258, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -99,7 +98,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 42, 400193, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 42, 400193, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -108,7 +107,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 46, 375945, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 46, 375945, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -117,7 +116,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 50, 855978, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 50, 855978, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -126,7 +125,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 47, 54, 823989, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 47, 54, 823989, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -135,7 +134,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 48, 1, 399994, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 48, 1, 399994, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),
@@ -144,7 +143,7 @@ class Migration(migrations.Migration):
             name="updated_at",
             field=models.DateTimeField(
                 auto_now=True,
-                default=datetime.datetime(2016, 1, 20, 18, 48, 5, 392000, tzinfo=utc),
+                default=datetime.datetime(2016, 1, 20, 18, 48, 5, 392000, tzinfo=datetime.timezone.utc),
             ),
             preserve_default=False,
         ),

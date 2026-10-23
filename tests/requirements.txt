@@ -3,4 +3,4 @@ pytest-django
 pytest-mock
 dj-database-url
 flake8
-black
+black==22.3.0

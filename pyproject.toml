@@ -7,7 +7,7 @@ name = "django-councilmatic"
 version = "5.0"
 description = "Core models and optional search and CMS layers for councilmatic.org family"
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "DataMade, LLC", email = "info@datamade.us" }]
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -26,8 +25,8 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "Django>=4.2,<5",
-    "opencivicdata>=3.1",
+    "Django>=5.2,<6",
+    "opencivicdata @ git+https://github.com/opencivicdata/python-opencivicdata.git@feature/django6-support",
     "django-proxy-overrides>=0.2.1",
     "pytz",
 ]
