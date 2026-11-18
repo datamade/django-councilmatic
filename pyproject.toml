@@ -37,13 +37,13 @@ dependencies = [
 
 [project.optional-dependencies]
 search = [
-    "django-haystack[elasticsearch]",
+    "django-haystack[elasticsearch]>=3.4",
     "textract-py3",
     "requests",
     "tqdm",
 ]
 cms = [
-    "wagtail>=5",
+    "wagtail>=8.0",
     "django-storages[s3]",
 ]
 all = ["django-councilmatic[search,cms]"]
