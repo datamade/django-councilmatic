@@ -16,7 +16,6 @@ from proxy_overrides.related import ProxyForeignKey
 import opencivicdata.legislative.models
 import opencivicdata.core.models
 
-
 static_storage = FileSystemStorage(
     location=os.path.join(settings.STATIC_ROOT), base_url="/"
 )

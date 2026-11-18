@@ -11,6 +11,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/requirements.txt
+      - name: Lint
+        run: |
+          flake8 councilmatic_core councilmatic_search councilmatic_cms tests
+          black --check councilmatic_core councilmatic_search councilmatic_cms tests --exclude "/migrations/"
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -60,7 +77,4 @@ jobs:
           pip install -r tests/requirements.txt
           pip install -e ".${{ matrix.extras }}" "Django~=${{ matrix.django-version }}.0"
       - name: Test with pytest
-        run: |
-          flake8 councilmatic_core councilmatic_search councilmatic_cms tests
-          black --check councilmatic_core councilmatic_search councilmatic_cms tests --exclude "/migrations/"
-          pytest
+        run: pytest

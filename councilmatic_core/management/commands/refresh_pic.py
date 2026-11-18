@@ -17,7 +17,6 @@ from opencivicdata.legislative.models import (
     EventRelatedEntity,
 )
 
-
 for configuration in ["AWS_KEY", "AWS_SECRET"]:
     if not hasattr(settings, configuration):
         raise ImproperlyConfigured(

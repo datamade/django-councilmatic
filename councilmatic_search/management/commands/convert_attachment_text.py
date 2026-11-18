@@ -13,7 +13,6 @@ from django.db.models import Max, Q
 
 from opencivicdata.legislative.models import BillDocumentLink, BillDocument
 
-
 logging.config.dictConfig(settings.LOGGING)
 logging.getLogger("requests").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
