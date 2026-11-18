@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+from councilmatic_core.migrations._operations import RemoveFieldCascade
+
 
 class Migration(migrations.Migration):
 
@@ -12,11 +14,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
+        RemoveFieldCascade(
             model_name="organization",
             name="id",
         ),
-        migrations.RemoveField(
+        RemoveFieldCascade(
             model_name="post",
             name="id",
         ),

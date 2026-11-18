@@ -6,6 +6,13 @@ _Changes_
 
 Add optional search (django-haystack) and CMS (wagtail) layers. Drop support for Python<=3.9, Django<4.2.
 
+Add support for Django 5.2, 6.0, and 6.1. Django 6.x requires Python 3.12+, and
+Django 6.1 requires PostgreSQL 15+.
+
+Projects using Django 6.0+ must add `"django.contrib.postgres"` to
+`INSTALLED_APPS`, since the Open Civic Data models use PostgreSQL-specific
+fields.
+
 ## Version 4.0
 
 _Changes_

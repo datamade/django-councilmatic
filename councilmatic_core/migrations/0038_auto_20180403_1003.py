@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
 
             with transaction.atomic(), connection.cursor() as cursor:
                 cursor.execute(
-                    """
+                    r"""
                     DECLARE bills_cursor CURSOR FOR
                     SELECT identifier FROM councilmatic_core_bill as bill
                     WHERE bill.identifier ~* '(^([A-Za-z]+)\s([-\d]+)$)'

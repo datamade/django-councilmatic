@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 
 import councilmatic_core.models
 from django.db import migrations, models
+
+from councilmatic_core.migrations._operations import RemoveFieldCascade
 import uuid
 
 
@@ -14,15 +16,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
+        RemoveFieldCascade(
             model_name="bill",
             name="id",
         ),
-        migrations.RemoveField(
+        RemoveFieldCascade(
             model_name="event",
             name="id",
         ),
-        migrations.RemoveField(
+        RemoveFieldCascade(
             model_name="person",
             name="id",
         ),
