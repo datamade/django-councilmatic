@@ -1,6 +1,7 @@
 import datetime
 import os
 import pytz
+import copy
 
 from django.db import models
 from django.contrib.gis.db import models as geo_models
@@ -51,7 +52,30 @@ class CastToDateTimeMixin:
         return cls._cast(field, models.DateTimeField())
 
 
-class Person(opencivicdata.core.models.Person):
+class KeepParentsOnDeleteMixin:
+    """
+    Delete the Councilmatic row and its dependents, but keep the parent
+    OpenCivicData row.
+
+    With ``keep_parents=True``, Django skips relations that point at a parent
+    of the model being deleted, and a proxy's concrete model counts as one of
+    its parents. Deleting a proxy instance (e.g., a downstream subclass with
+    ``proxy = True``) therefore skips relations to the concrete model, and,
+    as of Django 6.0, relations to the proxy itself. Related rows are left
+    behind and the delete fails with an IntegrityError. Delete as the
+    concrete model instead, so only the OpenCivicData parents are kept.
+    """
+
+    def delete(self, using=None, keep_parents=True):
+        if self._meta.proxy:
+            instance = copy.copy(self)
+            instance.__class__ = self._meta.concrete_model
+            return instance.delete(using=using, keep_parents=keep_parents)
+
+        return super().delete(using=using, keep_parents=keep_parents)
+
+
+class Person(KeepParentsOnDeleteMixin, opencivicdata.core.models.Person):
     person = models.OneToOneField(
         opencivicdata.core.models.Person,
         on_delete=models.CASCADE,
@@ -60,10 +84,6 @@ class Person(opencivicdata.core.models.Person):
     )
 
     slug = models.SlugField(unique=True)
-
-    def delete(self, **kwargs):
-        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
-        super().delete(**kwargs)
 
     def __str__(self):
         return self.name
@@ -135,7 +155,11 @@ class Person(opencivicdata.core.models.Person):
         )
 
 
-class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
+class Organization(
+    KeepParentsOnDeleteMixin,
+    opencivicdata.core.models.Organization,
+    CastToDateTimeMixin,
+):
     organization = models.OneToOneField(
         opencivicdata.core.models.Organization,
         on_delete=models.CASCADE,
@@ -144,10 +168,6 @@ class Organization(opencivicdata.core.models.Organization, CastToDateTimeMixin):
     )
 
     slug = models.SlugField(max_length=200, unique=True)
-
-    def delete(self, **kwargs):
-        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
-        super().delete(**kwargs)
 
     def __str__(self):
         return self.name
@@ -343,7 +363,7 @@ class EventManager(CastToDateTimeMixin, models.Manager):
         )
 
 
-class Event(opencivicdata.legislative.models.Event):
+class Event(KeepParentsOnDeleteMixin, opencivicdata.legislative.models.Event):
     event = models.OneToOneField(
         opencivicdata.legislative.models.Event,
         on_delete=models.CASCADE,
@@ -352,10 +372,6 @@ class Event(opencivicdata.legislative.models.Event):
     )
 
     slug = models.SlugField(max_length=200, unique=True)
-
-    def delete(self, **kwargs):
-        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
-        super().delete(**kwargs)
 
     objects = EventManager()
 
@@ -426,7 +442,7 @@ class Event(opencivicdata.legislative.models.Event):
         return timezone.localtime(self.start_time)
 
 
-class Bill(opencivicdata.legislative.models.Bill):
+class Bill(KeepParentsOnDeleteMixin, opencivicdata.legislative.models.Bill):
     bill = models.OneToOneField(
         opencivicdata.legislative.models.Bill,
         on_delete=models.CASCADE,
@@ -437,10 +453,6 @@ class Bill(opencivicdata.legislative.models.Bill):
     slug = models.SlugField(unique=True)
     restrict_view = models.BooleanField(default=False)
     last_action_date = models.DateField(blank=True, null=True)
-
-    def delete(self, **kwargs):
-        kwargs["keep_parents"] = kwargs.get("keep_parents", True)
-        super().delete(**kwargs)
 
     def __str__(self):
         return self.friendly_name
